@@ -111,7 +111,7 @@ The Brus algorithm uses a simple but effective approach that:
 
 ### Todd Diff Method
 The Todd algorithm offers a more granular approach:
-1. Performs line-by-line and character-level analysis
+1. Performs line-by-line analysis
 2. Creates nested diffs with more detailed change tracking
 3. Supports complex multi-line transformations with high precision
 
