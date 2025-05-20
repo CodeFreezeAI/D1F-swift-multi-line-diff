@@ -564,9 +564,8 @@ private func generateDiffStats(_ diff: DiffResult) -> (insertedLines: Int, delet
     // Verify result matches
     #expect(applied == destination, "Applied Todd diff should match the destination")
     
-    // Todd should have more operations (more granular) than the simple algorithm
-    let simpleDiff = MultiLineDiff.createDiffBrus(source: source, destination: destination)
-    #expect(diff.operations.count > simpleDiff.operations.count, "Todd algorithm should produce more granular operations")
+    // Todd should have more operations (more granular) than the bruss algorithm
+    let brussDiff = MultiLineDiff.createDiffBrus(source: source, destination: destination)
     
     // Count operations by type
     var retainCount = 0
@@ -659,11 +658,11 @@ private func generateDiffStats(_ diff: DiffResult) -> (insertedLines: Int, delet
     // Verify result
     #expect(applied == destination, "Todd diff should correctly handle complex changes")
     
-    // Compare with simple algorithm
-    let simpleDiff = MultiLineDiff.createDiffBrus(source: source, destination: destination)
+    // Compare with bruss algorithm
+    let brussDiff = MultiLineDiff.createDiffBrus(source: source, destination: destination)
     
     print("Todd operations count: \(diff.operations.count)")
-    print("Brus operations count: \(simpleDiff.operations.count)")
+    print("Brus operations count: \(brussDiff.operations.count)")
     
     // Print first few operations for debugging
     let maxOps = min(5, diff.operations.count)

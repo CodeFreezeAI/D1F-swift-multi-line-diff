@@ -10,7 +10,7 @@ A Swift package for creating and applying diffs to multi-line Unicode/UTF-8 text
 - Apply diffs to transform one string into another
 - Full support for multi-line text
 - Support for Unicode/UTF-8 characters
-- Clean, simple API
+- Clean, Simple API
 - Comprehensive test suite
 
 ## Requirements

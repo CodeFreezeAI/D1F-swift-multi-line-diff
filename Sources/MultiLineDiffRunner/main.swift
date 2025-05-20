@@ -526,7 +526,7 @@ func demonstrateLargeFileDiffWithPatterns() {
 demonstrateCodeFileDiff()
 demonstrateLargeFileDiffWithPatterns()
 
-// Example: Comparing simple vs. Todd diff algorithm
+// Example: Comparing bruss vs. Todd diff algorithm
 func demonstrateToddDiff() {
     print("\nComparing Brus vs. Todd Diff Algorithms:")
     
@@ -640,15 +640,15 @@ func demonstrateToddDiff() {
         try modifiedCode.data(using: .utf8)?.write(to: modifiedFileURL)
         
         // Create diffs with both algorithms
-        let simpleDiff = MultiLineDiff.createDiffBrus(source: sourceCode, destination: modifiedCode)
-        let myersDiff = MultiLineDiff.createDiffTodd(source: sourceCode, destination: modifiedCode)
+        let brussDiff = MultiLineDiff.createDiffBrus(source: sourceCode, destination: modifiedCode)
+        let toddDiff = MultiLineDiff.createDiffTodd(source: sourceCode, destination: modifiedCode)
         
         // Save diffs to files
-        let simpleDiffFileURL = tempDirURL.appendingPathComponent("simple_diff.json")
-        let myersDiffFileURL = tempDirURL.appendingPathComponent("myers_diff.json")
+        let brussDiffFileURL = tempDirURL.appendingPathComponent("bruss_diff.json")
+        let toddDiffFileURL = tempDirURL.appendingPathComponent("todd_diff.json")
         
-        try MultiLineDiff.saveDiffToFile(simpleDiff, fileURL: simpleDiffFileURL)
-        try MultiLineDiff.saveDiffToFile(myersDiff, fileURL: myersDiffFileURL)
+        try MultiLineDiff.saveDiffToFile(brussDiff, fileURL: brussDiffFileURL)
+        try MultiLineDiff.saveDiffToFile(toddDiff, fileURL: toddDiffFileURL)
         
         // Count operations by type
         func countOperations(_ diff: DiffResult) -> (retain: Int, insert: Int, delete: Int) {
@@ -667,39 +667,41 @@ func demonstrateToddDiff() {
             return (retainCount, insertCount, deleteCount)
         }
         
-        let simpleOpCounts = countOperations(simpleDiff)
-        let myersOpCounts = countOperations(myersDiff)
+        let brussOpCounts = countOperations(brussDiff)
+        let toddOpCounts = countOperations(toddDiff)
         
         // Print comparison
         print("\n  Brus Diff Algorithm:")
-        print("    -  Total operations: \(simpleDiff.operations.count)")
-        print("    - Retain operations: \(simpleOpCounts.retain)")
-        print("    - Insert operations: \(simpleOpCounts.insert)")
-        print("    - Delete operations: \(simpleOpCounts.delete)")
+        print("    -  Total operations: \(brussDiff.operations.count)")
+        print("    - Retain operations: \(brussOpCounts.retain)")
+        print("    - Insert operations: \(brussOpCounts.insert)")
+        print("    - Delete operations: \(brussOpCounts.delete)")
         
         print("\n  Todd Diff Algorithm:")
-        print("    -  Total operations: \(myersDiff.operations.count)")
-        print("    - Retain operations: \(myersOpCounts.retain)")
-        print("    - Insert operations: \(myersOpCounts.insert)")
-        print("    - Delete operations: \(myersOpCounts.delete)")
+        print("    -  Total operations: \(toddDiff.operations.count)")
+        print("    - Retain operations: \(toddOpCounts.retain)")
+        print("    - Insert operations: \(toddOpCounts.insert)")
+        print("    - Delete operations: \(toddOpCounts.delete)")
         
         // Apply both diffs to verify they work
-        let simpleResult = try MultiLineDiff.applyDiff(to: sourceCode, diff: simpleDiff)
-        let myersResult = try MultiLineDiff.applyDiffTodd(to: sourceCode, diff: myersDiff)
+        let brussResult = try MultiLineDiff.applyDiff(to: sourceCode, diff: brussDiff)
+        let toddResult = try MultiLineDiff.applyDiffTodd(to: sourceCode, diff: toddDiff)
         
-        let simpleMatches = simpleResult == modifiedCode
-        let myersMatches = myersResult == modifiedCode
+        let brussMatches = brussResult == modifiedCode
+        let toddMatches = toddResult == modifiedCode
+        let bothFilesMatch = toddResult == brussResult
         
         print("\n  Results:")
-        print("    - Brus diff correctly transforms source: \(simpleMatches ? "✅" : "❌")")
-        print("    - Todd diff correctly transforms source: \(myersMatches ? "✅" : "❌")")
-        
+        print("    - Brus diff correctly transforms source: \(brussMatches ? "✅" : "❌")")
+        print("    - Todd diff correctly transforms source: \(toddMatches ? "✅" : "❌")")
+        print("    - Todd = Brus results are a dead match!: \(bothFilesMatch ? "✅" : "❌")")
+
         print("\n  Files available at:")
         print("    - Original: \(originalFileURL.path)")
         print("    - Modified: \(modifiedFileURL.path)")
-        print("    - Brus Diff: \(simpleDiffFileURL.path)")
-        print("    - Todd Diff: \(myersDiffFileURL.path)")
-        
+        print("    - Brus Diff: \(brussDiffFileURL.path)")
+        print("    - Todd Diff: \(toddDiffFileURL.path)")
+
     } catch {
         print("  ❌ ERROR: \(error)")
     }

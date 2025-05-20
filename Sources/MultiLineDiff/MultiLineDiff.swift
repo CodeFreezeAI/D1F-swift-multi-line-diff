@@ -58,7 +58,7 @@ public enum MultiLineDiff {
             return DiffResult(operations: [.delete(source.count)])
         }
         
-        // Use a simple and reliable approach that always works
+        // Use a bruss and reliable approach that always works
         var operations: [DiffOperation] = []
         
         // Find common prefix
@@ -163,10 +163,10 @@ public enum MultiLineDiff {
     ///   - prettyPrinted: Whether to format the JSON for human readability
     /// - Returns: The encoded JSON data
     /// - Throws: An error if encoding fails
-    public static func encodeDiffToJSON(_ diff: DiffResult, prettyPrinted: Bool = true) throws -> Data {
+    public static func encodeDiffToJSON(_ diff: DiffResult, prettyPrinted: Bool = false) throws -> Data {
         let encoder = JSONEncoder()
         if prettyPrinted {
-            encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+            encoder.outputFormatting = [.sortedKeys]
         }
         return try encoder.encode(diff)
     }
@@ -177,7 +177,7 @@ public enum MultiLineDiff {
     ///   - prettyPrinted: Whether to format the JSON for human readability
     /// - Returns: The JSON string representation of the diff
     /// - Throws: An error if encoding fails
-    public static func encodeDiffToJSONString(_ diff: DiffResult, prettyPrinted: Bool = true) throws -> String {
+    public static func encodeDiffToJSONString(_ diff: DiffResult, prettyPrinted: Bool = false) throws -> String {
         let data = try encodeDiffToJSON(diff, prettyPrinted: prettyPrinted)
         guard let jsonString = String(data: data, encoding: .utf8) else {
             throw DiffError.encodingFailed
@@ -211,7 +211,7 @@ public enum MultiLineDiff {
     ///   - fileURL: The URL of the file to write to
     ///   - prettyPrinted: Whether to format the JSON for human readability
     /// - Throws: An error if saving fails
-    public static func saveDiffToFile(_ diff: DiffResult, fileURL: URL, prettyPrinted: Bool = true) throws {
+    public static func saveDiffToFile(_ diff: DiffResult, fileURL: URL, prettyPrinted: Bool = false) throws {
         let data = try encodeDiffToJSON(diff, prettyPrinted: prettyPrinted)
         try data.write(to: fileURL)
     }
@@ -246,23 +246,18 @@ public enum MultiLineDiff {
             return DiffResult(operations: [.delete(source.count)])
         }
         
-        // For very small strings, just use the regular algorithm
-        if source.count < 10 && destination.count < 10 {
-            return createDiffBrus(source: source, destination: destination)
-        }
-        
         // Split into lines
         let sourceLines = source.split(separator: "\n", omittingEmptySubsequences: false)
         let destLines = destination.split(separator: "\n", omittingEmptySubsequences: false)
         
         // Create a line-by-line nested diff
-        let operations = createNestedDiffTodd(sourceLines: sourceLines, destLines: destLines)
-        
+        let operations = createLineByLineDiffTodd(sourceLines: sourceLines, destLines: destLines)
+            
         return DiffResult(operations: operations)
     }
     
     /// Create a nested diff by diffing each line separately
-    private static func createNestedDiffTodd(sourceLines: [Substring], destLines: [Substring]) -> [DiffOperation] {
+    private static func createLineByLineDiffTodd(sourceLines: [Substring], destLines: [Substring]) -> [DiffOperation] {
         var result: [DiffOperation] = []
         
         // First create operations that represent line-level changes
@@ -301,7 +296,7 @@ public enum MultiLineDiff {
     private static func diffLines<T: Equatable>(_ source: [T], _ dest: [T]) -> [LineOperation] {
         var operations: [LineOperation] = []
         
-        // Use a simple Longest Common Subsequence algorithm
+        // Use a bruss Longest Common Subsequence algorithm
         let lcs = longestCommonSubsequence(source, dest)
         
         var sourceIndex = 0
