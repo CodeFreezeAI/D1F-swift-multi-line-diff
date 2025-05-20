@@ -672,13 +672,13 @@ func demonstrateToddDiff() {
         
         // Print comparison
         print("\n  Brus Diff Algorithm:")
-        print("    - Total operations: \(simpleDiff.operations.count)")
+        print("    -  Total operations: \(simpleDiff.operations.count)")
         print("    - Retain operations: \(simpleOpCounts.retain)")
         print("    - Insert operations: \(simpleOpCounts.insert)")
         print("    - Delete operations: \(simpleOpCounts.delete)")
         
         print("\n  Todd Diff Algorithm:")
-        print("    - Total operations: \(myersDiff.operations.count)")
+        print("    -  Total operations: \(myersDiff.operations.count)")
         print("    - Retain operations: \(myersOpCounts.retain)")
         print("    - Insert operations: \(myersOpCounts.insert)")
         print("    - Delete operations: \(myersOpCounts.delete)")
