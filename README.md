@@ -1,4 +1,4 @@
-# Swift MultiLineDiff
+# Swift Multi Line Diff
 
 A Swift package for creating and applying diffs to multi-line Unicode/UTF-8 text strings.
 
