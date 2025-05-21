@@ -75,6 +75,12 @@ print("Diff Operations:")
 // 1. Retain first 15 characters of the class definition
 // 2. Delete "oldMethod" and insert "newMethod"
 // 3. Delete old print statement and insert new one
+
+// Apply the diff operations
+let result = try MultiLineDiff.applyDiff(to: sourceCode, diff: diffOperations)
+
+// Verify the transformation
+assert(result == destinationCode, "Applied diff should match destination code")
 ```
 
 ### Base64 Diff Decoding Example
