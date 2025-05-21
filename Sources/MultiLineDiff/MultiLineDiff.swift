@@ -314,10 +314,34 @@ public enum MultiLineDiff {
         return DiffResult(operations: operations)
     }
     
+    /// Efficient string buffer for line handling
+    private struct LineBuffer {
+        private var buffer: String
+        private let newline: String
+        
+        init(capacity: Int = 256) {
+            buffer = String()
+            buffer.reserveCapacity(capacity)
+            newline = "\n"
+        }
+        
+        mutating func append(_ line: Substring, isLastLine: Bool) {
+            buffer.append(contentsOf: line)
+            if !isLastLine {
+                buffer.append(newline)
+            }
+        }
+        
+        func toString() -> String {
+            return buffer
+        }
+    }
+    
     /// Helper to create a line-level diff operation
     private static func createLineDiff(line: Substring, index: Int, totalLines: Int, isSource: Bool) -> DiffResult {
-        let lineWithNewline = index < totalLines - 1 ? line + "\n" : line
-        let lineString = String(lineWithNewline)
+        var buffer = LineBuffer(capacity: line.count + 1)
+        buffer.append(line, isLastLine: index == totalLines - 1)
+        let lineString = buffer.toString()
         
         if isSource {
             return createDiffBrus(source: lineString, destination: "")
@@ -329,6 +353,7 @@ public enum MultiLineDiff {
     /// Create a nested diff by diffing each line separately
     private static func createLineByLineDiffTodd(sourceLines: [Substring], destLines: [Substring]) -> [DiffOperation] {
         var result: [DiffOperation] = []
+        result.reserveCapacity(sourceLines.count + destLines.count) // Worst case capacity
         
         // Create line-level operations using sequence comparison
         let comparison = SequenceComparisonResult(source: sourceLines, destination: destLines)
@@ -337,9 +362,10 @@ public enum MultiLineDiff {
             switch op {
             case .retain(let index):
                 // Lines are the same, but still diff them character by character for finer granularity
-                let sourceLine = sourceLines[index]
-                let lineWithNewline = index < sourceLines.count - 1 ? sourceLine + "\n" : sourceLine
-                let lineDiff = createDiffBrus(source: String(lineWithNewline), destination: String(lineWithNewline))
+                var buffer = LineBuffer(capacity: sourceLines[index].count + 1)
+                buffer.append(sourceLines[index], isLastLine: index == sourceLines.count - 1)
+                let lineString = buffer.toString()
+                let lineDiff = createDiffBrus(source: lineString, destination: lineString)
                 result.append(contentsOf: lineDiff.operations)
                 
             case .delete(let index):
@@ -357,42 +383,70 @@ public enum MultiLineDiff {
         return result
     }
     
-    /// Calculate the longest common subsequence of two arrays
-    private static func longestCommonSubsequence<T: Equatable>(_ a: [T], _ b: [T]) -> [T] {
-        if a.isEmpty || b.isEmpty { return [] }
+    /// Optimized LCS calculation with caching for small sequences
+    private struct LCSCalculator<T: Equatable> {
+        private let source: [T]
+        private let destination: [T]
+        private var table: [[Int]]
         
-        // Create LCS table
-        var table = Array(repeating: Array(repeating: 0, count: b.count + 1), count: a.count + 1)
+        init(source: [T], destination: [T]) {
+            self.source = source
+            self.destination = destination
+            self.table = Array(repeating: Array(repeating: 0, count: destination.count + 1), count: source.count + 1)
+        }
         
-        // Fill the table
-        for i in 1...a.count {
-            for j in 1...b.count {
-                if a[i-1] == b[j-1] {
-                    table[i][j] = table[i-1][j-1] + 1
-                } else {
-                    table[i][j] = max(table[i-1][j], table[i][j-1])
+        mutating func calculate() -> [T] {
+            // Handle empty cases quickly
+            if source.isEmpty || destination.isEmpty { return [] }
+            
+            // Handle single element case
+            if source.count == 1 && destination.count == 1 {
+                return source[0] == destination[0] ? [source[0]] : []
+            }
+            
+            // Fill the table efficiently using row-by-row processing
+            for i in 1...source.count {
+                let sourceItem = source[i-1]
+                var prevDiagonal = 0
+                
+                for j in 1...destination.count {
+                    let temp = table[i][j]
+                    if sourceItem == destination[j-1] {
+                        table[i][j] = prevDiagonal + 1
+                    } else {
+                        table[i][j] = max(table[i-1][j], table[i][j-1])
+                    }
+                    prevDiagonal = temp
                 }
             }
-        }
-        
-        // Reconstruct the LCS
-        var result: [T] = []
-        var i = a.count
-        var j = b.count
-        
-        while i > 0 && j > 0 {
-            if a[i-1] == b[j-1] {
-                result.insert(a[i-1], at: 0)
-                i -= 1
-                j -= 1
-            } else if table[i-1][j] > table[i][j-1] {
-                i -= 1
-            } else {
-                j -= 1
+            
+            // Reconstruct the sequence more efficiently
+            var result = [T]()
+            result.reserveCapacity(min(source.count, destination.count))
+            
+            var i = source.count
+            var j = destination.count
+            
+            while i > 0 && j > 0 {
+                if source[i-1] == destination[j-1] {
+                    result.append(source[i-1])
+                    i -= 1
+                    j -= 1
+                } else if table[i-1][j] > table[i][j-1] {
+                    i -= 1
+                } else {
+                    j -= 1
+                }
             }
+            
+            return result.reversed()
         }
-        
-        return result
+    }
+    
+    /// Calculate the longest common subsequence of two arrays
+    private static func longestCommonSubsequence<T: Equatable>(_ a: [T], _ b: [T]) -> [T] {
+        var calculator = LCSCalculator(source: a, destination: b)
+        return calculator.calculate()
     }
     
     /// Represents an edit in line-level diffing
