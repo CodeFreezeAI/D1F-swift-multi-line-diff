@@ -32,27 +32,158 @@ A Swift library for creating and applying diffs to multi-line text content. Supp
 | Memory Usage | 💾 Low | 🧠 Higher |
 | Scalability | 📈 Excellent | 📊 Limited |
 
-## Why Base64?
+## 📦 Diff Representation Formats
 
-MultiLineDiff uses base64 encoding for several critical reasons:
+### Diff Operation Types
 
-1. **AI Code Integrity**: Designed specifically for Vibe AI Coding, base64 encoding ensures:
-   - Exact preservation of whitespace and indentation
-   - Perfect handling of special characters
-   - No loss of code structure during transmission
-   - Safe transport between AI and human code reviews
+```swift
+enum DiffOperation {
+    case retain(Int)     // Keep existing characters
+    case delete(Int)     // Remove characters
+    case insert(String)  // Add new characters
+    case replace(String) // Replace with new content
+}
+```
 
-2. **Data Safety**:
-   - Eliminates JSON escaping issues
-   - Preserves newlines and tabs exactly
-   - Handles all Unicode characters reliably
-   - Prevents code corruption during transport
+### Detailed Diff Visualization
 
-3. **Efficiency**:
-   - 6% more compact than JSON format
-   - No need for complex escaping rules
-   - Faster encoding/decoding
-   - Reduced network bandwidth
+```swift
+let sourceCode = """
+class Example {
+    func oldMethod() {
+        print("Hello")
+    }
+}
+"""
+
+let destinationCode = """
+class Example {
+    func newMethod() {
+        print("Hello, World!")
+    }
+}
+"""
+
+// Create diff operations
+let diffOperations = MultiLineDiff.createDiff(
+    source: sourceCode, 
+    destination: destinationCode
+)
+
+// Diff Operations Breakdown
+print("Diff Operations:")
+// Typical output might look like:
+// 1. Retain first 15 characters of the class definition
+// 2. Replace "oldMethod()" with "newMethod()"
+// 3. Replace print statement
+```
+
+### Base64 Diff Decoding Example
+
+```swift
+// Create Base64 encoded diff
+let base64Diff = try MultiLineDiff.createBase64Diff(
+    source: sourceCode, 
+    destination: destinationCode
+)
+
+// Decode Base64 Diff
+func decodeBase64Diff(_ base64String: String) -> String {
+    guard let decodedData = Data(base64Encoded: base64String),
+          let jsonString = String(data: decodedData, encoding: .utf8) else {
+        return "Decoding failed"
+    }
+    return jsonString
+}
+
+// Example of Base64 Diff Decoding
+let decodedDiffOperations = decodeBase64Diff(base64Diff)
+print("Decoded Diff:")
+print(decodedDiffOperations)
+
+// Typical decoded output might look like:
+// [
+//   {"retain": 15},
+//   {"replace": "newMethod() {\n        print(\"Hello, World!\")\n    }"}
+// ]
+```
+
+### Diff Visualization
+
+```
+Original Code:
+class Example {
+    func oldMethod() {
+        print("Hello")
+    }
+}
+
+Diff Operations:
+1. ✅ Retain "class Example {\n    "  (15 chars)
+2. 🔄 Replace "func oldMethod()" with "func newMethod()"
+3. 🔄 Replace print statement with more detailed version
+
+Transformed Code:
+class Example {
+    func newMethod() {
+        print("Hello, World!")
+    }
+}
+```
+
+### Practical Diff Decoding
+
+```swift
+// Full decoding and application process
+let reconstructedCode = try MultiLineDiff.applyBase64Diff(
+    to: sourceCode, 
+    base64Diff: base64Diff
+)
+
+// Verify the transformation
+assert(reconstructedCode == destinationCode, "Diff application failed")
+```
+
+## 🔍 Diff Operation Insights
+
+| Operation | Symbol | Meaning |
+|-----------|--------|---------|
+| Retain    | ✅ | Keep existing content |
+| Delete    | ❌ | Remove content |
+| Insert    | ➕ | Add new content |
+| Replace   | 🔄 | Swap out content |
+
+### Real-World Diff Complexity
+
+```swift
+// Complex multi-line transformation example
+let complexSource = """
+func calculateTotal(items: [Product]) -> Double {
+    var total = 0.0
+    for item in items {
+        total += item.price
+    }
+    return total
+}
+"""
+
+let complexDestination = """
+func calculateTotal(items: [Product]) -> Double {
+    return items.reduce(0.0) { $0 + $1.price }
+}
+"""
+
+// Diff operations will show:
+// 1. Retain function signature
+// 2. Replace entire function body with functional approach
+```
+
+## 🚀 Why Base64?
+
+1. **Compact Representation**: Reduces diff size
+2. **Safe Transmission**: Avoids escaping issues
+3. **Universal Compatibility**: Works across different systems
+4. **AI-Friendly**: Ideal for code transformation pipelines
 
 ## 🔍 Algorithm Complexity Analysis
 
@@ -99,7 +230,7 @@ Todd Algorithm:  🟢🟠🟡
 
 ## 📦 Usage Examples
 
-### Basic Diff Operations
+### Basic Single-Line Diff
 
 ```swift
 let source = "Hello, world!"
@@ -113,23 +244,113 @@ let result = try MultiLineDiff.applyDiff(to: source, diff: diff)
 assert(result == destination)
 ```
 
-### Base64 Diff Operations (Recommended)
+### Multi-Line Code Diff Example
 
 ```swift
-// Create a base64 encoded diff (Brus algorithm)
-let base64Diff = try MultiLineDiff.createBase64Diff(source: source, destination: destination)
+let sourceCode = """
+class Example {
+    func oldMethod() {
+        print("Hello")
+        // Some old comment
+    }
+}
+"""
 
-// Create a base64 encoded diff (Todd algorithm for more granular changes)
-let base64DiffTodd = try MultiLineDiff.createBase64Diff(
-    source: source, 
-    destination: destination, 
-    useToddAlgorithm: true
+let destinationCode = """
+class Example {
+    // New method implementation
+    func newMethod() {
+        print("Hello, World!")
+        // Improved logging
+    }
+}
+"""
+
+// Create a multi-line diff
+let multiLineDiff = MultiLineDiff.createDiff(
+    source: sourceCode, 
+    destination: destinationCode,
+    algorithm: .todd  // Use Todd algorithm for more semantic diff
 )
 
-// Apply the base64 diff
-let result = try MultiLineDiff.applyBase64Diff(to: source, base64Diff: base64Diff)
-assert(result == destination)
+// Apply the multi-line diff
+let updatedCode = try MultiLineDiff.applyDiff(
+    to: sourceCode, 
+    diff: multiLineDiff
+)
+print(updatedCode)
 ```
+
+### Choosing Diff Algorithms
+
+```swift
+// Automatically choose the best algorithm
+let recommendedAlgorithm = MultiLineDiff.suggestDiffAlgorithm(
+    source: sourceCode, 
+    destination: destinationCode
+)
+
+// Explicitly select an algorithm
+let brusDiff = MultiLineDiff.createDiff(
+    source: sourceCode, 
+    destination: destinationCode, 
+    algorithm: .brus
+)
+
+let toddDiff = MultiLineDiff.createDiff(
+    source: sourceCode, 
+    destination: destinationCode, 
+    algorithm: .todd
+)
+```
+
+### Base64 Encoded Diffs (Recommended for AI Transformations)
+
+```swift
+// Create a base64 encoded diff
+let base64Diff = try MultiLineDiff.createBase64Diff(
+    source: sourceCode, 
+    destination: destinationCode
+)
+
+// Apply a base64 encoded diff
+let reconstructedCode = try MultiLineDiff.applyBase64Diff(
+    to: sourceCode, 
+    base64Diff: base64Diff
+)
+```
+
+### File-Based Diff Operations
+
+```swift
+// Save diff to a file
+try MultiLineDiff.saveDiffToFile(
+    multiLineDiff, 
+    fileURL: URL(fileURLWithPath: "/path/to/diff.json")
+)
+
+// Load diff from a file
+let loadedDiff = try MultiLineDiff.loadDiffFromFile(
+    fileURL: URL(fileURLWithPath: "/path/to/diff.json")
+)
+```
+
+## 🎯 Practical Scenarios
+
+### Code Refactoring
+- Rename methods
+- Change method signatures
+- Restructure class hierarchies
+
+### Version Control
+- Generate compact diffs
+- Store minimal change information
+- Efficient code comparison
+
+### AI-Assisted Coding
+- Safe code transformations
+- Precise change tracking
+- Semantic diff analysis
 
 ## 📝 License
 
@@ -140,3 +361,138 @@ MIT
 Contributions are welcome! Please feel free to submit a Pull Request. 
 
 (c) 2025 Todd Bruss
+
+## 📦 Diff Operation Examples
+
+### Basic Diff Operations
+
+```swift
+enum DiffOperation {
+    case retain(Int)     // Keep existing characters
+    case delete(Int)     // Remove characters
+    case insert(String)  // Add new characters
+    case replace(String) // Replace with new content
+}
+```
+
+### Retain Operation Example
+
+```swift
+Source:      "Hello, world!"
+Destination: "Hello, Swift!"
+Operation:    ====== ▼        // Retain "Hello, "
+             |||||| |
+             Hello, w
+```
+
+### Delete Operation Example
+
+```swift
+Source:      "Hello, world!"
+Destination: "Hello!"
+Operation:    ====== -----    // Delete "world"
+             |||||| xxxxx
+             Hello, world
+```
+
+### Insert Operation Example
+
+```swift
+Source:      "Hello!"
+Destination: "Hello, world!"
+Operation:    ====== ++++++   // Insert ", world"
+             |||||| ------
+             Hello, world
+```
+
+### Replace Operation Example
+
+```swift
+Source:      "Hello, world!"
+Destination: "Hello, Swift!"
+Operation:    ====== ~~~~~    // Replace "world" with "Swift"
+             |||||| -----
+             Hello, world
+                    Swift
+```
+
+### Multi-Line Diff Example
+
+```swift
+// Source
+func oldMethod() {
+    print("Hello")
+}
+
+// Destination
+func newMethod() {
+    print("Hello, World!")
+}
+
+// Operation Breakdown:
+func ===~~~~~=== () {     // retain "func ", replace "old" with "new", retain "Method"
+    ~~~~~~~~~~~~~~~~~~~~  // replace entire print statement
+}===                     // retain closing brace
+
+// Visual Representation:
+┌─ Source
+│ func oldMethod() {
+│     print("Hello")
+│ }
+└─────────────────
+   ↓ Transform ↓
+┌─ Destination
+│ func newMethod() {
+│     print("Hello, World!")
+│ }
+└─────────────────
+```
+
+### Real-World Complex Example
+
+```swift
+// Source
+func calculateTotal(items: [Product]) -> Double {
+    var total = 0.0
+    for item in items {
+        total += item.price
+    }
+    return total
+}
+
+// Destination
+func calculateTotal(items: [Product]) -> Double {
+    return items.reduce(0.0) { $0 + $1.price }
+}
+
+// Operation Visualization:
+┌─ Retain signature
+│ func calculateTotal(items: [Product]) -> Double {
+└─ ===============================================
+
+┌─ Replace implementation
+│ --- var total = 0.0
+│ --- for item in items {
+│ ---     total += item.price
+│ --- }
+│ --- return total
+│ +++ return items.reduce(0.0) { $0 + $1.price }
+└─ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+┌─ Retain closing
+│ }
+└─ =
+```
+
+### Operation Legend
+
+| Symbol | Operation | Description |
+|--------|-----------|-------------|
+| `====` | Retain    | Keep text as is |
+| `----` | Delete    | Remove text |
+| `++++` | Insert    | Add new text |
+| `~~~~` | Replace   | Change text |
+| `||||` | Match     | Shows matching characters |
+| `▼`    | Position  | Current operation point |
+| `┌─┐`  | Section   | Groups related changes |
+| `└─┘`  | Border    | Section boundary |
