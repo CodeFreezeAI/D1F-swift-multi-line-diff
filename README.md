@@ -69,7 +69,7 @@ MultiLineDiff uses base64 encoding for several critical reasons:
 #### Performance Gradient
 ```
 Complexity:     🟢🟢🟢
-Memory Usage:   🟢🟢🟢
+Memory Usage:   🟢🟢🟡
 Speed:          🟢🟢🟢
 ```
 
@@ -77,24 +77,24 @@ Speed:          🟢🟢🟢
 
 | Metric | Complexity | Explanation | Visual Representation |
 |--------|------------|-------------|----------------------|
-| **Time Complexity** | O(n log n) | Logarithmic-linear time complexity | 🟠🟡🟡 Moderate |
-| **Space Complexity** | O(n) | Linear space usage | 🟠🟡🟡 Moderate |
-| **Best Case** | Ω(n) | Minimal structural changes | 🟢🟡🟡 Efficient |
-| **Worst Case** | O(n²) | Highly complex text transformations | 🔴🔴🟠 High |
-| **Average Case** | Θ(n log n) | Semantic analysis overhead | 🟠🟡🟡 Moderate |
+| **Time Complexity** | O(n log n) | Logarithmic-linear time complexity | 🟢🟠🟡 Moderate |
+| **Space Complexity** | O(n) | Linear space usage | 🟢🟠🟡 Moderate |
+| **Best Case** | Ω(n) | Minimal structural changes | 🟢🟠🟡 Efficient |
+| **Worst Case** | O(n²) | Highly complex text transformations | 🔴🟠🟡 High |
+| **Average Case** | Θ(n log n) | Semantic analysis overhead | 🟢🟠🟡 Moderate |
 
 #### Performance Gradient
 ```
-Complexity:     🟠🟡🟡
-Memory Usage:   🟠🟡🟡
-Speed:          🟠🟡🟡
+Complexity:     🟢🟠🟡
+Memory Usage:   🟢🟠🟡
+Speed:          🟢🟠🟡
 ```
 
 ### Comparative Performance Visualization
 
 ```
 Brus Algorithm:  🟢🟢🟢
-Todd Algorithm:  🟠🟡🟡
+Todd Algorithm:  🟢🟠🟡
 ```
 
 ## 📦 Usage Examples
