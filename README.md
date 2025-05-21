@@ -79,7 +79,7 @@ Speed:          🟢🟢🟢
 |--------|------------|-------------|----------------------|
 | **Time Complexity** | O(n log n) | Logarithmic-linear time complexity | 🟢🟠🟡 Moderate |
 | **Space Complexity** | O(n) | Linear space usage | 🟢🟠🟡 Moderate |
-| **Best Case** | Ω(n) | Minimal structural changes | 🟢🟠🟡 Efficient |
+| **Best Case** | Ω(n) | Minimal structural changes | 🟠🟡🟡 Efficient |
 | **Worst Case** | O(n²) | Highly complex text transformations | 🔴🟠🟡 High |
 | **Average Case** | Θ(n log n) | Semantic analysis overhead | 🟢🟠🟡 Moderate |
 
@@ -87,7 +87,7 @@ Speed:          🟢🟢🟢
 ```
 Complexity:     🟢🟠🟡
 Memory Usage:   🟢🟠🟡
-Speed:          🟢🟠🟡
+Speed:          🟠🟡🟡
 ```
 
 ### Comparative Performance Visualization
