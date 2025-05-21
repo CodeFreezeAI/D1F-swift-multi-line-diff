@@ -85,6 +85,7 @@ private extension String {
         
         let comparison = SequenceComparisonResult(source: sourceLines, destination: destLines)
         
+        // Process operations sequentially for now
         for op in comparison.operations {
             switch op {
             case .retain(let index):
@@ -174,6 +175,24 @@ private extension String {
         }
     }
     
+    /// Efficient string buffer for line handling
+    private final class StringBuffer {
+        private var buffer: String
+        
+        init(capacity: Int = 256) {
+            buffer = String()
+            buffer.reserveCapacity(capacity)
+        }
+        
+        func append(_ line: Substring, isLastLine: Bool) {
+            buffer.append(contentsOf: line)
+            guard !isLastLine else { return }
+            buffer.append("\n")
+        }
+        
+        var result: String { buffer }
+    }
+    
     /// Represents common regions between two strings
     private struct CommonRegions {
         let prefixLength, suffixLength: Int
@@ -181,7 +200,12 @@ private extension String {
         let destMiddleStart, destMiddleEnd: Int
         
         init(source: String, destination: String) {
-            let (sourceChars, destChars) = (Array(source), Array(destination))
+            let (sourceChars, destChars) = source.withContiguousStorageIfAvailable { sourceBuffer in
+                destination.withContiguousStorageIfAvailable { destBuffer in
+                    (Array(sourceBuffer), Array(destBuffer))
+                } ?? (Array(destination), Array(source))
+            } ?? (Array(source), Array(destination))
+            
             let minLength = min(source.count, destination.count)
             
             // Find common prefix and suffix
@@ -204,24 +228,6 @@ private extension String {
             destMiddleStart = prefix
             destMiddleEnd = destination.count - suffix
         }
-    }
-    
-    /// Efficient string buffer for line handling
-    private final class StringBuffer {
-        private var buffer: String
-        
-        init(capacity: Int = 256) {
-            buffer = String()
-            buffer.reserveCapacity(capacity)
-        }
-        
-        func append(_ line: Substring, isLastLine: Bool) {
-            buffer.append(contentsOf: line)
-            guard !isLastLine else { return }
-            buffer.append("\n")
-        }
-        
-        var result: String { buffer }
     }
     
     /// Helper to create a line-level diff operation
@@ -265,21 +271,20 @@ private extension String {
             guard !a.isEmpty && !b.isEmpty else { return [] }
             guard a.count > 1 || b.count > 1 else { return a == b ? a : [] }
             
+            // Create a 2D array for dynamic programming
             var table = [[Int]](repeating: .init(repeating: 0, count: b.count + 1), 
                               count: a.count + 1)
             
+            // Fill the table
             for i in 1...a.count {
                 let aItem = a[i-1]
-                var prev = 0
-                
                 for j in 1...b.count {
-                    let temp = table[i][j]
-                    table[i][j] = aItem == b[j-1] ? prev + 1 : 
+                    table[i][j] = aItem == b[j-1] ? table[i-1][j-1] + 1 : 
                                  max(table[i-1][j], table[i][j-1])
-                    prev = temp
                 }
             }
             
+            // Build the result
             var result = [T]()
             result.reserveCapacity(min(a.count, b.count))
             
