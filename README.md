@@ -1,4 +1,4 @@
-# MultiLineDiff 1.0.6
+# MultiLineDiff 1.0.7
 
 A Swift library for creating and applying diffs to multi-line text content. Supports Unicode/UTF-8 strings and handles multi-line content properly. Designed specifically for Vibe AI Coding integrity and safe code transformations.
 
@@ -616,11 +616,11 @@ print(base64Diff)
 // W3sicmV0YWluIjo1fSx7InJlcGxhY2UiOiJuZXcifSx7InJldGFpbiI6N31d...
 
 // Operations represented in the base64:
-// ✅ Retain "func "
-// 🔄 Replace "old" with "new"
-// ✅ Retain "Method"
-// 🔄 Replace print statement
-// ✅ Retain closing brace
+// ==== Retain "func "
+// ~~~~� Replace "old" with "new"
+// ==== Retain "Method"
+// ~~~~ Replace print statement
+// ==== Retain closing brace
 ```
 
 ### File Operations with Base64
