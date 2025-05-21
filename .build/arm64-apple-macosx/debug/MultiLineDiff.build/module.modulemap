@@ -1,4 +1,0 @@
-module MultiLineDiff {
-    header "/Users/toddbruss/Documents/GitHub/swift-multi-line-diff/.build/arm64-apple-macosx/debug/MultiLineDiff.build/MultiLineDiff-Swift.h"
-    requires objc
-}
