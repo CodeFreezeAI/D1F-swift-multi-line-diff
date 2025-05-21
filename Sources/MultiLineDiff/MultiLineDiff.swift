@@ -7,11 +7,12 @@ import Foundation
 // Supports Unicode/UTF-8 strings and handles multi-line content properly
 
 /// Represents a single diff operation
-@frozen public enum DiffOperation: Equatable, Codable {
+@frozen public enum DiffOperation: Sendable, Equatable, Codable {
     case retain(Int)      // Keep a number of characters from the source
     case insert(String)   // Insert new content
     case delete(Int)      // Delete a number of characters from the source
     
+    @_optimize(speed)
     public var description: String {
         switch self {
         case .retain(let count): "retain \(count) character\(count.isPlural ? "s" : "")"
@@ -20,18 +21,34 @@ import Foundation
         }
     }
     
-    // Custom Codable implementation to preserve operation type
+    /// Custom Codable implementation to preserve operation type
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
-        if let retainValue = try? container.decode(Int.self, forKey: .retain) {
+        switch (
+            container.contains(.retain),
+            container.contains(.insert),
+            container.contains(.delete)
+        ) {
+        case (true, false, false):
+            let retainValue = try container.decode(Int.self, forKey: .retain)
             self = .retain(retainValue)
-        } else if let insertValue = try? container.decode(String.self, forKey: .insert) {
+        
+        case (false, true, false):
+            let insertValue = try container.decode(String.self, forKey: .insert)
             self = .insert(insertValue)
-        } else if let deleteValue = try? container.decode(Int.self, forKey: .delete) {
+        
+        case (false, false, true):
+            let deleteValue = try container.decode(Int.self, forKey: .delete)
             self = .delete(deleteValue)
-        } else {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Cannot decode DiffOperation"))
+        
+        default:
+            throw DecodingError.dataCorrupted(
+                .init(
+                    codingPath: decoder.codingPath, 
+                    debugDescription: "Cannot decode DiffOperation: Invalid or multiple keys"
+                )
+            )
         }
     }
     
@@ -77,6 +94,7 @@ private extension String {
     ///   - destination: The modified string
     /// - Returns: A DiffResult containing the operations to transform source into destination
     public static func createDiffBrus(source: String, destination: String) -> DiffResult {
+        // Handle empty string scenarios first
         if let emptyResult = handleEmptyStrings(source: source, destination: destination) {
             return emptyResult
         }
@@ -85,16 +103,38 @@ private extension String {
         var operations = [DiffOperation]()
         operations.reserveCapacity(3) // Most common case: prefix, middle, suffix
         
-        if regions.prefixLength > 0 { operations.append(.retain(regions.prefixLength)) }
-        if regions.sourceMiddleLength > 0 { operations.append(.delete(regions.sourceMiddleLength)) }
-        
-        if regions.destMiddleStart < regions.destMiddleEnd {
-            let destChars = Array(destination)
-            let destMiddleString = String(destChars[regions.destMiddleStart..<regions.destMiddleEnd])
-            operations.append(.insert(destMiddleString))
+        // Construct operations based on region characteristics
+        switch (regions.prefixLength, regions.sourceMiddleLength, regions.destMiddleStart, regions.destMiddleEnd, regions.suffixLength) {
+        case let (prefixLen, middleLen, destStart, destEnd, suffixLen) 
+            where prefixLen > 0 || middleLen > 0 || (destStart < destEnd) || suffixLen > 0:
+            
+            // Add prefix retain operation if applicable
+            if prefixLen > 0 {
+                operations.append(.retain(prefixLen))
+            }
+            
+            // Add delete operation for source middle if applicable
+            if middleLen > 0 {
+                operations.append(.delete(middleLen))
+            }
+            
+            // Add insert operation for destination middle if applicable
+            if destStart < destEnd {
+                let destChars = Array(destination)
+                let destMiddleString = String(destChars[destStart..<destEnd])
+                operations.append(.insert(destMiddleString))
+            }
+            
+            // Add suffix retain operation if applicable
+            if suffixLen > 0 {
+                operations.append(.retain(suffixLen))
+            }
+            
+        default:
+            // This case should never be reached due to previous empty string handling
+            // but included for exhaustiveness
+            return .init(operations: [])
         }
-        
-        if regions.suffixLength > 0 { operations.append(.retain(regions.suffixLength)) }
         
         return DiffResult(operations: operations)
     }
@@ -105,17 +145,27 @@ private extension String {
     ///   - destination: The modified string
     /// - Returns: A DiffResult containing detailed operations to transform source into destination
     public static func createDiffTodd(source: String, destination: String) -> DiffResult {
-        // Early fallback for extremely simple cases
-        if let emptyResult = handleEmptyStrings(source: source, destination: destination) {
-            return emptyResult
+        // Early handling of empty or simple cases
+        switch (source.isEmpty, destination.isEmpty) {
+        case (true, true):
+            return .init(operations: [])
+        case (true, false):
+            return .init(operations: [.insert(destination)])
+        case (false, true):
+            return .init(operations: [.delete(source.count)])
+        case (false, false):
+            break  // Continue with diff calculation
         }
         
         // Determine the most appropriate diff strategy
-        switch determineDiffStrategy(source: source, destination: destination) {
+        let strategy = determineDiffStrategy(source: source, destination: destination)
+        
+        // Select algorithm based on strategy
+        switch strategy {
         case .brus:
             return createDiffBrus(source: source, destination: destination)
         case .todd:
-            break // Continue with Todd algorithm implementation
+            break  // Continue with Todd algorithm
         }
         
         let sourceLines = source.split(separator: "\n", omittingEmptySubsequences: false)
@@ -134,17 +184,18 @@ private extension String {
         
         // Helper to flush accumulated operations
         func flushOperations() {
-            if currentRetainCount > 0 {
-                result.append(.retain(currentRetainCount))
+            switch (currentRetainCount, currentDeleteCount, currentInsertText.isEmpty) {
+            case (let retain, 0, true) where retain > 0:
+                result.append(.retain(retain))
                 currentRetainCount = 0
-            }
-            if currentDeleteCount > 0 {
-                result.append(.delete(currentDeleteCount))
+            case (0, let delete, true) where delete > 0:
+                result.append(.delete(delete))
                 currentDeleteCount = 0
-            }
-            if !currentInsertText.isEmpty {
+            case (0, 0, false):
                 result.append(.insert(currentInsertText))
                 currentInsertText = ""
+            default:
+                break
             }
         }
         
@@ -199,15 +250,13 @@ private extension String {
         flushOperations()
         
         // Handle trailing newlines
-        let sourceEndsWithNewline = source.hasSuffix("\n")
-        let destEndsWithNewline = destination.hasSuffix("\n")
-        
-        if sourceEndsWithNewline != destEndsWithNewline {
-            if destEndsWithNewline {
-                result.append(.insert("\n"))
-            } else {
-                result.append(.delete(1))
-            }
+        switch (source.hasSuffix("\n"), destination.hasSuffix("\n")) {
+        case (false, true):
+            result.append(.insert("\n"))
+        case (true, false):
+            result.append(.delete(1))
+        default:
+            break
         }
         
         return DiffResult(operations: result)
@@ -226,42 +275,57 @@ private extension String {
         for operation in diff.operations {
             switch operation {
             case .retain(let count):
+                // Validate and apply retain operation
                 guard currentIndex < source.endIndex else {
                     throw DiffError.invalidRetain(count: count, remainingLength: 0)
                 }
                 
                 let endIndex = source.index(currentIndex, offsetBy: count, 
                                          limitedBy: source.endIndex) ?? source.endIndex
-                guard source.distance(from: currentIndex, to: endIndex) == count else {
-                    throw DiffError.invalidRetain(count: count, 
-                          remainingLength: source.distance(from: currentIndex, to: source.endIndex))
+                
+                // Validate retain count
+                let retainLength = source.distance(from: currentIndex, to: endIndex)
+                guard retainLength == count else {
+                    throw DiffError.invalidRetain(
+                        count: count, 
+                        remainingLength: source.distance(from: currentIndex, to: source.endIndex)
+                    )
                 }
                 
                 result.append(contentsOf: source[currentIndex..<endIndex])
                 currentIndex = endIndex
                 
             case .insert(let text):
+                // Simply append inserted text
                 result.append(text)
                 
             case .delete(let count):
+                // Validate and skip deletion
                 guard currentIndex < source.endIndex else {
                     throw DiffError.invalidDelete(count: count, remainingLength: 0)
                 }
                 
                 let endIndex = source.index(currentIndex, offsetBy: count, 
                                          limitedBy: source.endIndex) ?? source.endIndex
-                guard source.distance(from: currentIndex, to: endIndex) == count else {
-                    throw DiffError.invalidDelete(count: count, 
-                          remainingLength: source.distance(from: currentIndex, to: source.endIndex))
+                
+                // Validate delete count
+                let deleteLength = source.distance(from: currentIndex, to: endIndex)
+                guard deleteLength == count else {
+                    throw DiffError.invalidDelete(
+                        count: count, 
+                        remainingLength: source.distance(from: currentIndex, to: source.endIndex)
+                    )
                 }
                 
                 currentIndex = endIndex
             }
         }
         
+        // Ensure entire source is consumed
         guard currentIndex == source.endIndex else {
             throw DiffError.incompleteApplication(
-                unconsumedLength: source.distance(from: currentIndex, to: source.endIndex))
+                unconsumedLength: source.distance(from: currentIndex, to: source.endIndex)
+            )
         }
         
         return result
@@ -298,10 +362,14 @@ private extension String {
     /// Handle empty string cases for both diff algorithms
     private static func handleEmptyStrings(source: String, destination: String) -> DiffResult? {
         switch (source.isEmpty, destination.isEmpty) {
-        case (true, true): .init(operations: [])
-        case (true, _): .init(operations: [.insert(destination)])
-        case (_, true): .init(operations: [.delete(source.count)])
-        default: nil
+        case (true, true): 
+            return .init(operations: [])
+        case (true, false): 
+            return .init(operations: [.insert(destination)])
+        case (false, true): 
+            return .init(operations: [.delete(source.count)])
+        case (false, false): 
+            return nil
         }
     }
     
@@ -366,23 +434,20 @@ private extension String {
         buffer.append(line, isLastLine: index == totalLines - 1)
         let content = buffer.result
         
-        if isSource {
-            // For source lines, we need to handle the newline separately
-            if content.hasSuffix("\n") {
-                return DiffResult(operations: [
-                    .delete(content.count - 1),  // Delete content without newline
-                    .delete(1)                   // Delete newline separately
-                ])
-            }
+        switch (content.hasSuffix("\n"), isSource) {
+        case (true, true):
+            return DiffResult(operations: [
+                .delete(content.count - 1),  // Delete content without newline
+                .delete(1)                   // Delete newline separately
+            ])
+        case (false, true):
             return DiffResult(operations: [.delete(content.count)])
-        } else {
-            // For destination lines, we need to handle the newline separately
-            if content.hasSuffix("\n") {
-                return DiffResult(operations: [
-                    .insert(String(content.dropLast())),  // Insert content without newline
-                    .insert("\n")                         // Insert newline separately
-                ])
-            }
+        case (true, false):
+            return DiffResult(operations: [
+                .insert(String(content.dropLast())),  // Insert content without newline
+                .insert("\n")                         // Insert newline separately
+            ])
+        case (false, false):
             return DiffResult(operations: [.insert(content)])
         }
     }
@@ -471,43 +536,33 @@ private extension String {
     
     /// Determines the most appropriate diff strategy
     private static func determineDiffStrategy(source: String, destination: String) -> DiffStrategy {
-        // Comprehensive strategy selection
-        let strategies: [(condition: () -> Bool, strategy: DiffStrategy)] = [
-            // Extremely short strings
-            ({ source.count <= 2 || destination.count <= 2 }, .brus),
-            
-            // Pure whitespace changes
-            ({ 
-                source.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-                destination.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty 
-            }, .brus),
-            
-            // Nearly identical strings
-            ({ 
-                source.count == destination.count && 
-                source.prefix(source.count - 1) == destination.prefix(destination.count - 1) 
-            }, .brus),
-            
-            // Minimal line count differences
-            ({ 
-                let sourceLines = source.split(separator: "\n")
-                let destLines = destination.split(separator: "\n")
-                return abs(sourceLines.count - destLines.count) <= 2 
-            }, .brus),
-            
-            // Default to Todd for complex transformations
-            ({ true }, .todd)
-        ]
+        switch (source.count, destination.count, 
+                source.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                destination.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty) {
+        // Extremely short strings
+        case (0...2, 0...2, _, _):
+            return .brus
         
-        // Find the first matching strategy
-        for (condition, strategy) in strategies {
-            if condition() {
-                return strategy
-            }
+        // Pure whitespace changes
+        case (_, _, true, true):
+            return .brus
+        
+        // Nearly identical strings with minimal differences
+        case let (sourceCount, destCount, _, _) 
+            where sourceCount == destCount && 
+                  source.prefix(sourceCount - 1) == destination.prefix(destCount - 1):
+            return .brus
+        
+        // Minimal line count differences
+        case let (_, _, _, _) 
+            where abs(source.split(separator: "\n").count - 
+                      destination.split(separator: "\n").count) <= 2:
+            return .brus
+        
+        // Complex transformations default to Todd algorithm
+        default:
+            return .todd
         }
-        
-        // Fallback (though this should never be reached due to the last catch-all condition)
-        return .todd
     }
     
     /// Optimized method to check if Brus algorithm is suitable
