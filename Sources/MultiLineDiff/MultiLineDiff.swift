@@ -86,14 +86,41 @@ private extension String {
     public let operations: [DiffOperation]
 }
 
+/// Represents the available diff algorithms
+@frozen public enum DiffAlgorithm {
+    /// Simple, fast diff algorithm with O(n) time complexity
+    case brus
+    /// Detailed, semantic diff algorithm with O(n log n) time complexity
+    case todd
+}
+
 /// The main entry point for the MultiLineDiff library
 @frozen public enum MultiLineDiff {
+    /// Creates a diff between two strings using the specified algorithm
+    /// - Parameters:
+    ///   - source: The original string
+    ///   - destination: The modified string
+    ///   - algorithm: The algorithm to use (defaults to .brus)
+    /// - Returns: A DiffResult containing the operations to transform source into destination
+    public static func createDiff(
+        source: String,
+        destination: String,
+        algorithm: DiffAlgorithm = .todd
+    ) -> DiffResult {
+        switch algorithm {
+        case .brus:
+            return createDiffBrus(source: source, destination: destination)
+        case .todd:
+            return createDiffTodd(source: source, destination: destination)
+        }
+    }
+    
     /// Creates a diff between two strings
     /// - Parameters:
     ///   - source: The original string
     ///   - destination: The modified string
     /// - Returns: A DiffResult containing the operations to transform source into destination
-    public static func createDiffBrus(source: String, destination: String) -> DiffResult {
+    private static func createDiffBrus(source: String, destination: String) -> DiffResult {
         // Handle empty string scenarios first
         if let emptyResult = handleEmptyStrings(source: source, destination: destination) {
             return emptyResult
@@ -144,8 +171,8 @@ private extension String {
     ///   - source: The original string
     ///   - destination: The modified string
     /// - Returns: A DiffResult containing detailed operations to transform source into destination
-    public static func createDiffTodd(source: String, destination: String) -> DiffResult {
-        // Early handling of empty or simple cases
+    private static func createDiffTodd(source: String, destination: String) -> DiffResult {
+        // Early handling of empty or simple cases using pattern matching
         switch (source.isEmpty, destination.isEmpty) {
         case (true, true):
             return .init(operations: [])
@@ -171,29 +198,27 @@ private extension String {
         let sourceLines = source.split(separator: "\n", omittingEmptySubsequences: false)
         let destLines = destination.split(separator: "\n", omittingEmptySubsequences: false)
         
-        var result = [DiffOperation]()
-        result.reserveCapacity(sourceLines.count + destLines.count)
-        
         let comparison = SequenceComparisonResult(source: sourceLines, destination: destLines)
         
-        // Track the last operation type to combine consecutive operations
-        var lastOpType: DiffOperationType? = nil
-        var currentRetainCount = 0
-        var currentDeleteCount = 0
-        var currentInsertText = ""
+        // Use more functional approach to accumulate operations
+        var result = (operations: [DiffOperation](), 
+                      lastOpType: Optional<DiffOperationType>.none, 
+                      currentRetainCount: 0, 
+                      currentDeleteCount: 0, 
+                      currentInsertText: "")
         
         // Helper to flush accumulated operations
         func flushOperations() {
-            switch (currentRetainCount, currentDeleteCount, currentInsertText.isEmpty) {
+            switch (result.currentRetainCount, result.currentDeleteCount, result.currentInsertText.isEmpty) {
             case (let retain, 0, true) where retain > 0:
-                result.append(.retain(retain))
-                currentRetainCount = 0
+                result.operations.append(.retain(retain))
+                result.currentRetainCount = 0
             case (0, let delete, true) where delete > 0:
-                result.append(.delete(delete))
-                currentDeleteCount = 0
+                result.operations.append(.delete(delete))
+                result.currentDeleteCount = 0
             case (0, 0, false):
-                result.append(.insert(currentInsertText))
-                currentInsertText = ""
+                result.operations.append(.insert(result.currentInsertText))
+                result.currentInsertText = ""
             default:
                 break
             }
@@ -206,60 +231,60 @@ private extension String {
                 let line = sourceLines[index]
                 let isLastLine = index == sourceLines.count - 1
                 
-                if lastOpType != .retain {
+                if result.lastOpType != .retain {
                     flushOperations()
                 }
                 
-                currentRetainCount += line.count
+                result.currentRetainCount += line.count
                 if !isLastLine {
-                    currentRetainCount += 1 // Add newline
+                    result.currentRetainCount += 1 // Add newline
                 }
-                lastOpType = .retain
+                result.lastOpType = .retain
                 
             case .delete(let index):
                 let line = sourceLines[index]
                 let isLastLine = index == sourceLines.count - 1
                 
-                if lastOpType != .delete {
+                if result.lastOpType != .delete {
                     flushOperations()
                 }
                 
-                currentDeleteCount += line.count
+                result.currentDeleteCount += line.count
                 if !isLastLine {
-                    currentDeleteCount += 1 // Add newline
+                    result.currentDeleteCount += 1 // Add newline
                 }
-                lastOpType = .delete
+                result.lastOpType = .delete
                 
             case .insert(let index):
                 let line = destLines[index]
                 let isLastLine = index == destLines.count - 1
                 
-                if lastOpType != .insert {
+                if result.lastOpType != .insert {
                     flushOperations()
                 }
                 
-                currentInsertText += String(line)
+                result.currentInsertText += String(line)
                 if !isLastLine {
-                    currentInsertText += "\n"
+                    result.currentInsertText += "\n"
                 }
-                lastOpType = .insert
+                result.lastOpType = .insert
             }
         }
         
-        // Flush any remaining operations
+        // Final flush of operations
         flushOperations()
         
-        // Handle trailing newlines
+        // Handle trailing newlines using pattern matching
         switch (source.hasSuffix("\n"), destination.hasSuffix("\n")) {
         case (false, true):
-            result.append(.insert("\n"))
+            result.operations.append(.insert("\n"))
         case (true, false):
-            result.append(.delete(1))
+            result.operations.append(.delete(1))
         default:
             break
         }
         
-        return DiffResult(operations: result)
+        return DiffResult(operations: result.operations)
     }
     
     /// Applies a diff to a source string
@@ -339,9 +364,11 @@ private extension String {
     /// - Returns: A base64 encoded string representing the diff operations
     /// - Throws: An error if encoding fails
     public static func createBase64Diff(source: String, destination: String, useToddAlgorithm: Bool = false) throws -> String {
-        let diff = useToddAlgorithm ? 
-            createDiffTodd(source: source, destination: destination) :
-            createDiffBrus(source: source, destination: destination)
+        let diff = createDiff(
+            source: source,
+            destination: destination,
+            algorithm: useToddAlgorithm ? .todd : .brus
+        )
         return try diffToBase64(diff)
     }
     
@@ -457,63 +484,55 @@ private extension String {
         let operations: [LineOperation]
         
         init(source: [T], destination: [T]) {
-            let lcs = Self.longestCommonSubsequence(source, destination)
+            // Handle empty cases first
+            if source.isEmpty && destination.isEmpty {
+                self.operations = []
+                return
+            }
+            if source.isEmpty {
+                self.operations = destination.indices.map { LineOperation.insert($0) }
+                return
+            }
+            if destination.isEmpty {
+                self.operations = source.indices.map { LineOperation.delete($0) }
+                return
+            }
             
-            var ops = [LineOperation]()
-            ops.reserveCapacity(max(source.count, destination.count))
+            // Calculate LCS table
+            var table = Array(repeating: Array(repeating: 0, count: destination.count + 1), 
+                            count: source.count + 1)
             
-            var (si, di, li) = (0, 0, 0)
-            while si < source.count || di < destination.count {
-                switch (li < lcs.count, si < source.count, di < destination.count) {
-                case (true, true, true) where source[si] == lcs[li] && destination[di] == lcs[li]:
-                    ops.append(.retain(si))
-                    (si, di, li) = (si + 1, di + 1, li + 1)
-                case (_, _, true) where li >= lcs.count || source.count <= si || destination[di] != lcs[li]:
-                    ops.append(.insert(di))
-                    di += 1
-                default:
-                    ops.append(.delete(si))
-                    si += 1
+            // Fill the LCS table
+            for i in 1...source.count {
+                for j in 1...destination.count {
+                    if source[i-1] == destination[j-1] {
+                        table[i][j] = table[i-1][j-1] + 1
+                    } else {
+                        table[i][j] = max(table[i-1][j], table[i][j-1])
+                    }
                 }
             }
             
-            self.operations = ops
-        }
-        
-        private static func longestCommonSubsequence(_ a: [T], _ b: [T]) -> [T] {
-            guard !a.isEmpty && !b.isEmpty else { return [] }
-            guard a.count > 1 || b.count > 1 else { return a == b ? a : [] }
+            // Generate operations by backtracking through the table
+            var operations = [LineOperation]()
+            var i = source.count
+            var j = destination.count
             
-            // Create a 2D array for dynamic programming
-            var table = [[Int]](repeating: .init(repeating: 0, count: b.count + 1), 
-                              count: a.count + 1)
-            
-            // Fill the table
-            for i in 1...a.count {
-                let aItem = a[i-1]
-                for j in 1...b.count {
-                    table[i][j] = aItem == b[j-1] ? table[i-1][j-1] + 1 : 
-                                 max(table[i-1][j], table[i][j-1])
-                }
-            }
-            
-            // Build the result
-            var result = [T]()
-            result.reserveCapacity(min(a.count, b.count))
-            
-            var (i, j) = (a.count, b.count)
-            while i > 0 && j > 0 {
-                if a[i-1] == b[j-1] {
-                    result.append(a[i-1])
-                    (i, j) = (i - 1, j - 1)
-                } else if table[i-1][j] > table[i][j-1] {
+            while i > 0 || j > 0 {
+                if i > 0 && j > 0 && source[i-1] == destination[j-1] {
+                    operations.append(.retain(i-1))
                     i -= 1
-                } else {
                     j -= 1
+                } else if j > 0 && (i == 0 || table[i][j-1] >= table[i-1][j]) {
+                    operations.append(.insert(j-1))
+                    j -= 1
+                } else if i > 0 && (j == 0 || table[i][j-1] < table[i-1][j]) {
+                    operations.append(.delete(i-1))
+                    i -= 1
                 }
             }
             
-            return result.reversed()
+            self.operations = operations.reversed()
         }
     }
     
@@ -548,13 +567,13 @@ private extension String {
             return .brus
         
         // Nearly identical strings with minimal differences
-        case let (sourceCount, destCount, _, _) 
+        case (let sourceCount, let destCount, _, _) 
             where sourceCount == destCount && 
                   source.prefix(sourceCount - 1) == destination.prefix(destCount - 1):
             return .brus
         
         // Minimal line count differences
-        case let (_, _, _, _) 
+        case (_, _, _, _) 
             where abs(source.split(separator: "\n").count - 
                       destination.split(separator: "\n").count) <= 2:
             return .brus

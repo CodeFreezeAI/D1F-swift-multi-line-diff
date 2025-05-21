@@ -1,5 +1,11 @@
 import Foundation
 import MultiLineDiff
+import Darwin
+
+// Get current timestamp in milliseconds
+func getCurrentTimeMs() -> Int64 {
+    return Int64(Date().timeIntervalSince1970 * 1000)
+}
 
 // Function to run a test and print results
 func runTest(_ name: String, _ test: () throws -> Bool) {
@@ -15,7 +21,7 @@ func runTest(_ name: String, _ test: () throws -> Bool) {
 
 // Test empty strings
 runTest("Empty Strings") {
-    let result = MultiLineDiff.createDiffBrus(source: "", destination: "")
+    let result = MultiLineDiff.createDiff(source: "", destination: "")
     return result.operations.isEmpty
 }
 
@@ -24,7 +30,7 @@ runTest("Source Only") {
     let source = "Hello, world!"
     let destination = ""
     
-    let result = MultiLineDiff.createDiffBrus(source: source, destination: destination)
+    let result = MultiLineDiff.createDiff(source: source, destination: destination)
     
     guard result.operations.count == 1 else { return false }
     if case .delete(let count) = result.operations[0] {
@@ -38,7 +44,7 @@ runTest("Destination Only") {
     let source = ""
     let destination = "Hello, world!"
     
-    let result = MultiLineDiff.createDiffBrus(source: source, destination: destination)
+    let result = MultiLineDiff.createDiff(source: source, destination: destination)
     
     guard result.operations.count == 1 else { return false }
     if case .insert(let text) = result.operations[0] {
@@ -52,7 +58,7 @@ runTest("Single-Line Changes") {
     let source = "Hello, world!"
     let destination = "Hello, Swift!"
     
-    let result = MultiLineDiff.createDiffBrus(source: source, destination: destination)
+    let result = MultiLineDiff.createDiff(source: source, destination: destination)
     let applied = try MultiLineDiff.applyDiff(to: source, diff: result)
     
     return applied == destination
@@ -73,7 +79,7 @@ runTest("Multi-Line Changes") {
     Line 4
     """
     
-    let result = MultiLineDiff.createDiffBrus(source: source, destination: destination)
+    let result = MultiLineDiff.createDiff(source: source, destination: destination)
     let applied = try MultiLineDiff.applyDiff(to: source, diff: result)
     
     return applied == destination
@@ -84,7 +90,7 @@ runTest("Unicode Content") {
     let source = "Hello, 世界!"
     let destination = "Hello, 世界! 🚀"
     
-    let result = MultiLineDiff.createDiffBrus(source: source, destination: destination)
+    let result = MultiLineDiff.createDiff(source: source, destination: destination)
     let applied = try MultiLineDiff.applyDiff(to: source, diff: result)
     
     return applied == destination
@@ -106,7 +112,7 @@ runTest("Round Trip Tests") {
     
     for (source, destination) in testCases {
         print("  Testing: \"\(source)\" -> \"\(destination)\"")
-        let diff = MultiLineDiff.createDiffBrus(source: source, destination: destination)
+        let diff = MultiLineDiff.createDiff(source: source, destination: destination)
         let result = try MultiLineDiff.applyDiff(to: source, diff: diff)
         if result != destination {
             print("  ❌ Round trip failed: \"\(result)\" != \"\(destination)\"")
@@ -288,7 +294,7 @@ func demonstrateCodeFileDiff() {
         let originalCodeContent = try String(contentsOf: originalFileURL, encoding: .utf8)
         let updatedCodeContent = try String(contentsOf: updatedFileURL, encoding: .utf8)
         
-        let diff = MultiLineDiff.createDiffBrus(source: originalCodeContent, destination: updatedCodeContent)
+        let diff = MultiLineDiff.createDiff(source: originalCodeContent, destination: updatedCodeContent)
         print("  Created diff with \(diff.operations.count) operations")
         
         // Save diff to file
@@ -464,7 +470,7 @@ func demonstrateLargeFileDiffWithPatterns() {
         print("  Created original and modified large files")
         
         // Create the diff
-        let diff = MultiLineDiff.createDiffBrus(source: originalContent, destination: modifiedContent)
+        let diff = MultiLineDiff.createDiff(source: originalContent, destination: modifiedContent)
         
         // Collect statistics on the diff
         var insertCount = 0
@@ -526,8 +532,8 @@ func demonstrateLargeFileDiffWithPatterns() {
 demonstrateCodeFileDiff()
 demonstrateLargeFileDiffWithPatterns()
 
-// Example: Comparing brus vs. Todd diff algorithm
-func demonstrateToddDiff() {
+// Example: Comparing Brus vs. Todd diff algorithm
+func demonstrateAlgorithmComparison() {
     print("\nComparing Brus vs. Todd Diff Algorithms:")
     
     do {
@@ -555,7 +561,7 @@ func demonstrateToddDiff() {
         
         // Helper functions
         func validateEmail(_ email: String) -> Bool {
-            // Brus validation
+            // Basic validation
             return email.contains("@")
         }
         
@@ -576,57 +582,43 @@ func demonstrateToddDiff() {
             var name: String
             var email: String
             var age: Int
-            var isActive: Bool = true
+            var avatar: UIImage?
             
-            init(name: String, email: String, age: Int, isActive: Bool = true) {
+            init(name: String, email: String, age: Int, avatar: UIImage? = nil) {
                 self.id = UUID()
-                self.name = name.trimmingCharacters(in: .whitespacesAndNewlines)
-                self.email = email.lowercased()
-                self.age = max(0, age)
-                self.isActive = isActive
+                self.name = name
+                self.email = email
+                self.age = age
+                self.avatar = avatar
             }
             
             func greet() -> String {
-                if isActive {
-                    return "Hello, my name is \\(name)!"
-                } else {
-                    return "Account inactive"
-                }
+                return "👋 Hello, my name is \\(name)!"
             }
             
-            func toJSON() -> [String: Any] {
-                return [
-                    "id": id.uuidString,
-                    "name": name,
-                    "email": email,
-                    "age": age,
-                    "isActive": isActive
-                ]
+            func updateAvatar(_ newAvatar: UIImage) {
+                self.avatar = newAvatar
             }
         }
         
         // Helper functions
         func validateEmail(_ email: String) -> Bool {
-            // Improved validation
-            let emailRegex = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\\\.[A-Za-z]{2,}"
-            let emailPredicate = NSPredicate(format: "SELF MATCHES %@", emailRegex)
+            // Enhanced validation
+            let emailRegex = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
+            let emailPredicate = NSPredicate(format:"SELF MATCHES %@", emailRegex)
             return emailPredicate.evaluate(with: email)
         }
         
-        func createUser(name: String, email: String, age: Int, isActive: Bool = true) -> User? {
+        func createUser(name: String, email: String, age: Int, avatar: UIImage? = nil) -> User? {
             guard validateEmail(email) else {
                 return nil
             }
-            guard age >= 0 else {
-                return nil
-            }
-            return User(name: name, email: email, age: age, isActive: isActive)
+            return User(name: name, email: email, age: age, avatar: avatar)
         }
         """
         
-        // Create temporary directory
         let fileManager = FileManager.default
-        let tempDirURL = fileManager.temporaryDirectory.appendingPathComponent("MultiLineDiffToddDemo-\(UUID().uuidString)")
+        let tempDirURL = fileManager.temporaryDirectory.appendingPathComponent("MultiLineDiffDemo-\(UUID().uuidString)")
         
         // Create directory
         try fileManager.createDirectory(at: tempDirURL, withIntermediateDirectories: true)
@@ -640,8 +632,8 @@ func demonstrateToddDiff() {
         try modifiedCode.data(using: .utf8)?.write(to: modifiedFileURL)
         
         // Create diffs with both algorithms
-        let brusDiff = MultiLineDiff.createDiffBrus(source: sourceCode, destination: modifiedCode)
-        let toddDiff = MultiLineDiff.createDiffTodd(source: sourceCode, destination: modifiedCode)
+        let brusDiff = MultiLineDiff.createDiff(source: sourceCode, destination: modifiedCode, algorithm: .brus)
+        let toddDiff = MultiLineDiff.createDiff(source: sourceCode, destination: modifiedCode, algorithm: .todd)
         
         // Save diffs to files
         let brusDiffFileURL = tempDirURL.appendingPathComponent("brus_diff.json")
@@ -707,69 +699,86 @@ func demonstrateToddDiff() {
     }
 }
 
-// Execute the Todd diff comparison
-demonstrateToddDiff()
-
-// Function to demonstrate base64 diff functionality
-func demonstrateBase64Diff() {
-    print("\nDemonstrating Base64 Diff Operations:")
-    
-    let source = """
-    class Example {
-        func greet() {
-            print("Hello")
-        }
-    }
-    """
-    
-    let destination = """
-    class Example {
-        // Added documentation
-        func greet(name: String) {
-            print("Hello, \\(name)!")
-        }
-    }
-    """
-    
-    do {
-        // Create base64 diff
-        let base64Diff = try MultiLineDiff.createBase64Diff(source: source, destination: destination)
-        print("\n  Base64 diff created:")
-        print("  - Length: \(base64Diff.count) characters")
-        print("  - Diff: \(base64Diff)")
-        
-        // Apply base64 diff
-        let result = try MultiLineDiff.applyBase64Diff(to: source, base64Diff: base64Diff)
-        let success = result == destination
-        
-        print("\n  Applied base64 diff:")
-        print("  - Success: \(success ? "✅" : "❌")")
-        
-        // Compare with JSON format
-        let diff = MultiLineDiff.createDiffBrus(source: source, destination: destination)
-        let jsonString = try MultiLineDiff.encodeDiffToJSONString(diff)
-        
-        print("\n  Format comparison:")
-        print("  - Base64 length: \(base64Diff.count)")
-        print("  - JSON length: \(jsonString.count)")
-        print("  - Size reduction: \(Int((1 - Double(base64Diff.count) / Double(jsonString.count)) * 100))%")
-        
-    } catch {
-        print("  ❌ ERROR: \(error)")
-    }
-}
-
 // Run all demonstrations
 print("=== MultiLineDiff Demonstrations ===\n")
 
-print("1. File-based diff operations:")
-demonstrateCodeFileDiff()
+print("1. Basic diff operations:")
+runTest("Basic Diff Operations") {
+    let source = "Hello, world!"
+    let destination = "Hello, Swift!"
+    
+    let diff = MultiLineDiff.createDiff(source: source, destination: destination)
+    let result = try MultiLineDiff.applyDiff(to: source, diff: diff)
+    
+    return result == destination
+}
 
-print("\n2. Large file handling:")
-demonstrateLargeFileDiffWithPatterns()
+print("\n2. Algorithm comparison (Brus vs Todd):")
+demonstrateAlgorithmComparison()
 
-print("\n3. Algorithm comparison (Brus vs Todd):")
-demonstrateToddDiff()
+print("\n3. Base64 operations:")
+runTest("Base64 Diff Operations") {
+    let source = "Hello, world!"
+    let destination = "Hello, Swift!"
+    
+    // Test both algorithms
+    for algorithm in [DiffAlgorithm.brus, .todd] {
+        let base64Diff = try MultiLineDiff.createBase64Diff(
+            source: source,
+            destination: destination,
+            useToddAlgorithm: algorithm == .todd
+        )
+        let result = try MultiLineDiff.applyBase64Diff(
+            to: source,
+            base64Diff: base64Diff,
+            useToddAlgorithm: algorithm == .todd
+        )
+        
+        if result != destination {
+            print("❌ \(algorithm) algorithm failed")
+            return false
+        }
+    }
+    
+    return true
+}
 
-print("\n4. Base64 operations:")
-demonstrateBase64Diff() 
+// Main execution with timing
+func main() {
+    let startTime = getCurrentTimeMs()
+    print("🚀 MultiLineDiff Runner Started at: \(Date())")
+    print("-----------------------------------")
+    
+    // Test empty strings
+    runTest("Empty Strings") {
+        let result = MultiLineDiff.createDiff(source: "", destination: "")
+        return result.operations.isEmpty
+    }
+    
+    // Test source only
+    runTest("Source Only") {
+        let source = "Hello, world!"
+        let destination = ""
+        
+        let result = MultiLineDiff.createDiff(source: source, destination: destination)
+        
+        guard result.operations.count == 1 else { return false }
+        if case .delete(let count) = result.operations[0] {
+            return count == source.count
+        }
+        return false
+    }
+    
+    let endTime = getCurrentTimeMs()
+    let totalExecutionTime = Double(endTime - startTime) / 1000.0
+    
+    print("-----------------------------------")
+    print("🏁 MultiLineDiff Runner Completed")
+    print("Start Time: \(Date(timeIntervalSince1970: Double(startTime) / 1000.0))")
+    print("End Time: \(Date(timeIntervalSince1970: Double(endTime) / 1000.0))")
+    print("Total Execution Time: \(String(format: "%.3f", totalExecutionTime)) seconds")
+}
+
+// Run the main function
+main() 
+

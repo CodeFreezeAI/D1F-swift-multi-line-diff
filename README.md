@@ -1,4 +1,4 @@
-# Swift Multi Line Diff 1.0.5
+# Swift Multi Line Diff 1.0.6
 
 ## Overview
 

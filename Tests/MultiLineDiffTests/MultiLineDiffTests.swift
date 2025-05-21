@@ -7,7 +7,7 @@ import Foundation
 }
 
 @Test func testCreateDiffWithEmptyStrings() throws {
-    let result = MultiLineDiff.createDiffBrus(source: "", destination: "")
+    let result = MultiLineDiff.createDiff(source: "", destination: "")
     #expect(result.operations.isEmpty)
 }
 
@@ -15,7 +15,7 @@ import Foundation
     let source = "Hello, world!"
     let destination = ""
     
-    let result = MultiLineDiff.createDiffBrus(source: source, destination: destination)
+    let result = MultiLineDiff.createDiff(source: source, destination: destination)
     
     #expect(result.operations.count == 1)
     if case .delete(let count) = result.operations[0] {
@@ -29,7 +29,7 @@ import Foundation
     let source = ""
     let destination = "Hello, world!"
     
-    let result = MultiLineDiff.createDiffBrus(source: source, destination: destination)
+    let result = MultiLineDiff.createDiff(source: source, destination: destination)
     
     #expect(result.operations.count == 1)
     if case .insert(let text) = result.operations[0] {
@@ -43,7 +43,7 @@ import Foundation
     let source = "Hello, world!"
     let destination = "Hello, Swift!"
     
-    let result = MultiLineDiff.createDiffBrus(source: source, destination: destination)
+    let result = MultiLineDiff.createDiff(source: source, destination: destination)
     
     // Expected operations: retain "Hello, ", delete "world", insert "Swift", retain "!"
     #expect(result.operations.count == 4)
@@ -93,7 +93,7 @@ import Foundation
      }
     """
     
-    let result = MultiLineDiff.createDiffBrus(source: source, destination: destination)
+    let result = MultiLineDiff.createDiff(source: source, destination: destination)
     
     print(result)
     
@@ -105,7 +105,7 @@ import Foundation
 }
 
 @Test func testApplyDiffWithEmptyStrings() throws {
-    let result = MultiLineDiff.createDiffBrus(source: "", destination: "")
+    let result = MultiLineDiff.createDiff(source: "", destination: "")
     let applied = try MultiLineDiff.applyDiff(to: "", diff: result)
     #expect(applied == "")
 }
@@ -114,7 +114,7 @@ import Foundation
     let source = "Hello, world!"
     let destination = ""
     
-    let result = MultiLineDiff.createDiffBrus(source: source, destination: destination)
+    let result = MultiLineDiff.createDiff(source: source, destination: destination)
     let applied = try MultiLineDiff.applyDiff(to: source, diff: result)
     
     #expect(applied == destination)
@@ -124,7 +124,7 @@ import Foundation
     let source = ""
     let destination = "Hello, world!"
     
-    let result = MultiLineDiff.createDiffBrus(source: source, destination: destination)
+    let result = MultiLineDiff.createDiff(source: source, destination: destination)
     let applied = try MultiLineDiff.applyDiff(to: source, diff: result)
     
     #expect(applied == destination)
@@ -134,7 +134,7 @@ import Foundation
     let source = "Hello, world!"
     let destination = "Hello, Swift!"
     
-    let result = MultiLineDiff.createDiffBrus(source: source, destination: destination)
+    let result = MultiLineDiff.createDiff(source: source, destination: destination)
     let applied = try MultiLineDiff.applyDiff(to: source, diff: result)
     
     #expect(applied == destination)
@@ -155,7 +155,7 @@ import Foundation
     Line 4
     """
     
-    let result = MultiLineDiff.createDiffBrus(source: source, destination: destination)
+    let result = MultiLineDiff.createDiff(source: source, destination: destination)
     print(result)
     let applied = try MultiLineDiff.applyDiff(to: source, diff: result)
     print(applied)
@@ -166,7 +166,7 @@ import Foundation
     let source = "Hello, 世界 !"
     let destination = "Hello, 世界!\n🚀"
     
-    let result = MultiLineDiff.createDiffBrus(source: source, destination: destination)
+    let result = MultiLineDiff.createDiff(source: source, destination: destination)
     print(result)
     let applied = try MultiLineDiff.applyDiff(to: source, diff: result)
     print(applied)
@@ -197,7 +197,7 @@ import Foundation
     ]
     
     for (source, destination) in testCases {
-        let diff = MultiLineDiff.createDiffBrus(source: source, destination: destination)
+        let diff = MultiLineDiff.createDiff(source: source, destination: destination)
         let result = try MultiLineDiff.applyDiff(to: source, diff: diff)
         #expect(result == destination, "Round trip failed for source: \(source), destination: \(destination)")
     }
@@ -253,7 +253,7 @@ import Foundation
     let modifiedFromFile = try testFiles.readFile(modifiedFileURL)
     
     // Create diff
-    let diff = MultiLineDiff.createDiffBrus(source: sourceFromFile, destination: modifiedFromFile)
+    let diff = MultiLineDiff.createDiff(source: sourceFromFile, destination: modifiedFromFile)
     
     // Save diff to file
     try MultiLineDiff.saveDiffToFile(diff, fileURL: diffFileURL)
@@ -264,15 +264,51 @@ import Foundation
     
     // Apply diff
     let result = try MultiLineDiff.applyDiff(to: sourceFromFile, diff: diff)
+    #expect(result == modifiedFromFile, "Applied diff should match modified code")
+}
+
+@Test func testAlgorithmComparison() throws {
+    // Test case with various types of changes
+    let source = """
+    Line 1: This is unchanged
+    Line 2: This will be modified
+    Line 3: This will be deleted
+    Line 4: This stays the same
+    Line 5: This is the final line
+    """
     
-    // Write result to output file
-    let outputFileURL = try testFiles.createFile(named: "output_code.swift", content: result)
+    let destination = """
+    Line 1: This is unchanged
+    Line 2: This has been MODIFIED
+    Line 4: This stays the same
+    New line: This is inserted
+    Line 5: This is the final line
+    """
     
-    // Read back the output and verify
-    let outputFromFile = try testFiles.readFile(outputFileURL)
+    // Create diffs with both algorithms
+    let brusDiff = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .brus)
+    let toddDiff = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .todd)
     
-    // Verify
-    #expect(outputFromFile == modifiedFromFile, "Output from applying diff should match the modified file")
+    // Apply both diffs
+    let brusResult = try MultiLineDiff.applyDiff(to: source, diff: brusDiff)
+    let toddResult = try MultiLineDiff.applyDiff(to: source, diff: toddDiff)
+    
+    // Verify both results match the destination
+    #expect(brusResult == destination, "Brus algorithm diff should match the destination")
+    #expect(toddResult == destination, "Todd algorithm diff should match the destination")
+    
+    // Count operations for both algorithms
+    let brusOpCounts = countOperations(brusDiff)
+    let toddOpCounts = countOperations(toddDiff)
+    
+    // Both should have sufficient operations to handle the changes
+    #expect(brusOpCounts.retainCount >= 2, "Brus should have multiple retain operations")
+    #expect(brusOpCounts.insertCount >= 1, "Brus should have at least one insert operation")
+    #expect(brusOpCounts.deleteCount >= 1, "Brus should have at least one delete operation")
+    
+    #expect(toddOpCounts.retainCount >= 2, "Todd should have multiple retain operations")
+    #expect(toddOpCounts.insertCount >= 1, "Todd should have at least one insert operation")
+    #expect(toddOpCounts.deleteCount >= 1, "Todd should have at least one delete operation")
 }
 
 @Test func testCodeModificationDiff() throws {
@@ -303,7 +339,7 @@ import Foundation
     """
     
     // Create diff
-    let diff = MultiLineDiff.createDiffBrus(source: originalFunction, destination: modifiedFunction)
+    let diff = MultiLineDiff.createDiff(source: originalFunction, destination: modifiedFunction)
     
     // Apply diff
     let result = try MultiLineDiff.applyDiff(to: originalFunction, diff: diff)
@@ -519,7 +555,7 @@ import Foundation
     try modifiedContent.data(using: .utf8)?.write(to: modifiedFileURL)
     
     // Create diff
-    let diff = MultiLineDiff.createDiffBrus(source: originalContent, destination: modifiedContent)
+    let diff = MultiLineDiff.createDiff(source: originalContent, destination: modifiedContent)
     
     // Verify diff operations contain the expected changes
     let opCounts = countOperations(diff)
@@ -614,7 +650,7 @@ private func generateDiffStats(_ diff: DiffResult) -> (insertedLines: Int, delet
     """
     
     // Create diff with more granular Todd algorithm
-    let diff = MultiLineDiff.createDiffTodd(source: source, destination: destination)
+    let diff = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .todd)
     
     // Apply diff
     let applied = try MultiLineDiff.applyDiff(to: source, diff: diff)
@@ -689,7 +725,7 @@ private func generateDiffStats(_ diff: DiffResult) -> (insertedLines: Int, delet
     """
     
     // Create diff with Todd algorithm
-    let diff = MultiLineDiff.createDiffTodd(source: source, destination: destination)
+    let diff = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .todd)
     
     // Apply diff
     let applied = try MultiLineDiff.applyDiff(to: source, diff: diff)
@@ -698,7 +734,7 @@ private func generateDiffStats(_ diff: DiffResult) -> (insertedLines: Int, delet
     #expect(applied == destination, "Todd diff should correctly handle complex changes")
     
     // Compare with brus algorithm
-    let brusDiff = MultiLineDiff.createDiffBrus(source: source, destination: destination)
+    let brusDiff = MultiLineDiff.createDiff(source: source, destination: destination)
     
     print("Todd operations count: \(diff.operations.count)")
     print("Brus operations count: \(brusDiff.operations.count)")
