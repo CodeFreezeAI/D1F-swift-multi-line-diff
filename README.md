@@ -60,11 +60,11 @@ MultiLineDiff uses base64 encoding for several critical reasons:
 
 | Metric | Complexity | Explanation | Visual Representation |
 |--------|------------|-------------|----------------------|
-| **Time Complexity** | O(n) | Linear time complexity | 🟢🟢⚪ Low |
-| **Space Complexity** | O(1) | Constant space usage | 🟢🟢⚪ Min Memory |
-| **Best Case** | Ω(1) | Minimal changes between strings | 🟢🟢⚪ Fast |
-| **Worst Case** | O(n) | Complete string replacement | 🟠🟡⚪ Ok |
-| **Average Case** | Θ(n) | Proportional to input string length | 🟢🟡⚪ Logical |
+| **Time Complexity** | O(n) | Linear time complexity | 🟢🟢🟢 Low |
+| **Space Complexity** | O(1) | Constant space usage | 🟢🟢🟡 Moderate |
+| **Best Case** | Ω(1) | Minimal changes between strings | 🟢🟢🟢 Fast |
+| **Worst Case** | O(n) | Complete string replacement | 🟠🟡🟡 Ok |
+| **Average Case** | Θ(n) | Proportional to input string length | 🟢🟡🟡 Logical |
 
 #### Performance Gradient
 ```
@@ -77,16 +77,16 @@ Speed:          🟢🟢🟢
 
 | Metric | Complexity | Explanation | Visual Representation |
 |--------|------------|-------------|----------------------|
-| **Time Complexity** | O(n log n) | Logarithmic-linear time complexity | 🟠🟡🟡 (Moderate Complexity) |
-| **Space Complexity** | O(n) | Linear space usage | 🟠🟡⚪ (Moderate Memory) |
-| **Best Case** | Ω(n) | Minimal structural changes | 🟢🟡⚪ (Efficient) |
-| **Worst Case** | O(n²) | Highly complex text transformations | 🔴🔴🟠 (High Complexity) |
-| **Average Case** | Θ(n log n) | Semantic analysis overhead | 🟠🟡🟡 (Moderate Performance) |
+| **Time Complexity** | O(n log n) | Logarithmic-linear time complexity | 🟠🟡🟡 Moderate |
+| **Space Complexity** | O(n) | Linear space usage | 🟠🟡🟡 Moderate |
+| **Best Case** | Ω(n) | Minimal structural changes | 🟢🟡🟡 Efficient |
+| **Worst Case** | O(n²) | Highly complex text transformations | 🔴🔴🟠 High |
+| **Average Case** | Θ(n log n) | Semantic analysis overhead | 🟠🟡🟡 Moderate |
 
 #### Performance Gradient
 ```
 Complexity:     🟠🟡🟡
-Memory Usage:   🟠🟡⚪
+Memory Usage:   🟠🟡🟡
 Speed:          🟠🟡🟡
 ```
 
@@ -95,7 +95,6 @@ Speed:          🟠🟡🟡
 ```
 Brus Algorithm:  🟢🟢🟢
 Todd Algorithm:  🟠🟡🟡
-                 ↑ Speed   ↑ Memory   ↑ Complexity
 ```
 
 ## 📦 Usage Examples
