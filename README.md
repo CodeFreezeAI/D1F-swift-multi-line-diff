@@ -28,9 +28,9 @@ A Swift library for creating and applying diffs to multi-line text content. Supp
 
 | Metric | MultiLineDiff | Traditional Diff Libraries |
 |--------|---------------|----------------------------|
-| Speed | Ultra-Fast | Slower |
-| Memory Usage | Low | Higher |
-| Scalability | Excellent | Limited |
+| Speed | ⚡️ Ultra-Fast | 🐌 Slower |
+| Memory Usage | 💡 Low | 🧠 Higher |
+| Scalability | 🚀 Excellent | 📉 Limited |
 
 ## 📦 Diff Representation Formats
 
