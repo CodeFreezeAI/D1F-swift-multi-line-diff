@@ -66,13 +66,6 @@ class Example {
 // Create diff operations
 let diffOperations = MultiLineDiff.createDiff(source: sourceCode, destination: destinationCode)
 
-// Diff Operations Breakdown
-print("Diff Operations:")
-// Typical output might look like:
-// 1. Retain first 15 characters of the class definition
-// 2. Delete "oldMethod" and insert "newMethod"
-// 3. Delete old print statement and insert new one
-
 // Apply the diff operations
 let result = try MultiLineDiff.applyDiff(to: sourceCode, diff: diffOperations)
 
@@ -81,13 +74,6 @@ assert(result == destinationCode, "Applied diff should match destination code")
 ```
 
 ### Base64 Diff Decoding Example
-
-```swift
-// Create Base64 encoded diff
-let base64Diff = try MultiLineDiff.createBase64Diff(
-    source: sourceCode, 
-    destination: destinationCode
-)
 
 // Decode Base64 Diff
 func decodeBase64Diff(_ base64String: String) -> String {
@@ -100,41 +86,6 @@ func decodeBase64Diff(_ base64String: String) -> String {
 
 // Example of Base64 Diff Decoding
 let decodedDiffOperations = decodeBase64Diff(base64Diff)
-print("Decoded Diff:")
-print(decodedDiffOperations)
-
-// Typical decoded output might look like:
-// [
-//   {"retain": 15},
-//   {"delete": 9},
-//   {"insert": "newMethod() {\n        print(\"Hello, World!\")\n    }"}
-// ]
-
-let reconstructedCode = try MultiLineDiff.applyBase64Diff(to: sourceCode, base64Diff: base64Diff)
-```
-
-### Diff Visualization
-
-```
-Original Code:
-class Example {
-    func oldMethod() {
-        print("Hello")
-    }
-}
-
-Diff Operations:
-1. ✅ Retain "class Example {\n    "  (15 chars)
-2. 🔄 Delete "oldMethod" and insert "newMethod"
-3. 🔄 Delete old print statement and insert new one
-
-Transformed Code:
-class Example {
-    func newMethod() {
-        print("Hello, World!")
-    }
-}
-```
 
 ## 🔍 Diff Operation Insights
 
