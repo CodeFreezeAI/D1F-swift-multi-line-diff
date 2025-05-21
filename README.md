@@ -146,6 +146,8 @@ assert(reconstructedCode == destinationCode, "Diff application failed")
 
 ## 🔍 Diff Operation Insights
 
+### Operation Types
+
 | Operation | Symbol | Meaning |
 |-----------|--------|---------|
 | Retain    | ✅ | Keep existing content |
@@ -153,11 +155,37 @@ assert(reconstructedCode == destinationCode, "Diff application failed")
 | Insert    | ➕ | Add new content |
 | Replace   | 🔄 | Swap out content |
 
-### Real-World Diff Complexity
+### Basic Examples
 
 ```swift
-// Complex multi-line transformation example
-let complexSource = """
+Source:      "Hello, world!"
+Destination: "Hello, Swift!"
+Operations:   ✅✅✅✅✅✅ 🔄     // "Hello, " retained, "world" replaced with "Swift"
+```
+
+### Multi-Line Example
+
+```swift
+// Source
+func oldMethod() {
+    print("Hello")
+}
+
+// Destination
+func newMethod() {
+    print("Hello, World!")
+}
+
+// Operations:
+func ✅🔄✅ () {          // "func " retained, "old" → "new", "Method" retained
+    🔄                   // print statement replaced
+}✅                      // closing brace retained
+```
+
+### Real-World Complex Example (Algorithm Comparison)
+
+```swift
+// Source Code
 func calculateTotal(items: [Product]) -> Double {
     var total = 0.0
     for item in items {
@@ -165,17 +193,83 @@ func calculateTotal(items: [Product]) -> Double {
     }
     return total
 }
-"""
 
-let complexDestination = """
+// Destination Code
 func calculateTotal(items: [Product]) -> Double {
     return items.reduce(0.0) { $0 + $1.price }
 }
-"""
 
-// Diff operations will show:
-// 1. Retain function signature
-// 2. Replace entire function body with functional approach
+// Todd Algorithm (.todd) - Semantic Understanding
+┌─ Analysis
+│ ✅ Signature preserved (semantic match)
+│ 🔄 Loop construct transformed to functional approach
+│ ❌ Imperative accumulator removed
+│ ➕ Functional reduce operation added
+└─ Result: More granular, semantic-aware changes
+
+// Brus Algorithm (.brus) - Character-based
+┌─ Analysis
+│ ✅ Matching prefix
+│ ❌ Bulk content removal
+│ ➕ New content insertion
+│ ✅ Matching suffix
+└─ Result: Simpler, character-based changes
+
+// Visual Comparison
+Todd Algorithm:
+┌─ Signature
+│ func calculateTotal(items: [Product]) -> Double {
+│ ✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅
+└─ Semantic preservation
+
+┌─ Implementation
+│ ❌ var total = 0.0
+│ ❌ for item in items {
+│ ❌     total += item.price
+│ ❌ }
+│ ❌ return total
+│ ➕ return items.reduce(0.0) { $0 + $1.price }
+└─ Semantic transformation
+
+Brus Algorithm:
+┌─ Content
+│ ✅ func calculateTotal(items: [Product]) -> Double {
+│ ❌ [entire old implementation]
+│ ➕ [entire new implementation]
+│ ✅ }
+└─ Character-based changes
+
+// Performance Impact
+Todd (.todd):
+- More operations but semantically meaningful
+- Better for code refactoring
+- Preserves code structure
+
+Brus (.brus):
+- Fewer operations but less granular
+- Better for simple text changes
+- Faster for basic transformations
+```
+
+### When to Use Each Algorithm
+
+```swift
+// Automatic algorithm selection
+let algorithm = MultiLineDiff.suggestDiffAlgorithm(
+    source: sourceCode,
+    destination: destinationCode
+)
+
+// Result will be:
+// .todd for:
+// - Code refactoring
+// - Semantic changes
+// - Structure preservation
+
+// .brus for:
+// - Simple text changes
+// - Performance critical operations
+// - Character-based modifications
 ```
 
 ## 🚀 Why Base64?
