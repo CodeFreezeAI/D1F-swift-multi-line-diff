@@ -453,6 +453,18 @@ import Foundation
     // Save result
     try result.data(using: .utf8)?.write(to: outputFileURL)
     
+    // Diagnostic information
+    print("Original content length: \(originalContent.count)")
+    print("Modified content length: \(modifiedContent.count)")
+    print("Result content length: \(result.count)")
+    print("Diff operations count: \(loadedDiff.operations.count)")
+    
+    // Print first few diff operations for debugging
+    print("First 10 diff operations:")
+    for (index, op) in loadedDiff.operations.prefix(10).enumerated() {
+        print("\(index): \(op.description)")
+    }
+    
     // Verify result matches modified content
     #expect(result == modifiedContent, "Output from applying diff should match the modified content")
     
@@ -607,6 +619,54 @@ private func generateDiffStats(_ diff: DiffResult) -> (insertedLines: Int, delet
     let maxOps = min(5, diff.operations.count)
     for i in 0..<maxOps {
         print("Todd op \(i): \(diff.operations[i].description)")
+    }
+}
+
+@Test func testDiffOperationJSONEncoding() throws {
+    // Create a diff with various operations
+    let operations: [DiffOperation] = [
+        .retain(10),
+        .delete(5),
+        .insert("Hello, world!"),
+        .retain(3)
+    ]
+    
+    let diff = DiffResult(operations: operations)
+    
+    // Encode to JSON string
+    let jsonString = try MultiLineDiff.encodeDiffToJSONString(diff)
+    
+    print("JSON Encoding Test:")
+    print("JSON String: \(jsonString)")
+    
+    // Verify JSON structure
+    #expect(jsonString.contains("operations"), "Should contain 'operations' key")
+    #expect(jsonString.contains("retain"), "Should contain 'retain' key")
+    #expect(jsonString.contains("delete"), "Should contain 'delete' key")
+    #expect(jsonString.contains("insert"), "Should contain 'insert' key")
+    
+    // Decode back
+    let decodedDiff = try MultiLineDiff.decodeDiffFromJSONString(jsonString)
+    
+    // Verify operations match
+    #expect(decodedDiff.operations.count == diff.operations.count, "Operation count should match")
+    
+    for (index, op) in diff.operations.enumerated() {
+        let decodedOp = decodedDiff.operations[index]
+        
+        switch (op, decodedOp) {
+        case (.retain(let count1), .retain(let count2)):
+            #expect(count1 == count2, "Retain count should match")
+            
+        case (.insert(let text1), .insert(let text2)):
+            #expect(text1 == text2, "Insert text should match")
+            
+        case (.delete(let count1), .delete(let count2)):
+            #expect(count1 == count2, "Delete count should match")
+            
+        default:
+            throw TestError("Operation types don't match at index \(index)")
+        }
     }
 }
 

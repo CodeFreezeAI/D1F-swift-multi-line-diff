@@ -19,6 +19,38 @@ import Foundation
         case .delete(let count): "delete \(count) character\(count.isPlural ? "s" : "")"
         }
     }
+    
+    // Custom Codable implementation to preserve operation type
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        if let retainValue = try? container.decode(Int.self, forKey: .retain) {
+            self = .retain(retainValue)
+        } else if let insertValue = try? container.decode(String.self, forKey: .insert) {
+            self = .insert(insertValue)
+        } else if let deleteValue = try? container.decode(Int.self, forKey: .delete) {
+            self = .delete(deleteValue)
+        } else {
+            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Cannot decode DiffOperation"))
+        }
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        
+        switch self {
+        case .retain(let count):
+            try container.encode(count, forKey: .retain)
+        case .insert(let text):
+            try container.encode(text, forKey: .insert)
+        case .delete(let count):
+            try container.encode(count, forKey: .delete)
+        }
+    }
+    
+    private enum CodingKeys: String, CodingKey {
+        case retain, insert, delete
+    }
 }
 
 private extension Int {
