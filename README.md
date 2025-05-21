@@ -106,6 +106,11 @@ print(decodedDiffOperations)
 //   {"retain": 15},
 //   {"replace": "newMethod() {\n        print(\"Hello, World!\")\n    }"}
 // ]
+
+let reconstructedCode = try MultiLineDiff.applyBase64Diff(
+    to: sourceCode, 
+    base64Diff: base64Diff
+)
 ```
 
 ### Diff Visualization
@@ -119,9 +124,9 @@ class Example {
 }
 
 Diff Operations:
-1. ✅ Retain "class Example {\n    "  (15 chars)
-2. 🔄 Replace "func oldMethod()" with "func newMethod()"
-3. 🔄 Replace print statement with more detailed version
+1. ==== Retain "class Example {\n    "  (15 chars)
+2. ~~~~ Replace "func oldMethod()" with "func newMethod()"
+3. ~~~~ Replace print statement with more detailed version
 
 Transformed Code:
 class Example {
@@ -129,19 +134,6 @@ class Example {
         print("Hello, World!")
     }
 }
-```
-
-### Practical Diff Decoding
-
-```swift
-// Full decoding and application process
-let reconstructedCode = try MultiLineDiff.applyBase64Diff(
-    to: sourceCode, 
-    base64Diff: base64Diff
-)
-
-// Verify the transformation
-assert(reconstructedCode == destinationCode, "Diff application failed")
 ```
 
 ## 🔍 Diff Operation Insights
@@ -189,7 +181,7 @@ Operation:    ====== ~~~~     // "Hello, " retained, "world" replaced
 └─────────────────
 ```
 
-### Real-World Complex Example
+### More Complex Example
 
 ```swift
 ┌─ Source
