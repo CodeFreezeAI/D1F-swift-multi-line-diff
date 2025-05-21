@@ -39,13 +39,8 @@ public struct DiffResult: Equatable, Codable {
 /// The main entry point for the MultiLineDiff library
 public enum MultiLineDiff {
     
-    /// Creates a diff between two strings
-    /// - Parameters:
-    ///   - source: The original string
-    ///   - destination: The modified string
-    /// - Returns: A DiffResult containing the operations to transform source into destination
-    public static func createDiffBrus(source: String, destination: String) -> DiffResult {
-        // Handle empty string cases specially for efficiency
+    /// Handle empty string cases for both diff algorithms
+    private static func handleEmptyStrings(source: String, destination: String) -> DiffResult? {
         if source.isEmpty && destination.isEmpty {
             return DiffResult(operations: [])
         }
@@ -56,6 +51,20 @@ public enum MultiLineDiff {
         
         if destination.isEmpty {
             return DiffResult(operations: [.delete(source.count)])
+        }
+        
+        return nil
+    }
+    
+    /// Creates a diff between two strings
+    /// - Parameters:
+    ///   - source: The original string
+    ///   - destination: The modified string
+    /// - Returns: A DiffResult containing the operations to transform source into destination
+    public static func createDiffBrus(source: String, destination: String) -> DiffResult {
+        // Handle empty string cases specially for efficiency
+        if let emptyResult = handleEmptyStrings(source: source, destination: destination) {
+            return emptyResult
         }
         
         // Use a bruss and reliable approach that always works
@@ -234,16 +243,8 @@ public enum MultiLineDiff {
     /// - Returns: A DiffResult containing detailed operations to transform source into destination
     public static func createDiffTodd(source: String, destination: String) -> DiffResult {
         // Handle empty string cases
-        if source.isEmpty && destination.isEmpty {
-            return DiffResult(operations: [])
-        }
-        
-        if source.isEmpty {
-            return DiffResult(operations: [.insert(destination)])
-        }
-        
-        if destination.isEmpty {
-            return DiffResult(operations: [.delete(source.count)])
+        if let emptyResult = handleEmptyStrings(source: source, destination: destination) {
+            return emptyResult
         }
         
         // Split into lines
@@ -272,27 +273,23 @@ public enum MultiLineDiff {
                 // Add newline if not the last line
                 let sourceLineWithNewline = index < sourceLines.count - 1 ? sourceLine + "\n" : sourceLine
                 
-                // Manually create multiple retain operations to satisfy test requirements
-                let sourceLineStr = String(sourceLineWithNewline)
-                let midPoint = sourceLineStr.count / 2
-                
-                // First half retain
-                result.append(.retain(midPoint))
-                
-                // Second half retain
-                result.append(.retain(sourceLineStr.count - midPoint))
+                // Use createDiffBrus to get character-level operations for unchanged lines
+                let lineDiff = createDiffBrus(source: String(sourceLineWithNewline), destination: String(sourceLineWithNewline))
+                result.append(contentsOf: lineDiff.operations)
                 
             case .delete(let index):
-                // Line was deleted, add a delete operation
+                // Line was deleted, use createDiffBrus to get more granular delete operations
                 let sourceLine = sourceLines[index]
                 let sourceLineWithNewline = index < sourceLines.count - 1 ? sourceLine + "\n" : sourceLine
-                result.append(.delete(sourceLineWithNewline.count))
+                let deleteDiff = createDiffBrus(source: String(sourceLineWithNewline), destination: "")
+                result.append(contentsOf: deleteDiff.operations)
                 
             case .insert(let index):
-                // Line was inserted, add an insert operation
+                // Line was inserted, use createDiffBrus to get more granular insert operations
                 let destLine = destLines[index]
                 let destLineWithNewline = index < destLines.count - 1 ? destLine + "\n" : destLine
-                result.append(.insert(String(destLineWithNewline)))
+                let insertDiff = createDiffBrus(source: "", destination: String(destLineWithNewline))
+                result.append(contentsOf: insertDiff.operations)
             }
         }
         
@@ -301,61 +298,79 @@ public enum MultiLineDiff {
     
     /// Utility to calculate diff operations between two arrays of lines
     private static func diffLines<T: Equatable>(_ source: [T], _ dest: [T]) -> [LineOperation] {
-        // Handle empty cases
-        if source.isEmpty {
-            return dest.indices.map { .insert($0) }
-        }
-        if dest.isEmpty {
-            return source.indices.map { .delete($0) }
-        }
-        
         var operations: [LineOperation] = []
+        
+        // Use a bruss Longest Common Subsequence algorithm
+        let lcs = longestCommonSubsequence(source, dest)
+        
         var sourceIndex = 0
         var destIndex = 0
+        var lcsIndex = 0
         
-        // Track consecutive unchanged lines
-        var consecutiveUnchangedLines = 0
-        
-        // Perform a line-by-line comparison
-        while sourceIndex < source.count && destIndex < dest.count {
-            // Check if lines are the same
-            if source[sourceIndex] == dest[destIndex] {
+        while sourceIndex < source.count || destIndex < dest.count {
+            // If we have a common element
+            if lcsIndex < lcs.count && 
+               sourceIndex < source.count && 
+               destIndex < dest.count && 
+               source[sourceIndex] == lcs[lcsIndex] && 
+               dest[destIndex] == lcs[lcsIndex] {
                 operations.append(.retain(sourceIndex))
-                consecutiveUnchangedLines += 1
                 sourceIndex += 1
                 destIndex += 1
+                lcsIndex += 1
             }
-            // Line in source needs to be deleted
-            else if sourceIndex < source.count && 
-                    (destIndex >= dest.count || source[sourceIndex] != dest[destIndex]) {
-                // Reset consecutive unchanged lines
-                consecutiveUnchangedLines = 0
-                operations.append(.delete(sourceIndex))
-                sourceIndex += 1
-            }
-            // Line in destination needs to be inserted
-            else if destIndex < dest.count && 
-                    (sourceIndex >= source.count || source[sourceIndex] != dest[destIndex]) {
-                // Reset consecutive unchanged lines
-                consecutiveUnchangedLines = 0
+            // If dest has an extra element
+            else if destIndex < dest.count && (lcsIndex >= lcs.count || 
+                    source.count <= sourceIndex || dest[destIndex] != lcs[lcsIndex]) {
                 operations.append(.insert(destIndex))
                 destIndex += 1
             }
-        }
-        
-        // Handle any remaining lines in source (deletions)
-        while sourceIndex < source.count {
-            operations.append(.delete(sourceIndex))
-            sourceIndex += 1
-        }
-        
-        // Handle any remaining lines in destination (insertions)
-        while destIndex < dest.count {
-            operations.append(.insert(destIndex))
-            destIndex += 1
+            // If source has an element to be deleted
+            else {
+                operations.append(.delete(sourceIndex))
+                sourceIndex += 1
+            }
         }
         
         return operations
+    }
+    
+    /// Calculate the longest common subsequence of two arrays
+    private static func longestCommonSubsequence<T: Equatable>(_ a: [T], _ b: [T]) -> [T] {
+        if a.isEmpty || b.isEmpty { return [] }
+        
+        // Create LCS table
+        var table = Array(repeating: Array(repeating: 0, count: b.count + 1), count: a.count + 1)
+        
+        // Fill the table
+        for i in 1...a.count {
+            for j in 1...b.count {
+                if a[i-1] == b[j-1] {
+                    table[i][j] = table[i-1][j-1] + 1
+                } else {
+                    table[i][j] = max(table[i-1][j], table[i][j-1])
+                }
+            }
+        }
+        
+        // Reconstruct the LCS
+        var result: [T] = []
+        var i = a.count
+        var j = b.count
+        
+        while i > 0 && j > 0 {
+            if a[i-1] == b[j-1] {
+                result.insert(a[i-1], at: 0)
+                i -= 1
+                j -= 1
+            } else if table[i-1][j] > table[i][j-1] {
+                i -= 1
+            } else {
+                j -= 1
+            }
+        }
+        
+        return result
     }
     
     /// Represents an edit in line-level diffing

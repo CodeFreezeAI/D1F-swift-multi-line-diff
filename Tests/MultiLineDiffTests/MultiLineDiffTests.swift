@@ -225,15 +225,7 @@ import Foundation
 }
 
 @Test func testFileBasedDiffOperations() throws {
-    // Setup temporary directory paths
-    let fileManager = FileManager.default
-    let tempDirURL = fileManager.temporaryDirectory.appendingPathComponent("MultiLineDiffTests-\(UUID().uuidString)")
-    let sourceFileURL = tempDirURL.appendingPathComponent("source_code.swift")
-    let modifiedFileURL = tempDirURL.appendingPathComponent("modified_code.swift")
-    let outputFileURL = tempDirURL.appendingPathComponent("output_code.swift")
-    
-    // Create temp directory
-    try fileManager.createDirectory(at: tempDirURL, withIntermediateDirectories: true)
+    let testFiles = try TestFileManager(testName: "FileBasedDiff")
     
     // Sample source code
     let sourceCode = """
@@ -272,19 +264,19 @@ import Foundation
     }
     """
     
-    // Write source and modified files
-    try sourceCode.data(using: .utf8)?.write(to: sourceFileURL)
-    try modifiedCode.data(using: .utf8)?.write(to: modifiedFileURL)
+    // Write files
+    let sourceFileURL = try testFiles.createFile(named: "source_code.swift", content: sourceCode)
+    let modifiedFileURL = try testFiles.createFile(named: "modified_code.swift", content: modifiedCode)
+    let diffFileURL = try testFiles.createFile(named: "diff.json", content: "")
     
     // Read back the files
-    let sourceFromFile = try String(contentsOf: sourceFileURL)
-    let modifiedFromFile = try String(contentsOf: modifiedFileURL)
+    let sourceFromFile = try testFiles.readFile(sourceFileURL)
+    let modifiedFromFile = try testFiles.readFile(modifiedFileURL)
     
     // Create diff
     let diff = MultiLineDiff.createDiffBrus(source: sourceFromFile, destination: modifiedFromFile)
     
     // Save diff to file
-    let diffFileURL = tempDirURL.appendingPathComponent("diff.json")
     try MultiLineDiff.saveDiffToFile(diff, fileURL: diffFileURL)
     
     // Load diff from file for verification
@@ -295,16 +287,13 @@ import Foundation
     let result = try MultiLineDiff.applyDiff(to: sourceFromFile, diff: diff)
     
     // Write result to output file
-    try result.data(using: .utf8)?.write(to: outputFileURL)
+    let outputFileURL = try testFiles.createFile(named: "output_code.swift", content: result)
     
     // Read back the output and verify
-    let outputFromFile = try String(contentsOf: outputFileURL)
+    let outputFromFile = try testFiles.readFile(outputFileURL)
     
     // Verify
     #expect(outputFromFile == modifiedFromFile, "Output from applying diff should match the modified file")
-    
-    // Clean up
-    try fileManager.removeItem(at: tempDirURL)
 }
 
 @Test func testCodeModificationDiff() throws {
@@ -466,22 +455,12 @@ import Foundation
     let diff = MultiLineDiff.createDiffBrus(source: originalContent, destination: modifiedContent)
     
     // Verify diff operations contain the expected changes
-    var insertCount = 0
-    var deleteCount = 0
-    var retainCount = 0
-    
-    for op in diff.operations {
-        switch op {
-        case .insert: insertCount += 1
-        case .delete: deleteCount += 1
-        case .retain: retainCount += 1
-        }
-    }
+    let opCounts = countOperations(diff)
     
     // Should have some of each operation type
-    #expect(insertCount > 0, "Should have insert operations")
-    #expect(deleteCount > 0, "Should have delete operations")
-    #expect(retainCount > 0, "Should have retain operations")
+    #expect(opCounts.insertCount > 0, "Should have insert operations")
+    #expect(opCounts.deleteCount > 0, "Should have delete operations")
+    #expect(opCounts.retainCount > 0, "Should have retain operations")
     
     // Save diff to JSON file
     try MultiLineDiff.saveDiffToFile(diff, fileURL: diffFileURL)
@@ -567,23 +546,13 @@ private func generateDiffStats(_ diff: DiffResult) -> (insertedLines: Int, delet
     // Todd should have more operations (more granular) than the bruss algorithm
     let brussDiff = MultiLineDiff.createDiffBrus(source: source, destination: destination)
     
-    // Count operations by type
-    var retainCount = 0
-    var insertCount = 0
-    var deleteCount = 0
-    
-    for op in diff.operations {
-        switch op {
-        case .retain: retainCount += 1
-        case .insert: insertCount += 1
-        case .delete: deleteCount += 1
-        }
-    }
+    // Count operations
+    let opCounts = countOperations(diff)
     
     // Should have multiple retain operations (for unchanged lines)
-    #expect(retainCount >= 2, "Should have multiple retain operations")
-    #expect(insertCount >= 1, "Should have at least one insert operation")
-    #expect(deleteCount >= 1, "Should have at least one delete operation")
+    #expect(opCounts.retainCount >= 2, "Should have multiple retain operations")
+    #expect(opCounts.insertCount >= 1, "Should have at least one insert operation")
+    #expect(opCounts.deleteCount >= 1, "Should have at least one delete operation")
     
     // Verify we can encode/decode these diffs
     let jsonData = try MultiLineDiff.encodeDiffToJSON(diff)
@@ -681,5 +650,82 @@ struct TestError: Error, CustomStringConvertible {
     
     var description: String {
         return message
+    }
+}
+
+/// Helper struct to hold operation counts
+struct DiffOperationCounts {
+    let retainCount: Int
+    let insertCount: Int
+    let deleteCount: Int
+    let insertedChars: Int
+    let deletedChars: Int
+    let retainedChars: Int
+    
+    var totalOperations: Int {
+        return retainCount + insertCount + deleteCount
+    }
+}
+
+/// Helper function to count operations in a diff result
+func countOperations(_ diff: DiffResult) -> DiffOperationCounts {
+    var retainCount = 0
+    var insertCount = 0
+    var deleteCount = 0
+    var insertedChars = 0
+    var deletedChars = 0
+    var retainedChars = 0
+    
+    for op in diff.operations {
+        switch op {
+        case .retain(let count):
+            retainCount += 1
+            retainedChars += count
+        case .insert(let text):
+            insertCount += 1
+            insertedChars += text.count
+        case .delete(let count):
+            deleteCount += 1
+            deletedChars += count
+        }
+    }
+    
+    return DiffOperationCounts(
+        retainCount: retainCount,
+        insertCount: insertCount,
+        deleteCount: deleteCount,
+        insertedChars: insertedChars,
+        deletedChars: deletedChars,
+        retainedChars: retainedChars
+    )
+}
+
+/// Helper class for managing temporary test files
+class TestFileManager {
+    let tempDirURL: URL
+    let fileManager: FileManager
+    
+    init(testName: String) throws {
+        fileManager = FileManager.default
+        tempDirURL = fileManager.temporaryDirectory.appendingPathComponent("MultiLineDiffTests-\(testName)-\(UUID().uuidString)")
+        try fileManager.createDirectory(at: tempDirURL, withIntermediateDirectories: true)
+    }
+    
+    func createFile(named: String, content: String) throws -> URL {
+        let fileURL = tempDirURL.appendingPathComponent(named)
+        try content.data(using: .utf8)?.write(to: fileURL)
+        return fileURL
+    }
+    
+    func readFile(_ url: URL) throws -> String {
+        return try String(contentsOf: url)
+    }
+    
+    func cleanup() throws {
+        try fileManager.removeItem(at: tempDirURL)
+    }
+    
+    deinit {
+        try? cleanup()
     }
 }
