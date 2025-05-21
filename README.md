@@ -202,7 +202,7 @@ Operation:    ====== ----- ++++++   // "Hello, " retained, "world" deleted, "Swi
 
 ┌─ Operations
 │ ==================================== {    // retain signature
-│ ┌─ Delete old implementation and insert new
+│ ┌─ Delete old implementation and insert new implementation
 │ │ --- var total = 0.0
 │ │ --- for item in items {
 │ │ ---     total += item.price
@@ -496,9 +496,9 @@ func newMethod() {
 }
 
 // Operation Breakdown:
-func ===~~~~~=== () {     // retain "func ", replace "old" with "new", retain "Method"
-    ~~~~~~~~~~~~~~~~~~~~  // replace entire print statement
-}===                     // retain closing brace
+func ==== ---- ++++ ==== () {     // retain "func ", delete "old", insert "new", retain "Method"
+    ---- +++++++++++++++++++     // delete old print statement, insert new one
+}====                            // retain closing brace
 
 // Visual Representation:
 ┌─ Source
@@ -536,7 +536,7 @@ func calculateTotal(items: [Product]) -> Double {
 │ func calculateTotal(items: [Product]) -> Double {
 └─ ===============================================
 
-┌─ Replace implementation
+┌─ Delete old implementation and insert new implementation
 │ --- var total = 0.0
 │ --- for item in items {
 │ ---     total += item.price
