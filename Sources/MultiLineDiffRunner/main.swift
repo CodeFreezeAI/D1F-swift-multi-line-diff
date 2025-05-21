@@ -526,7 +526,7 @@ func demonstrateLargeFileDiffWithPatterns() {
 demonstrateCodeFileDiff()
 demonstrateLargeFileDiffWithPatterns()
 
-// Example: Comparing bruss vs. Todd diff algorithm
+// Example: Comparing brus vs. Todd diff algorithm
 func demonstrateToddDiff() {
     print("\nComparing Brus vs. Todd Diff Algorithms:")
     
@@ -640,14 +640,14 @@ func demonstrateToddDiff() {
         try modifiedCode.data(using: .utf8)?.write(to: modifiedFileURL)
         
         // Create diffs with both algorithms
-        let brussDiff = MultiLineDiff.createDiffBrus(source: sourceCode, destination: modifiedCode)
+        let brusDiff = MultiLineDiff.createDiffBrus(source: sourceCode, destination: modifiedCode)
         let toddDiff = MultiLineDiff.createDiffTodd(source: sourceCode, destination: modifiedCode)
         
         // Save diffs to files
-        let brussDiffFileURL = tempDirURL.appendingPathComponent("bruss_diff.json")
+        let brusDiffFileURL = tempDirURL.appendingPathComponent("brus_diff.json")
         let toddDiffFileURL = tempDirURL.appendingPathComponent("todd_diff.json")
         
-        try MultiLineDiff.saveDiffToFile(brussDiff, fileURL: brussDiffFileURL)
+        try MultiLineDiff.saveDiffToFile(brusDiff, fileURL: brusDiffFileURL)
         try MultiLineDiff.saveDiffToFile(toddDiff, fileURL: toddDiffFileURL)
         
         // Count operations by type
@@ -667,15 +667,15 @@ func demonstrateToddDiff() {
             return (retainCount, insertCount, deleteCount)
         }
         
-        let brussOpCounts = countOperations(brussDiff)
+        let brusOpCounts = countOperations(brusDiff)
         let toddOpCounts = countOperations(toddDiff)
         
         // Print comparison
         print("\n  Brus Diff Algorithm:")
-        print("    -  Total operations: \(brussDiff.operations.count)")
-        print("    - Retain operations: \(brussOpCounts.retain)")
-        print("    - Insert operations: \(brussOpCounts.insert)")
-        print("    - Delete operations: \(brussOpCounts.delete)")
+        print("    -  Total operations: \(brusDiff.operations.count)")
+        print("    - Retain operations: \(brusOpCounts.retain)")
+        print("    - Insert operations: \(brusOpCounts.insert)")
+        print("    - Delete operations: \(brusOpCounts.delete)")
         
         print("\n  Todd Diff Algorithm:")
         print("    -  Total operations: \(toddDiff.operations.count)")
@@ -684,22 +684,22 @@ func demonstrateToddDiff() {
         print("    - Delete operations: \(toddOpCounts.delete)")
         
         // Apply both diffs to verify they work
-        let brussResult = try MultiLineDiff.applyDiff(to: sourceCode, diff: brussDiff)
+        let brusResult = try MultiLineDiff.applyDiff(to: sourceCode, diff: brusDiff)
         let toddResult = try MultiLineDiff.applyDiff(to: sourceCode, diff: toddDiff)
         
-        let brussMatches = brussResult == modifiedCode
+        let brusMatches = brusResult == modifiedCode
         let toddMatches = toddResult == modifiedCode
-        let bothFilesMatch = toddResult == brussResult
+        let bothFilesMatch = toddResult == brusResult
         
         print("\n  Results:")
-        print("    - Brus diff correctly transforms source: \(brussMatches ? "✅" : "❌")")
+        print("    - Brus diff correctly transforms source: \(brusMatches ? "✅" : "❌")")
         print("    - Todd diff correctly transforms source: \(toddMatches ? "✅" : "❌")")
         print("    - Todd = Brus results are a dead match!: \(bothFilesMatch ? "✅" : "❌")")
 
         print("\n  Files available at:")
         print("    - Original: \(originalFileURL.path)")
         print("    - Modified: \(modifiedFileURL.path)")
-        print("    - Brus Diff: \(brussDiffFileURL.path)")
+        print("    - Brus Diff: \(brusDiffFileURL.path)")
         print("    - Todd Diff: \(toddDiffFileURL.path)")
 
     } catch {

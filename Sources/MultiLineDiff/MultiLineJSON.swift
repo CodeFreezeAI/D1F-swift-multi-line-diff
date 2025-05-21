@@ -19,7 +19,16 @@ extension MultiLineDiff {
         if prettyPrinted {
             encoder.outputFormatting = [.sortedKeys]
         }
-        return try encoder.encode(diff)
+        
+        // First encode the operations to data
+        let operationsData = try encoder.encode(diff.operations)
+        
+        // Create a wrapper with base64 encoded operations
+        let wrapper = [
+            "base64Operations": operationsData.base64EncodedString()
+        ]
+        
+        return try encoder.encode(wrapper)
     }
     
     /// Encodes a diff result to a JSON string
@@ -42,7 +51,18 @@ extension MultiLineDiff {
     /// - Throws: An error if decoding fails
     public static func decodeDiffFromJSON(_ data: Data) throws -> DiffResult {
         let decoder = JSONDecoder()
-        return try decoder.decode(DiffResult.self, from: data)
+        
+        // Decode the wrapper first
+        let wrapper = try decoder.decode([String: String].self, from: data)
+        
+        guard let base64String = wrapper["base64Operations"],
+              let operationsData = Data(base64Encoded: base64String) else {
+            throw DiffError.decodingFailed
+        }
+        
+        // Decode the operations from the base64 data
+        let operations = try decoder.decode([DiffOperation].self, from: operationsData)
+        return DiffResult(operations: operations)
     }
     
     /// Decodes a diff result from a JSON string

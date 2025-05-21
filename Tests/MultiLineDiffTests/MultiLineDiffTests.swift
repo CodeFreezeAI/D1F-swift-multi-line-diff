@@ -331,11 +331,8 @@ import Foundation
     // Encode to JSON string
     let jsonString = try MultiLineDiff.encodeDiffToJSONString(diff)
     
-    // Should contain operation types
-    #expect(jsonString.contains("retain"), "JSON should contain retain operation")
-    #expect(jsonString.contains("delete"), "JSON should contain delete operation")
-    #expect(jsonString.contains("insert"), "JSON should contain insert operation")
-    #expect(jsonString.contains("Hello, world!"), "JSON should contain inserted text")
+    // Should contain base64Operations key
+    #expect(jsonString.contains("base64Operations"), "JSON should contain base64Operations key")
     
     // Decode back
     let decodedDiff = try MultiLineDiff.decodeDiffFromJSONString(jsonString)
@@ -379,6 +376,51 @@ import Foundation
     
     // Clean up
     try fileManager.removeItem(at: tempDirURL)
+}
+
+@Test func testDiffOperationJSONEncoding() throws {
+    // Create a diff with various operations
+    let operations: [DiffOperation] = [
+        .retain(10),
+        .delete(5),
+        .insert("Hello, world!"),
+        .retain(3)
+    ]
+    
+    let diff = DiffResult(operations: operations)
+    
+    // Encode to JSON string
+    let jsonString = try MultiLineDiff.encodeDiffToJSONString(diff)
+    
+    print("JSON Encoding Test:")
+    print("JSON String: \(jsonString)")
+    
+    // Verify JSON structure
+    #expect(jsonString.contains("base64Operations"), "Should contain base64Operations key")
+    
+    // Decode back
+    let decodedDiff = try MultiLineDiff.decodeDiffFromJSONString(jsonString)
+    
+    // Verify operations match
+    #expect(decodedDiff.operations.count == diff.operations.count, "Operation count should match")
+    
+    for (index, op) in diff.operations.enumerated() {
+        let decodedOp = decodedDiff.operations[index]
+        
+        switch (op, decodedOp) {
+        case (.retain(let count1), .retain(let count2)):
+            #expect(count1 == count2, "Retain count should match")
+            
+        case (.insert(let text1), .insert(let text2)):
+            #expect(text1 == text2, "Insert text should match")
+            
+        case (.delete(let count1), .delete(let count2)):
+            #expect(count1 == count2, "Delete count should match")
+            
+        default:
+            throw TestError("Operation types don't match at index \(index)")
+        }
+    }
 }
 
 @Test func testLargeFileWithRegularChanges() throws {
@@ -609,64 +651,16 @@ private func generateDiffStats(_ diff: DiffResult) -> (insertedLines: Int, delet
     // Verify result
     #expect(applied == destination, "Todd diff should correctly handle complex changes")
     
-    // Compare with bruss algorithm
-    let brussDiff = MultiLineDiff.createDiffBrus(source: source, destination: destination)
+    // Compare with brus algorithm
+    let brusDiff = MultiLineDiff.createDiffBrus(source: source, destination: destination)
     
     print("Todd operations count: \(diff.operations.count)")
-    print("Brus operations count: \(brussDiff.operations.count)")
+    print("Brus operations count: \(brusDiff.operations.count)")
     
     // Print first few operations for debugging
     let maxOps = min(5, diff.operations.count)
     for i in 0..<maxOps {
         print("Todd op \(i): \(diff.operations[i].description)")
-    }
-}
-
-@Test func testDiffOperationJSONEncoding() throws {
-    // Create a diff with various operations
-    let operations: [DiffOperation] = [
-        .retain(10),
-        .delete(5),
-        .insert("Hello, world!"),
-        .retain(3)
-    ]
-    
-    let diff = DiffResult(operations: operations)
-    
-    // Encode to JSON string
-    let jsonString = try MultiLineDiff.encodeDiffToJSONString(diff)
-    
-    print("JSON Encoding Test:")
-    print("JSON String: \(jsonString)")
-    
-    // Verify JSON structure
-    #expect(jsonString.contains("operations"), "Should contain 'operations' key")
-    #expect(jsonString.contains("retain"), "Should contain 'retain' key")
-    #expect(jsonString.contains("delete"), "Should contain 'delete' key")
-    #expect(jsonString.contains("insert"), "Should contain 'insert' key")
-    
-    // Decode back
-    let decodedDiff = try MultiLineDiff.decodeDiffFromJSONString(jsonString)
-    
-    // Verify operations match
-    #expect(decodedDiff.operations.count == diff.operations.count, "Operation count should match")
-    
-    for (index, op) in diff.operations.enumerated() {
-        let decodedOp = decodedDiff.operations[index]
-        
-        switch (op, decodedOp) {
-        case (.retain(let count1), .retain(let count2)):
-            #expect(count1 == count2, "Retain count should match")
-            
-        case (.insert(let text1), .insert(let text2)):
-            #expect(text1 == text2, "Insert text should match")
-            
-        case (.delete(let count1), .delete(let count2)):
-            #expect(count1 == count2, "Delete count should match")
-            
-        default:
-            throw TestError("Operation types don't match at index \(index)")
-        }
     }
 }
 
