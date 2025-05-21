@@ -528,10 +528,6 @@ func demonstrateLargeFileDiffWithPatterns() {
     }
 }
 
-// Execute real-world examples
-demonstrateCodeFileDiff()
-demonstrateLargeFileDiffWithPatterns()
-
 // Example: Comparing Brus vs. Todd diff algorithm
 func demonstrateAlgorithmComparison() {
     print("\nComparing Brus vs. Todd Diff Algorithms:")
@@ -699,48 +695,52 @@ func demonstrateAlgorithmComparison() {
     }
 }
 
-// Run all demonstrations
-print("=== MultiLineDiff Demonstrations ===\n")
-
-print("1. Basic diff operations:")
-runTest("Basic Diff Operations") {
-    let source = "Hello, world!"
-    let destination = "Hello, Swift!"
+func demonstrateBase64Diff() {
+    print("\nDemonstrating Base64 Diff Operations:")
     
-    let diff = MultiLineDiff.createDiff(source: source, destination: destination)
-    let result = try MultiLineDiff.applyDiff(to: source, diff: diff)
-    
-    return result == destination
-}
-
-print("\n2. Algorithm comparison (Brus vs Todd):")
-demonstrateAlgorithmComparison()
-
-print("\n3. Base64 operations:")
-runTest("Base64 Diff Operations") {
-    let source = "Hello, world!"
-    let destination = "Hello, Swift!"
-    
-    // Test both algorithms
-    for algorithm in [DiffAlgorithm.brus, .todd] {
-        let base64Diff = try MultiLineDiff.createBase64Diff(
-            source: source,
-            destination: destination,
-            useToddAlgorithm: algorithm == .todd
-        )
-        let result = try MultiLineDiff.applyBase64Diff(
-            to: source,
-            base64Diff: base64Diff,
-            useToddAlgorithm: algorithm == .todd
-        )
-        
-        if result != destination {
-            print("❌ \(algorithm) algorithm failed")
-            return false
+    let source = """
+    class Example {
+        func greet() {
+            print("Hello")
         }
     }
+    """
     
-    return true
+    let destination = """
+    class Example {
+        // Added documentation
+        func greet(name: String) {
+            print("Hello, \\(name)!")
+        }
+    }
+    """
+    
+    do {
+        // Create base64 diff
+        let base64Diff = try MultiLineDiff.createBase64Diff(source: source, destination: destination)
+        print("\n  Base64 diff created:")
+        print("  - Length: \(base64Diff.count) characters")
+        print("  - Diff: \(base64Diff)")
+        
+        // Apply base64 diff
+        let result = try MultiLineDiff.applyBase64Diff(to: source, base64Diff: base64Diff)
+        let success = result == destination
+        
+        print("\n  Applied base64 diff:")
+        print("  - Success: \(success ? "✅" : "❌")")
+        
+        // Compare with JSON format
+        let diff = MultiLineDiff.createDiff(source: source, destination: destination)
+        let jsonString = try MultiLineDiff.encodeDiffToJSONString(diff)
+        
+        print("\n  Format comparison:")
+        print("  - Base64 length: \(base64Diff.count)")
+        print("  - JSON length: \(jsonString.count)")
+        print("  - Size reduction: \(Int((1 - Double(base64Diff.count) / Double(jsonString.count)) * 100))%")
+        
+    } catch {
+        print("  ❌ ERROR: \(error)")
+    }
 }
 
 // Main execution with timing
@@ -769,6 +769,21 @@ func main() {
         return false
     }
     
+    // Run demonstrations
+    print("=== MultiLineDiff Demonstrations ===\n")
+    
+    print("1. File-based diff operations:")
+    demonstrateCodeFileDiff()
+    
+    print("\n2. Large file handling:")
+    demonstrateLargeFileDiffWithPatterns()
+    
+    print("\n3. Algorithm comparison (Brus vs Todd):")
+    demonstrateAlgorithmComparison()
+    
+    print("\n4. Base64 operations:")
+    demonstrateBase64Diff()
+    
     let endTime = getCurrentTimeMs()
     let totalExecutionTime = Double(endTime - startTime) / 1000.0
     
@@ -780,5 +795,4 @@ func main() {
 }
 
 // Run the main function
-main() 
-
+main()
