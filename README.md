@@ -175,9 +175,9 @@ Operation:    ====== ----- ++++++   // "Hello, " retained, "world" deleted, "Swi
 └─────────────────
 
 ┌─ Operations
-│ func ==== ~~~~ ==== () {    // retain, replace "old", retain "Method"
-│     ~~~~~~~~~~~~~~~~        // replace print statement
-│ }====                       // retain closing brace
+│ func ==== ---- ++++ ==== () {    // retain "func ", delete "old", insert "new", retain "Method"
+│     ---- +++++++++++++++++++     // delete old print statement, insert new print statement
+│ }====                            // retain closing brace
 └─────────────────
 ```
 
@@ -472,7 +472,7 @@ Operation:    ====== ++++++   // Insert ", world"
              Hello, world
 ```
 
-### Replace Operation Example
+### Replace (Delete and Insert) Operation Example
 
 ```swift
 Source:      "Hello, world!"
@@ -497,7 +497,7 @@ func newMethod() {
 
 // Operation Breakdown:
 func ==== ---- ++++ ==== () {     // retain "func ", delete "old", insert "new", retain "Method"
-    ---- +++++++++++++++++++     // delete old print statement, insert new one
+    ---- +++++++++++++++++++     // delete old print statement, insert new print statement
 }====                            // retain closing brace
 
 // Visual Representation:
