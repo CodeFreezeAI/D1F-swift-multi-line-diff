@@ -590,3 +590,63 @@ func calculateTotal(items: [Product]) -> Double {
 | `▼`    | Position  | Current operation point |
 | `┌─┐`  | Section   | Groups related changes |
 | `└─┘`  | Border    | Section boundary |
+
+### Base64 Operations (Built-in)
+
+```swift
+// Source Code
+let sourceCode = """
+func oldMethod() {
+    print("Hello")
+}
+"""
+
+let destinationCode = """
+func newMethod() {
+    print("Hello, World!")
+}
+"""
+
+// Create base64 diff (automatically encodes)
+let base64Diff = try MultiLineDiff.createBase64Diff(
+    source: sourceCode,
+    destination: destinationCode,
+    useToddAlgorithm: true  // Optional: use Todd algorithm
+)
+
+// Apply base64 diff (automatically decodes)
+let result = try MultiLineDiff.applyBase64Diff(
+    to: sourceCode,
+    base64Diff: base64Diff
+)
+
+// Verify transformation
+assert(result == destinationCode)
+
+// The base64 string contains encoded operations:
+print(base64Diff)
+// Example output:
+// W3sicmV0YWluIjo1fSx7InJlcGxhY2UiOiJuZXcifSx7InJldGFpbiI6N31d...
+
+// Operations represented in the base64:
+// ✅ Retain "func "
+// 🔄 Replace "old" with "new"
+// ✅ Retain "Method"
+// 🔄 Replace print statement
+// ✅ Retain closing brace
+```
+
+### File Operations with Base64
+
+```swift
+// Save base64 diff to file
+let fileURL = URL(fileURLWithPath: "diff.base64")
+try base64Diff.write(to: fileURL, atomically: true, encoding: .utf8)
+
+// Load and apply base64 diff from file
+let loadedBase64 = try String(contentsOf: fileURL, encoding: .utf8)
+let reconstructed = try MultiLineDiff.applyBase64Diff(
+    to: sourceCode,
+    base64Diff: loadedBase64
+)
+```
