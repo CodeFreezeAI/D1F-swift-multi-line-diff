@@ -685,7 +685,7 @@ func demonstrateToddDiff() {
         
         // Apply both diffs to verify they work
         let brussResult = try MultiLineDiff.applyDiff(to: sourceCode, diff: brussDiff)
-        let toddResult = try MultiLineDiff.applyDiffTodd(to: sourceCode, diff: toddDiff)
+        let toddResult = try MultiLineDiff.applyDiff(to: sourceCode, diff: toddDiff)
         
         let brussMatches = brussResult == modifiedCode
         let toddMatches = toddResult == modifiedCode

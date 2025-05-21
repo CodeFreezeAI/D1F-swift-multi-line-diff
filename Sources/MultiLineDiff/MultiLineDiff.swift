@@ -38,7 +38,6 @@ public struct DiffResult: Equatable, Codable {
 
 /// The main entry point for the MultiLineDiff library
 public enum MultiLineDiff {
-    
     /// Handle empty string cases for both diff algorithms
     private static func handleEmptyStrings(source: String, destination: String) -> DiffResult? {
         if source.isEmpty && destination.isEmpty {
@@ -56,6 +55,44 @@ public enum MultiLineDiff {
         return nil
     }
     
+    /// Represents common regions between two strings
+    private struct CommonRegions {
+        let prefixLength: Int
+        let suffixLength: Int
+        let sourceMiddleStart: Int
+        let sourceMiddleEnd: Int
+        let sourceMiddleLength: Int
+        let destMiddleStart: Int
+        let destMiddleEnd: Int
+        
+        init(source: String, destination: String) {
+            let sourceChars = Array(source)
+            let destChars = Array(destination)
+            let minLength = min(source.count, destination.count)
+            
+            // Find common prefix
+            var prefix = 0
+            while prefix < minLength && sourceChars[prefix] == destChars[prefix] {
+                prefix += 1
+            }
+            
+            // Find common suffix
+            var suffix = 0
+            while suffix < minLength - prefix &&
+                  sourceChars[source.count - suffix - 1] == destChars[destination.count - suffix - 1] {
+                suffix += 1
+            }
+            
+            self.prefixLength = prefix
+            self.suffixLength = suffix
+            self.sourceMiddleStart = prefix
+            self.sourceMiddleEnd = source.count - suffix
+            self.sourceMiddleLength = sourceMiddleEnd - sourceMiddleStart
+            self.destMiddleStart = prefix
+            self.destMiddleEnd = destination.count - suffix
+        }
+    }
+    
     /// Creates a diff between two strings
     /// - Parameters:
     ///   - source: The original string
@@ -67,50 +104,27 @@ public enum MultiLineDiff {
             return emptyResult
         }
         
-        // Use a bruss and reliable approach that always works
+        // Find common regions
+        let regions = CommonRegions(source: source, destination: destination)
         var operations: [DiffOperation] = []
         
-        // Find common prefix
-        var prefixLength = 0
-        let minLength = min(source.count, destination.count)
-        
-        let sourceChars = Array(source)
-        let destChars = Array(destination)
-        
-        while prefixLength < minLength && sourceChars[prefixLength] == destChars[prefixLength] {
-            prefixLength += 1
+        // Add operations based on common regions
+        if regions.prefixLength > 0 {
+            operations.append(.retain(regions.prefixLength))
         }
         
-        // Find common suffix
-        var suffixLength = 0
-        while suffixLength < minLength - prefixLength &&
-              sourceChars[source.count - suffixLength - 1] == destChars[destination.count - suffixLength - 1] {
-            suffixLength += 1
+        if regions.sourceMiddleLength > 0 {
+            operations.append(.delete(regions.sourceMiddleLength))
         }
         
-        // Add operations
-        if prefixLength > 0 {
-            operations.append(.retain(prefixLength))
-        }
-        
-        let sourceMiddleStart = prefixLength
-        let sourceMiddleEnd = source.count - suffixLength
-        let sourceMiddleLength = sourceMiddleEnd - sourceMiddleStart
-        
-        let destMiddleStart = prefixLength
-        let destMiddleEnd = destination.count - suffixLength
-        
-        if sourceMiddleLength > 0 {
-            operations.append(.delete(sourceMiddleLength))
-        }
-        
-        if destMiddleStart < destMiddleEnd {
-            let destMiddleString = String(destChars[destMiddleStart..<destMiddleEnd])
+        if regions.destMiddleStart < regions.destMiddleEnd {
+            let destChars = Array(destination)
+            let destMiddleString = String(destChars[regions.destMiddleStart..<regions.destMiddleEnd])
             operations.append(.insert(destMiddleString))
         }
         
-        if suffixLength > 0 {
-            operations.append(.retain(suffixLength))
+        if regions.suffixLength > 0 {
+            operations.append(.retain(regions.suffixLength))
         }
         
         return DiffResult(operations: operations)
@@ -236,6 +250,49 @@ public enum MultiLineDiff {
     
     // MARK: - Todd's Diff Algorithm (More Granular)
     
+    /// Result of comparing two sequences
+    private struct SequenceComparisonResult<T> {
+        let commonElements: [T]
+        let operations: [LineOperation]
+        
+        init(source: [T], destination: [T]) where T: Equatable {
+            let lcs = longestCommonSubsequence(source, destination)
+            self.commonElements = lcs
+            
+            var operations: [LineOperation] = []
+            var sourceIndex = 0
+            var destIndex = 0
+            var lcsIndex = 0
+            
+            while sourceIndex < source.count || destIndex < destination.count {
+                // If we have a common element
+                if lcsIndex < lcs.count && 
+                   sourceIndex < source.count && 
+                   destIndex < destination.count && 
+                   source[sourceIndex] == lcs[lcsIndex] && 
+                   destination[destIndex] == lcs[lcsIndex] {
+                    operations.append(.retain(sourceIndex))
+                    sourceIndex += 1
+                    destIndex += 1
+                    lcsIndex += 1
+                }
+                // If destination has an extra element
+                else if destIndex < destination.count && (lcsIndex >= lcs.count || 
+                        source.count <= sourceIndex || destination[destIndex] != lcs[lcsIndex]) {
+                    operations.append(.insert(destIndex))
+                    destIndex += 1
+                }
+                // If source has an element to be deleted
+                else {
+                    operations.append(.delete(sourceIndex))
+                    sourceIndex += 1
+                }
+            }
+            
+            self.operations = operations
+        }
+    }
+    
     /// Creates a more granular diff between two strings using Todd's algorithm
     /// - Parameters:
     ///   - source: The original string
@@ -257,82 +314,47 @@ public enum MultiLineDiff {
         return DiffResult(operations: operations)
     }
     
+    /// Helper to create a line-level diff operation
+    private static func createLineDiff(line: Substring, index: Int, totalLines: Int, isSource: Bool) -> DiffResult {
+        let lineWithNewline = index < totalLines - 1 ? line + "\n" : line
+        let lineString = String(lineWithNewline)
+        
+        if isSource {
+            return createDiffBrus(source: lineString, destination: "")
+        } else {
+            return createDiffBrus(source: "", destination: lineString)
+        }
+    }
+    
     /// Create a nested diff by diffing each line separately
     private static func createLineByLineDiffTodd(sourceLines: [Substring], destLines: [Substring]) -> [DiffOperation] {
         var result: [DiffOperation] = []
         
-        // First create operations that represent line-level changes
-        let lineOperations = diffLines(sourceLines, destLines)
+        // Create line-level operations using sequence comparison
+        let comparison = SequenceComparisonResult(source: sourceLines, destination: destLines)
         
-        for op in lineOperations {
+        for op in comparison.operations {
             switch op {
             case .retain(let index):
                 // Lines are the same, but still diff them character by character for finer granularity
                 let sourceLine = sourceLines[index]
-                
-                // Add newline if not the last line
-                let sourceLineWithNewline = index < sourceLines.count - 1 ? sourceLine + "\n" : sourceLine
-                
-                // Use createDiffBrus to get character-level operations for unchanged lines
-                let lineDiff = createDiffBrus(source: String(sourceLineWithNewline), destination: String(sourceLineWithNewline))
+                let lineWithNewline = index < sourceLines.count - 1 ? sourceLine + "\n" : sourceLine
+                let lineDiff = createDiffBrus(source: String(lineWithNewline), destination: String(lineWithNewline))
                 result.append(contentsOf: lineDiff.operations)
                 
             case .delete(let index):
                 // Line was deleted, use createDiffBrus to get more granular delete operations
-                let sourceLine = sourceLines[index]
-                let sourceLineWithNewline = index < sourceLines.count - 1 ? sourceLine + "\n" : sourceLine
-                let deleteDiff = createDiffBrus(source: String(sourceLineWithNewline), destination: "")
+                let deleteDiff = createLineDiff(line: sourceLines[index], index: index, totalLines: sourceLines.count, isSource: true)
                 result.append(contentsOf: deleteDiff.operations)
                 
             case .insert(let index):
                 // Line was inserted, use createDiffBrus to get more granular insert operations
-                let destLine = destLines[index]
-                let destLineWithNewline = index < destLines.count - 1 ? destLine + "\n" : destLine
-                let insertDiff = createDiffBrus(source: "", destination: String(destLineWithNewline))
+                let insertDiff = createLineDiff(line: destLines[index], index: index, totalLines: destLines.count, isSource: false)
                 result.append(contentsOf: insertDiff.operations)
             }
         }
         
         return result
-    }
-    
-    /// Utility to calculate diff operations between two arrays of lines
-    private static func diffLines<T: Equatable>(_ source: [T], _ dest: [T]) -> [LineOperation] {
-        var operations: [LineOperation] = []
-        
-        // Use a bruss Longest Common Subsequence algorithm
-        let lcs = longestCommonSubsequence(source, dest)
-        
-        var sourceIndex = 0
-        var destIndex = 0
-        var lcsIndex = 0
-        
-        while sourceIndex < source.count || destIndex < dest.count {
-            // If we have a common element
-            if lcsIndex < lcs.count && 
-               sourceIndex < source.count && 
-               destIndex < dest.count && 
-               source[sourceIndex] == lcs[lcsIndex] && 
-               dest[destIndex] == lcs[lcsIndex] {
-                operations.append(.retain(sourceIndex))
-                sourceIndex += 1
-                destIndex += 1
-                lcsIndex += 1
-            }
-            // If dest has an extra element
-            else if destIndex < dest.count && (lcsIndex >= lcs.count || 
-                    source.count <= sourceIndex || dest[destIndex] != lcs[lcsIndex]) {
-                operations.append(.insert(destIndex))
-                destIndex += 1
-            }
-            // If source has an element to be deleted
-            else {
-                operations.append(.delete(sourceIndex))
-                sourceIndex += 1
-            }
-        }
-        
-        return operations
     }
     
     /// Calculate the longest common subsequence of two arrays
@@ -379,20 +401,6 @@ public enum MultiLineDiff {
         case insert(Int) // Line index in destination
         case delete(Int) // Line index in source
     }
-    
-    /// Applies a diff created by Todd'ss' algorithm to a source string
-    /// - Parameters:
-    ///   - source: The original string
-    ///   - diff: The diff to apply
-    /// - Returns: The resulting string after applying the diff
-    /// - Throws: An error if the diff cannot be applied correctly
-    public static func applyDiffTodd(to source: String, diff: DiffResult) throws -> String {
-        // The application process is the same as the regular applyDiff function
-        return try applyDiff(to: source, diff: diff)
-    }
-    
-
- 
 }
 
 /// Errors that can occur during diff operations

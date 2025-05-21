@@ -538,7 +538,7 @@ private func generateDiffStats(_ diff: DiffResult) -> (insertedLines: Int, delet
     let diff = MultiLineDiff.createDiffTodd(source: source, destination: destination)
     
     // Apply diff
-    let applied = try MultiLineDiff.applyDiffTodd(to: source, diff: diff)
+    let applied = try MultiLineDiff.applyDiff(to: source, diff: diff)
     
     // Verify result matches
     #expect(applied == destination, "Applied Todd diff should match the destination")
@@ -622,7 +622,7 @@ private func generateDiffStats(_ diff: DiffResult) -> (insertedLines: Int, delet
     let diff = MultiLineDiff.createDiffTodd(source: source, destination: destination)
     
     // Apply diff
-    let applied = try MultiLineDiff.applyDiffTodd(to: source, diff: diff)
+    let applied = try MultiLineDiff.applyDiff(to: source, diff: diff)
     
     // Verify result
     #expect(applied == destination, "Todd diff should correctly handle complex changes")
