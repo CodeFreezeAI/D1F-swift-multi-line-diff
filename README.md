@@ -73,9 +73,9 @@ let diffOperations = MultiLineDiff.createDiff(
 // Diff Operations Breakdown
 print("Diff Operations:")
 // Typical output might look like:
-// 1. Retain first 15 characters of the class definition
-// 2. Replace "oldMethod()" with "newMethod()"
-// 3. Replace print statement
+// 1. ==== Retain first 15 characters of the class definition
+// 2. ~~~~ Replace "oldMethod()" with "newMethod()"
+// 3. ~~~~ Replace print statement
 ```
 
 ### Base64 Diff Decoding Example
