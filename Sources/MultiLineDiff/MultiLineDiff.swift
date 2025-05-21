@@ -105,19 +105,17 @@ private extension String {
     ///   - destination: The modified string
     /// - Returns: A DiffResult containing detailed operations to transform source into destination
     public static func createDiffTodd(source: String, destination: String) -> DiffResult {
+        // Early fallback for extremely simple cases
         if let emptyResult = handleEmptyStrings(source: source, destination: destination) {
             return emptyResult
         }
         
-        // For very simple cases, use Brus algorithm
-        if source.count <= 1 || destination.count <= 1 {
+        // Determine the most appropriate diff strategy
+        switch determineDiffStrategy(source: source, destination: destination) {
+        case .brus:
             return createDiffBrus(source: source, destination: destination)
-        }
-        
-        // For pure whitespace changes, use Brus algorithm
-        if source.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-           destination.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            return createDiffBrus(source: source, destination: destination)
+        case .todd:
+            break // Continue with Todd algorithm implementation
         }
         
         let sourceLines = source.split(separator: "\n", omittingEmptySubsequences: false)
@@ -463,6 +461,66 @@ private extension String {
     
     private enum DiffOperationType {
         case retain, delete, insert
+    }
+    
+    /// Represents the strategy for diff calculation
+    private enum DiffStrategy {
+        case brus   // Use simple, fast diff algorithm
+        case todd   // Use detailed, semantic diff algorithm
+    }
+    
+    /// Determines the most appropriate diff strategy
+    private static func determineDiffStrategy(source: String, destination: String) -> DiffStrategy {
+        // Comprehensive strategy selection
+        let strategies: [(condition: () -> Bool, strategy: DiffStrategy)] = [
+            // Extremely short strings
+            ({ source.count <= 2 || destination.count <= 2 }, .brus),
+            
+            // Pure whitespace changes
+            ({ 
+                source.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+                destination.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty 
+            }, .brus),
+            
+            // Nearly identical strings
+            ({ 
+                source.count == destination.count && 
+                source.prefix(source.count - 1) == destination.prefix(destination.count - 1) 
+            }, .brus),
+            
+            // Minimal line count differences
+            ({ 
+                let sourceLines = source.split(separator: "\n")
+                let destLines = destination.split(separator: "\n")
+                return abs(sourceLines.count - destLines.count) <= 2 
+            }, .brus),
+            
+            // Default to Todd for complex transformations
+            ({ true }, .todd)
+        ]
+        
+        // Find the first matching strategy
+        for (condition, strategy) in strategies {
+            if condition() {
+                return strategy
+            }
+        }
+        
+        // Fallback (though this should never be reached due to the last catch-all condition)
+        return .todd
+    }
+    
+    /// Optimized method to check if Brus algorithm is suitable
+    public static func isBrusSuitable(source: String, destination: String) -> Bool {
+        return determineDiffStrategy(source: source, destination: destination) == .brus
+    }
+    
+    /// Optional method to suggest algorithm selection
+    public static func suggestDiffAlgorithm(source: String, destination: String) -> String {
+        switch determineDiffStrategy(source: source, destination: destination) {
+        case .brus: return "Brus"
+        case .todd: return "Todd"
+        }
     }
 }
 

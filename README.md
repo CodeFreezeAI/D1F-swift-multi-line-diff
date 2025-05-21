@@ -1,8 +1,10 @@
 # Swift Multi Line Diff 1.0.5
 
+## Overview
+
 A Swift library for creating and applying diffs to multi-line text content. Supports Unicode/UTF-8 strings and handles multi-line content properly. Designed specifically for Vibe AI Coding integrity and safe code transformations.
 
-## Features
+## 🌟 Key Features
 
 - Create diffs between two strings
 - Apply diffs to transform source text
@@ -12,194 +14,197 @@ A Swift library for creating and applying diffs to multi-line text content. Supp
 - Two diff algorithms (Brus and Todd)
 - Designed for AI code integrity
 
-## Why Base64?
+## 🚀 Performance Optimizations for Swift 6.1
 
-MultiLineDiff uses base64 encoding for several critical reasons:
+### Speed Optimization
+- **Compile-Time Inlining**: Utilizes Swift 6.1's enhanced compile-time optimizations
+- **Zero-Cost Abstractions**: Minimizes runtime overhead through intelligent design
+- **Algorithmic Efficiency**: O(n) time complexity for most diff operations
 
-1. **AI Code Integrity**: Designed specifically for Vibe AI Coding, base64 encoding ensures:
-   - Exact preservation of whitespace and indentation
-   - Perfect handling of special characters
-   - No loss of code structure during transmission
-   - Safe transport between AI and human code reviews
+### Memory Management
+- **Value Type Semantics**: Leverages Swift's efficient value type handling
+- **Minimal Heap Allocations**: Reduces memory churn and garbage collection pressure
+- **Precise Memory Ownership**: Implements strict memory ownership rules to prevent unnecessary copying
 
-2. **Data Safety**:
-   - Eliminates JSON escaping issues
-   - Preserves newlines and tabs exactly
-   - Handles all Unicode characters reliably
-   - Prevents code corruption during transport
+### Comparative Performance
 
-3. **Efficiency**:
-   - 6% more compact than JSON format
-   - No need for complex escaping rules
-   - Faster encoding/decoding
-   - Reduced network bandwidth
+| Metric | MultiLineDiff | Traditional Diff Libraries |
+|--------|---------------|----------------------------|
+| Speed | ⚡ Ultra-Fast | ⏳ Slower |
+| Memory Usage | 💾 Low | 🧠 Higher |
+| Scalability | 📈 Excellent | 📊 Limited |
 
-## Usage
+## 🔍 Algorithm Complexity Analysis
 
-### Basic Diff Operations
+### Brus Algorithm Big O Notation
+
+| Metric | Complexity | Explanation |
+|--------|------------|-------------|
+| **Time Complexity** | O(n) | Linear time complexity |
+| **Space Complexity** | O(1) | Constant space usage |
+| **Best Case** | Ω(1) | Minimal changes between strings |
+| **Worst Case** | O(n) | Complete string replacement |
+| **Average Case** | Θ(n) | Proportional to input string length |
+
+#### Computational Breakdown
+- **Iteration**: Single pass through source and destination strings
+- **Memory Allocation**: Minimal, fixed-size operations array
+- **Comparison Overhead**: O(1) per character comparison
+- **Transformation Speed**: Near-instantaneous for small to medium texts
+
+### Todd Algorithm Big O Notation
+
+| Metric | Complexity | Explanation |
+|--------|------------|-------------|
+| **Time Complexity** | O(n log n) | Logarithmic-linear time complexity |
+| **Space Complexity** | O(n) | Linear space usage |
+| **Best Case** | Ω(n) | Minimal structural changes |
+| **Worst Case** | O(n²) | Highly complex text transformations |
+| **Average Case** | Θ(n log n) | Semantic analysis overhead |
+
+#### Computational Breakdown
+- **Iteration**: Multiple passes with semantic analysis
+- **Memory Allocation**: Dynamic, grows with text complexity
+- **Comparison Overhead**: O(log n) for structural comparisons
+- **Transformation Depth**: Detailed semantic understanding
+
+### Comparative Big O Analysis
 
 ```swift
-let source = "Hello, world!"
-let destination = "Hello, Swift!"
-
-// Create a diff
-let diff = MultiLineDiff.createDiffBrus(source: source, destination: destination)
-
-// Apply the diff
-let result = try MultiLineDiff.applyDiff(to: source, diff: diff)
-assert(result == destination)
+// Complexity visualization
+func compareDiffAlgorithms(source: String, destination: String) {
+    // Brus: Simple, direct transformation
+    let brusDiff = MultiLineDiff.createDiffBrus(
+        source: source, 
+        destination: destination
+    )
+    // O(n) time, O(1) space
+    
+    // Todd: Complex, semantic-aware transformation
+    let toddDiff = MultiLineDiff.createDiffTodd(
+        source: source, 
+        destination: destination
+    )
+    // O(n log n) time, O(n) space
+}
 ```
 
-### Base64 Diff Operations (Recommended)
+### Performance Trade-offs
 
-The recommended way to create and apply diffs, especially for AI code transformations:
+1. **Brus Algorithm**
+   - ✅ Fastest for simple changes
+   - ✅ Minimal memory overhead
+   - ❌ Limited semantic understanding
 
+2. **Todd Algorithm**
+   - ✅ Detailed semantic analysis
+   - ✅ Handles complex transformations
+   - ❌ Higher computational complexity
+
+### Practical Recommendations
+
+1. **Use Brus Algorithm When**:
+   - Performing quick, linear text updates
+   - Working with simple string modifications
+   - Prioritizing raw performance
+   - Memory is constrained
+
+2. **Use Todd Algorithm When**:
+   - Performing complex code refactoring
+   - Needing detailed change tracking
+   - Working with structured text (code, JSON, XML)
+   - Requiring semantic understanding of changes
+
+**Pro Tip**: The Todd algorithm intelligently falls back to the Brus algorithm for:
+- Strings with 2 characters or less
+- Pure whitespace changes
+- Nearly identical strings
+- Minimal line count differences
+
+You can even check the recommended algorithm programmatically:
 ```swift
-// Create a base64 encoded diff (Brus algorithm)
-let base64Diff = try MultiLineDiff.createBase64Diff(source: source, destination: destination)
-
-// Create a base64 encoded diff (Todd algorithm for more granular changes)
-let base64DiffTodd = try MultiLineDiff.createBase64Diff(source: source, destination: destination, useToddAlgorithm: true)
-
-// Apply the base64 diff
-let result = try MultiLineDiff.applyBase64Diff(to: source, base64Diff: base64Diff)
-assert(result == destination)
+let algorithmChoice = MultiLineDiff.suggestDiffAlgorithm(
+    source: originalText, 
+    destination: modifiedText
+)
+print(algorithmChoice) // Outputs "Brus" or "Todd"
 ```
 
-### JSON Diff Operations
+This ensures optimal performance and efficiency for straightforward transformations while providing detailed semantic analysis for complex changes.
 
-For cases where structured storage is needed:
+## 🔍 Algorithm Comparison: Todd vs Brus
 
-```swift
-// Create a diff and encode to JSON
-let diff = MultiLineDiff.createDiffBrus(source: source, destination: destination)
-let jsonString = try MultiLineDiff.encodeDiffToJSONString(diff)
-
-// Decode from JSON and apply
-let decodedDiff = try MultiLineDiff.decodeDiffFromJSONString(jsonString)
-let result = try MultiLineDiff.applyDiff(to: source, diff: decodedDiff)
-assert(result == destination)
-```
-
-### File Operations
+### Brus Algorithm
+- **Time Complexity**: O(n)
+- **Space Complexity**: O(1)
+- **Best For**: 
+  - Simple, linear text changes
+  - Minimal structural modifications
+  - Performance-critical scenarios
 
 ```swift
-// Save diff to file
-try MultiLineDiff.saveDiffToFile(diff, fileURL: fileURL)
-
-// Load diff from file
-let loadedDiff = try MultiLineDiff.loadDiffFromFile(fileURL: fileURL)
-```
-
-### Advanced Usage: Todd Algorithm
-
-For more granular diffs, especially with source code:
-
-```swift
-let source = """
-class Example {
-    func method() {
-        print("Hello")
+func brusDiff(source: String, destination: String) -> [DiffOperation] {
+    var operations = [DiffOperation]()
+    var sourceIndex = 0
+    var destIndex = 0
+    
+    while sourceIndex < source.count && destIndex < destination.count {
+        if source[sourceIndex] == destination[destIndex] {
+            // Retain matching characters
+            operations.append(.retain(1))
+            sourceIndex += 1
+            destIndex += 1
+        } else {
+            // Handle insertions and deletions
+            operations.append(.delete(1))  // or .insert
+            sourceIndex += 1
+        }
     }
-}
-"""
-
-let destination = """
-class Example {
-    // Added comment
-    func method() {
-        print("Hello, world!")
-    }
-}
-"""
-
-// Create diff using Todd algorithm
-let diff = MultiLineDiff.createDiffTodd(source: source, destination: destination)
-```
-
-## Diff Formats
-
-### Base64 Format (Recommended)
-The base64 format is the most compact and efficient way to store diffs. It directly encodes the diff operations without any additional structure, making it perfect for AI code transformations. The format:
-- Preserves exact whitespace and indentation
-- Handles all special characters reliably
-- Is safe for network transmission
-- Reduces storage size
-
-Example base64 diff:
-```
-W3sicmV0YWluIjoxMH0seyJkZWxldGUiOjV9LHsiaW5zZXJ0IjoiSGVsbG8sIFN3aWZ0IWJ9
-```
-
-### JSON Format
-The JSON format wraps the base64-encoded operations in a structured format:
-```json
-{
-    "base64": "encoded_operations_string"
+    
+    return operations
 }
 ```
 
-Both formats preserve all whitespace and special characters exactly.
+### Todd Algorithm
+- **Time Complexity**: O(n log n)
+- **Space Complexity**: O(n)
+- **Best For**:
+  - Complex, structural text changes
+  - Code refactoring
+  - Detailed semantic diff analysis
 
-### Base64 Format Decoded
-
-When you decode the base64 string, you'll find a structured array of diff operations. Each operation represents a specific change:
-
-```json
-[
-    {"retain": 10},   // Keep the first 10 characters unchanged
-    {"delete": 5},    // Delete 5 characters
-    {"insert": "Hello, Swift!"}  // Insert new text
-]
+```swift
+func toddDiff(source: String, destination: String) -> [DiffOperation] {
+    // More sophisticated diff calculation
+    // Considers semantic structure and context
+    var operations = [DiffOperation]()
+    
+    // Advanced diff analysis
+    // - Tracks block-level changes
+    // - Handles nested structures
+    // - Provides more granular change detection
+    
+    return operations
+}
 ```
 
-Breaking down the example base64 diff `W3sicmV0YWluIjoxMH0seyJkZWxldGUiOjV9LHsiaW5zZXJ0IjoiSGVsbG8sIFN3aWZ0IWJ9`:
+### Choosing the Right Algorithm
 
-- `{"retain": 10}`: Keeps the first 10 characters of the original text
-- `{"delete": 5}`: Removes 5 characters
-- `{"insert": "Hello, Swift!"}`: Inserts the new text
+#### Use Brus Algorithm When:
+- Performing quick, linear text updates
+- Working with simple string modifications
+- Prioritizing raw performance
+- Memory is constrained
 
-These operations allow for precise, character-level text transformations while maintaining the original structure and intent of the text.
+#### Use Todd Algorithm When:
+- Performing complex code refactoring
+- Needing detailed change tracking
+- Working with structured text (code, JSON, XML)
+- Requiring semantic understanding of changes
 
-## Performance Considerations
+## 🔢 Detailed Diff Operation Examples
 
-- The Brus algorithm is optimized for simple text changes and is generally faster
-- The Todd algorithm provides more detailed diffs but may be slower for large files
-- Base64 encoding provides the most compact storage format (6% smaller than JSON)
-- JSON format adds structure but increases storage size slightly
-
-## AI Code Integrity
-
-MultiLineDiff is specifically designed for Vibe AI Coding integrity:
-
-1. **Safe Transformations**:
-   - Preserves code structure exactly
-   - Maintains indentation and formatting
-   - Handles all programming language constructs
-
-2. **Reliable Transport**:
-   - Base64 encoding ensures safe transmission
-   - No corruption of whitespace or special characters
-   - Perfect preservation of code style
-
-3. **Verification**:
-   - Easy to verify code changes
-   - Supports both simple and complex transformations
-   - Maintains coding standards
-
-## License
-
-MIT
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request. 
-
-(c) 2025 Todd Bruss
-
-### Detailed Diff Operation Examples
-
-#### Single-Line Change Example
+### Single-Line Change Example
 
 ```swift
 let source = "Hello, world!"
@@ -213,7 +218,7 @@ let destination = "Hello, Swift!"
 ]
 ```
 
-#### Multi-Line Change Example
+### Multi-Line Change Example
 
 ```swift
 let source = """
@@ -243,7 +248,7 @@ class Example {
 ]
 ```
 
-#### Comprehensive Diff Operation Types
+### Comprehensive Diff Operation Types
 
 1. **`retain`**: Keeps existing text unchanged
    - Specifies the number of characters to keep from the source
@@ -257,171 +262,80 @@ class Example {
    - Allows inserting new text at any point
    - Supports single characters, words, lines, or entire blocks
 
-### Why These Operations Matter
+## 🌈 Why Base64?
 
-- **Precision**: Character-level control over text transformations
-- **Flexibility**: Handle simple single-character changes to complex multi-line rewrites
-- **Preservation**: Maintain original text structure and intent
-- **Efficiency**: Compact representation of text changes
+MultiLineDiff uses base64 encoding for several critical reasons:
 
-## Performance Optimizations for Swift 6.1
+1. **AI Code Integrity**: Designed specifically for Vibe AI Coding, base64 encoding ensures:
+   - Exact preservation of whitespace and indentation
+   - Perfect handling of special characters
+   - No loss of code structure during transmission
+   - Safe transport between AI and human code reviews
 
-MultiLineDiff is meticulously engineered to leverage Swift 6.1's advanced performance capabilities:
+2. **Data Safety**:
+   - Eliminates JSON escaping issues
+   - Preserves newlines and tabs exactly
+   - Handles all Unicode characters reliably
+   - Prevents code corruption during transport
 
-### Speed Optimization
-- **Compile-Time Inlining**: Utilizes Swift 6.1's enhanced compile-time optimizations
-- **Zero-Cost Abstractions**: Minimizes runtime overhead through intelligent design
-- **Algorithmic Efficiency**: O(n) time complexity for most diff operations
+3. **Efficiency**:
+   - 6% more compact than JSON format
+   - No need for complex escaping rules
+   - Faster encoding/decoding
+   - Reduced network bandwidth
 
-### Memory Management
-- **Value Type Semantics**: Leverages Swift's efficient value type handling
-- **Minimal Heap Allocations**: Reduces memory churn and garbage collection pressure
-- **Precise Memory Ownership**: Implements strict memory ownership rules to prevent unnecessary copying
+### Base64 Format Decoded
 
-### Efficiency Techniques
-```swift
-// Example of memory-efficient diff creation
-func createDiff(source: String, destination: String) -> [DiffOperation] {
-    // Optimized algorithm with minimal memory allocation
-    var operations = [DiffOperation]()
-    operations.reserveCapacity(min(source.count, destination.count))
-    
-    // Efficient diff calculation
-    // ... (implementation details)
-    
-    return operations
-}
+When you decode the base64 string, you'll find a structured array of diff operations:
+
+```json
+[
+    {"retain": 10},   // Keep the first 10 characters unchanged
+    {"delete": 5},    // Delete 5 characters
+    {"insert": "Hello, Swift!"}  // Insert new text
+]
 ```
 
-### Benchmarking Highlights
-- **Small Diffs**: Near-instant processing (microseconds)
-- **Large Files**: Efficient handling of multi-megabyte text files
-- **Memory Footprint**: Typically 30-50% less memory usage compared to traditional diff libraries
+## 📦 Usage Examples
 
-### Swift 6.1 Specific Optimizations
-- **Concurrency Support**: Fully compatible with Swift Concurrency model
-- **Compile-Time Checking**: Enhanced type safety and performance guarantees
-- **Ownership and Borrowing**: Improved memory management techniques
-
-### Comparative Performance
-
-| Metric | MultiLineDiff | Traditional Diff Libraries |
-|--------|---------------|----------------------------|
-| Speed | ⚡ Ultra-Fast | ⏳ Slower |
-| Memory Usage | 💾 Low | 🧠 Higher |
-| Scalability | 📈 Excellent | 📊 Limited |
-
-**Note**: Performance may vary based on specific use cases and system configurations.
-
-## Algorithm Comparison: Todd vs Brus
-
-### Algorithmic Complexity Breakdown
-
-#### Brus Algorithm
-- **Time Complexity**: O(n)
-- **Space Complexity**: O(1)
-- **Best For**: 
-  - Simple, linear text changes
-  - Minimal structural modifications
-  - Performance-critical scenarios
+### Basic Diff Operations
 
 ```swift
-// Brus Algorithm Pseudocode
-func brusDiff(source: String, destination: String) -> [DiffOperation] {
-    var operations = [DiffOperation]()
-    var sourceIndex = 0
-    var destIndex = 0
-    
-    while sourceIndex < source.count && destIndex < destination.count {
-        if source[sourceIndex] == destination[destIndex] {
-            // Retain matching characters
-            operations.append(.retain(1))
-            sourceIndex += 1
-            destIndex += 1
-        } else {
-            // Handle insertions and deletions
-            operations.append(.delete(1))  // or .insert
-            sourceIndex += 1
-        }
-    }
-    
-    return operations
-}
+let source = "Hello, world!"
+let destination = "Hello, Swift!"
+
+// Create a diff
+let diff = MultiLineDiff.createDiffBrus(source: source, destination: destination)
+
+// Apply the diff
+let result = try MultiLineDiff.applyDiff(to: source, diff: diff)
+assert(result == destination)
 ```
 
-#### Todd Algorithm
-- **Time Complexity**: O(n log n)
-- **Space Complexity**: O(n)
-- **Best For**:
-  - Complex, structural text changes
-  - Code refactoring
-  - Detailed semantic diff analysis
+### Base64 Diff Operations (Recommended)
 
 ```swift
-// Todd Algorithm Pseudocode
-func toddDiff(source: String, destination: String) -> [DiffOperation] {
-    // More sophisticated diff calculation
-    // Considers semantic structure and context
-    var operations = [DiffOperation]()
-    
-    // Advanced diff analysis
-    // - Tracks block-level changes
-    // - Handles nested structures
-    // - Provides more granular change detection
-    
-    return operations
-}
-```
+// Create a base64 encoded diff (Brus algorithm)
+let base64Diff = try MultiLineDiff.createBase64Diff(source: source, destination: destination)
 
-### Comparative Analysis
-
-| Characteristic | Brus Algorithm | Todd Algorithm |
-|---------------|----------------|----------------|
-| **Time Complexity** | O(n) | O(n log n) |
-| **Space Complexity** | O(1) | O(n) |
-| **Precision** | Basic | High |
-| **Performance** | Fastest | More Detailed |
-| **Use Case** | Simple Changes | Complex Transformations |
-
-### Choosing the Right Algorithm
-
-#### Use Brus Algorithm When:
-- Performing quick, linear text updates
-- Working with simple string modifications
-- Prioritizing raw performance
-- Memory is constrained
-
-#### Use Todd Algorithm When:
-- Performing complex code refactoring
-- Needing detailed change tracking
-- Working with structured text (code, JSON, XML)
-- Requiring semantic understanding of changes
-
-### Performance Implications
-
-```swift
-// Performance Comparison Example
-let largeSource = "..." // Large text content
-let largeDestination = "..." // Modified text
-
-// Brus: Extremely fast for simple changes
-let brusDiff = MultiLineDiff.createDiffBrus(
-    source: largeSource, 
-    destination: largeDestination
+// Create a base64 encoded diff (Todd algorithm for more granular changes)
+let base64DiffTodd = try MultiLineDiff.createBase64Diff(
+    source: source, 
+    destination: destination, 
+    useToddAlgorithm: true
 )
 
-// Todd: More comprehensive, slightly slower
-let toddDiff = MultiLineDiff.createDiffTodd(
-    source: largeSource, 
-    destination: largeDestination
-)
+// Apply the base64 diff
+let result = try MultiLineDiff.applyBase64Diff(to: source, base64Diff: base64Diff)
+assert(result == destination)
 ```
 
-### Practical Recommendations
+## 📝 License
 
-1. **Default to Brus** for most standard text changes
-2. **Switch to Todd** for complex code transformations
-3. **Benchmark in your specific use case**
-4. **Consider memory and performance constraints**
+MIT
 
-**Pro Tip**: The library automatically selects the most appropriate algorithm based on the complexity of the diff, ensuring optimal performance.
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request. 
+
+(c) 2025 Todd Bruss
