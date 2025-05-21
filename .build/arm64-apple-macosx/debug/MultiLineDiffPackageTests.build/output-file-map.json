@@ -1,0 +1,11 @@
+{
+  "": {
+    "swift-dependencies": "/Users/toddbruss/Documents/GitHub/swift-multi-line-diff/.build/arm64-apple-macosx/debug/MultiLineDiffPackageTests.build/master.swiftdeps"
+  },
+  "/Users/toddbruss/Documents/GitHub/swift-multi-line-diff/.build/arm64-apple-macosx/debug/MultiLineDiffPackageTests.derived/runner.swift": {
+    "dependencies": "/Users/toddbruss/Documents/GitHub/swift-multi-line-diff/.build/arm64-apple-macosx/debug/MultiLineDiffPackageTests.build/runner.d",
+    "object": "/Users/toddbruss/Documents/GitHub/swift-multi-line-diff/.build/arm64-apple-macosx/debug/MultiLineDiffPackageTests.build/runner.swift.o",
+    "swiftmodule": "/Users/toddbruss/Documents/GitHub/swift-multi-line-diff/.build/arm64-apple-macosx/debug/MultiLineDiffPackageTests.build/runner~partial.swiftmodule",
+    "swift-dependencies": "/Users/toddbruss/Documents/GitHub/swift-multi-line-diff/.build/arm64-apple-macosx/debug/MultiLineDiffPackageTests.build/runner.swiftdeps"
+  }
+}

@@ -1,0 +1,4 @@
+module MultiLineDiffPackageTests {
+    header "/Users/toddbruss/Documents/GitHub/swift-multi-line-diff/.build/arm64-apple-macosx/debug/MultiLineDiffPackageTests.build/MultiLineDiffPackageTests-Swift.h"
+    requires objc
+}
