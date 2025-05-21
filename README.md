@@ -24,13 +24,13 @@ A Swift library for creating and applying diffs to multi-line text content. Supp
 - **Minimal Heap Allocations**: Reduces memory churn and garbage collection pressure
 - **Precise Memory Ownership**: Implements strict memory ownership rules to prevent unnecessary copying
 
-### Comparative Performance
+## Performance Comparison
 
 | Metric | MultiLineDiff | Traditional Diff Libraries |
 |--------|---------------|----------------------------|
-| Speed | ⚡ Ultra-Fast | ⏳ Slower |
-| Memory Usage | 💾 Low | 🧠 Higher |
-| Scalability | 📈 Excellent | 📊 Limited |
+| Speed | Ultra-Fast | Slower |
+| Memory Usage | Low | Higher |
+| Scalability | Excellent | Limited |
 
 ## 📦 Diff Representation Formats
 
@@ -41,7 +41,6 @@ enum DiffOperation {
     case retain(Int)     // Keep existing characters
     case delete(Int)     // Remove characters
     case insert(String)  // Add new characters
-    case replace(String) // Replace with new content
 }
 ```
 
@@ -104,7 +103,8 @@ print(decodedDiffOperations)
 // Typical decoded output might look like:
 // [
 //   {"retain": 15},
-//   {"replace": "newMethod() {\n        print(\"Hello, World!\")\n    }"}
+//   {"delete": 9},
+//   {"insert": "newMethod() {\n        print(\"Hello, World!\")\n    }"}
 // ]
 ```
 
@@ -153,7 +153,6 @@ assert(reconstructedCode == destinationCode, "Diff application failed")
 | `====` | Retain    | Keep text as is |
 | `----` | Delete    | Remove text |
 | `++++` | Insert    | Add new text |
-| `~~~~` | Replace   | Change text |
 | `▼`    | Position  | Current operation point |
 | `┌─┐`  | Section   | Groups related changes |
 | `└─┘`  | Border    | Section boundary |
@@ -242,19 +241,12 @@ Operation:    ====== ~~~~     // "Hello, " retained, "world" replaced
 ### When to Use Each Algorithm
 
 ```swift
-// Automatic algorithm selection
-let algorithm = MultiLineDiff.suggestDiffAlgorithm(
-    source: sourceCode,
-    destination: destinationCode
-)
-
-// Result will be:
-// .todd for:
+// Todd Algorithm (.todd) best for:
 // - Code refactoring
 // - Semantic changes
 // - Structure preservation
 
-// .brus for:
+// Brus Algorithm (.brus) best for:
 // - Simple text changes
 // - Performance critical operations
 // - Character-based modifications
@@ -453,7 +445,6 @@ enum DiffOperation {
     case retain(Int)     // Keep existing characters
     case delete(Int)     // Remove characters
     case insert(String)  // Add new characters
-    case replace(String) // Replace with new content
 }
 ```
 
@@ -492,10 +483,9 @@ Operation:    ====== ++++++   // Insert ", world"
 ```swift
 Source:      "Hello, world!"
 Destination: "Hello, Swift!"
-Operation:    ====== ~~~~~    // Replace "world" with "Swift"
-             |||||| -----
-             Hello, world
-                    Swift
+Operation:    ====== ----- ++++++   // Retain "Hello, ", delete "world", insert "Swift"
+             |||||| xxxxx ++++++
+             Hello, world Swift
 ```
 
 ### Multi-Line Diff Example
@@ -512,9 +502,9 @@ func newMethod() {
 }
 
 // Operation Breakdown:
-func ===~~~~~=== () {     // retain "func ", replace "old" with "new", retain "Method"
-    ~~~~~~~~~~~~~~~~~~~~  // replace entire print statement
-}===                     // retain closing brace
+func ==== ---- ++++ ==== () {     // retain "func ", delete "old", insert "new", retain "Method"
+    ---- +++++++++++++++++++     // delete old print statement, insert new one
+}====                            // retain closing brace
 
 // Visual Representation:
 ┌─ Source
@@ -573,7 +563,6 @@ func calculateTotal(items: [Product]) -> Double {
 | `====` | Retain    | Keep text as is |
 | `----` | Delete    | Remove text |
 | `++++` | Insert    | Add new text |
-| `~~~~` | Replace   | Change text |
 | `▼`    | Position  | Current operation point |
 | `┌─┐`  | Section   | Groups related changes |
 | `└─┘`  | Border    | Section boundary |
@@ -617,9 +606,11 @@ print(base64Diff)
 
 // Operations represented in the base64:
 // ✅ Retain "func "
-// 🔄 Replace "old" with "new"
+// ❌ Delete "old"
+// ➕ Insert "new"
 // ✅ Retain "Method"
-// 🔄 Replace print statement
+// ❌ Delete old print statement
+// ➕ Insert new print statement
 // ✅ Retain closing brace
 ```
 
