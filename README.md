@@ -64,10 +64,7 @@ class Example {
 """
 
 // Create diff operations
-let diffOperations = MultiLineDiff.createDiff(
-    source: sourceCode, 
-    destination: destinationCode
-)
+let diffOperations = MultiLineDiff.createDiff(source: sourceCode, destination: destinationCode)
 
 // Diff Operations Breakdown
 print("Diff Operations:")
@@ -113,10 +110,7 @@ print(decodedDiffOperations)
 //   {"insert": "newMethod() {\n        print(\"Hello, World!\")\n    }"}
 // ]
 
-let reconstructedCode = try MultiLineDiff.applyBase64Diff(
-    to: sourceCode, 
-    base64Diff: base64Diff
-)
+let reconstructedCode = try MultiLineDiff.applyBase64Diff(to: sourceCode, base64Diff: base64Diff)
 ```
 
 ### Diff Visualization
