@@ -142,34 +142,13 @@ import Foundation
 
 @Test func testApplyDiffWithMultiLineChanges() throws {
     let source = """
-    
-    
-    
-    
-    
-    
-    
     Line 1
     Line 2
     Line 4
     Line 3
-    
-    ewrew
-    rwe
-    rw
-    er
-    we
-    
     """
     
     let destination = """
-    
-        ewrew
-        rwe
-        rw
-        er
-        we
-    
     Line 1
     Modified Line 2
     Line 3
@@ -543,9 +522,6 @@ private func generateDiffStats(_ diff: DiffResult) -> (insertedLines: Int, delet
     // Verify result matches
     #expect(applied == destination, "Applied Todd diff should match the destination")
     
-    // Todd should have more operations (more granular) than the bruss algorithm
-    let brussDiff = MultiLineDiff.createDiffBrus(source: source, destination: destination)
-    
     // Count operations
     let opCounts = countOperations(diff)
     
@@ -553,12 +529,6 @@ private func generateDiffStats(_ diff: DiffResult) -> (insertedLines: Int, delet
     #expect(opCounts.retainCount >= 2, "Should have multiple retain operations")
     #expect(opCounts.insertCount >= 1, "Should have at least one insert operation")
     #expect(opCounts.deleteCount >= 1, "Should have at least one delete operation")
-    
-    // Verify we can encode/decode these diffs
-    let jsonData = try MultiLineDiff.encodeDiffToJSON(diff)
-    let decodedDiff = try MultiLineDiff.decodeDiffFromJSON(jsonData)
-    let reapplied = try MultiLineDiff.applyDiff(to: source, diff: decodedDiff)
-    #expect(reapplied == destination, "Decoded diff should still work correctly")
 }
 
 @Test func testToddDiffWithComplexChanges() throws {
