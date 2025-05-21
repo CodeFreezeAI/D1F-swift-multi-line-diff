@@ -25,7 +25,7 @@ extension MultiLineDiff {
         
         // Create a wrapper with base64 encoded operations
         let wrapper = [
-            "base64Operations": operationsData.base64EncodedString()
+            "base64": operationsData.base64EncodedString()
         ]
         
         return try encoder.encode(wrapper)
@@ -55,7 +55,7 @@ extension MultiLineDiff {
         // Decode the wrapper first
         let wrapper = try decoder.decode([String: String].self, from: data)
         
-        guard let base64String = wrapper["base64Operations"],
+        guard let base64String = wrapper["base64"],
               let operationsData = Data(base64Encoded: base64String) else {
             throw DiffError.decodingFailed
         }
