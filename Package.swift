@@ -10,21 +10,21 @@ let package = Package(
         .library(
             name: "MultiLineDiff",
             targets: ["MultiLineDiff"]),
-        .executable(
-            name: "MultiLineDiffRunner",
-            targets: ["MultiLineDiffRunner"])
+//        .executable(
+//            name: "MultiLineDiffRunner",
+//            targets: ["MultiLineDiffRunner"])
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         // Targets can depend on other targets in this package and products from dependencies.
         .target(
             name: "MultiLineDiff"),
-        .executableTarget(
-            name: "MultiLineDiffRunner",
-            dependencies: ["MultiLineDiff"]),
-        .testTarget(
-            name: "MultiLineDiffTests",
-            dependencies: ["MultiLineDiff"]
-        ),
+//        .executableTarget(
+//            name: "MultiLineDiffRunner",
+//            dependencies: ["MultiLineDiff"]),
+//        .testTarget(
+//            name: "MultiLineDiffTests",
+//            dependencies: ["MultiLineDiff"]
+//        ),
     ]
 )
