@@ -73,8 +73,8 @@ let diffOperations = MultiLineDiff.createDiff(
 print("Diff Operations:")
 // Typical output might look like:
 // 1. Retain first 15 characters of the class definition
-// 2. Replace "oldMethod()" with "newMethod()"
-// 3. Replace print statement
+// 2. Delete "oldMethod" and insert "newMethod"
+// 3. Delete old print statement and insert new one
 ```
 
 ### Base64 Diff Decoding Example
@@ -120,8 +120,8 @@ class Example {
 
 Diff Operations:
 1. ✅ Retain "class Example {\n    "  (15 chars)
-2. 🔄 Replace "func oldMethod()" with "func newMethod()"
-3. 🔄 Replace print statement with more detailed version
+2. 🔄 Delete "oldMethod" and insert "newMethod"
+3. 🔄 Delete old print statement and insert new one
 
 Transformed Code:
 class Example {
@@ -162,8 +162,9 @@ assert(reconstructedCode == destinationCode, "Diff application failed")
 ```swift
 Source:      "Hello, world!"
 Destination: "Hello, Swift!"
-Operation:    ====== ~~~~     // "Hello, " retained, "world" replaced
-             ▼
+Operation:    ====== ----- ++++++   // "Hello, " retained, "world" deleted, "Swift" inserted
+             |||||| xxxxx ++++++
+             Hello, world Swift
 ```
 
 ### Multi-Line Example
@@ -209,14 +210,14 @@ Operation:    ====== ~~~~     // "Hello, " retained, "world" replaced
 
 ┌─ Operations
 │ ==================================== {    // retain signature
-│ ----                                      // delete old implementation
-│     var total = 0.0
-│     for item in items {
-│         total += item.price
-│     }
-│     return total
-│ ++++                                      // insert new implementation
-│     return items.reduce(0.0) { $0 + $1.price }
+│ ┌─ Delete old implementation and insert new
+│ │ --- var total = 0.0
+│ │ --- for item in items {
+│ │ ---     total += item.price
+│ │ --- }
+│ │ --- return total
+│ │ +++ return items.reduce(0.0) { $0 + $1.price }
+│ └─ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 │ }====                                     // retain closing brace
 └─────────────────
 ```
@@ -226,7 +227,8 @@ Operation:    ====== ~~~~     // "Hello, " retained, "world" replaced
 ```swift
 ┌─ Todd Algorithm (.todd)
 │ ==== function signature preserved
-│ ~~~~ implementation transformed semantically
+│ ---- old implementation removed
+│ ++++ new implementation added
 │ ==== closing brace retained
 └─────────────────
 
@@ -483,148 +485,7 @@ Operation:    ====== ++++++   // Insert ", world"
 ```swift
 Source:      "Hello, world!"
 Destination: "Hello, Swift!"
-Operation:    ====== ----- ++++++   // Retain "Hello, ", delete "world", insert "Swift"
+Operation:    ====== ----- ++++++   // "Hello, " retained, "world" deleted, "Swift" inserted
              |||||| xxxxx ++++++
              Hello, world Swift
-```
-
-### Multi-Line Diff Example
-
-```swift
-// Source
-func oldMethod() {
-    print("Hello")
-}
-
-// Destination
-func newMethod() {
-    print("Hello, World!")
-}
-
-// Operation Breakdown:
-func ==== ---- ++++ ==== () {     // retain "func ", delete "old", insert "new", retain "Method"
-    ---- +++++++++++++++++++     // delete old print statement, insert new one
-}====                            // retain closing brace
-
-// Visual Representation:
-┌─ Source
-│ func oldMethod() {
-│     print("Hello")
-│ }
-└─────────────────
-   ↓ Transform ↓
-┌─ Destination
-│ func newMethod() {
-│     print("Hello, World!")
-│ }
-└─────────────────
-```
-
-### Real-World Complex Example
-
-```swift
-// Source
-func calculateTotal(items: [Product]) -> Double {
-    var total = 0.0
-    for item in items {
-        total += item.price
-    }
-    return total
-}
-
-// Destination
-func calculateTotal(items: [Product]) -> Double {
-    return items.reduce(0.0) { $0 + $1.price }
-}
-
-// Operation Visualization:
-┌─ Retain signature
-│ func calculateTotal(items: [Product]) -> Double {
-└─ ===============================================
-
-┌─ Replace implementation
-│ --- var total = 0.0
-│ --- for item in items {
-│ ---     total += item.price
-│ --- }
-│ --- return total
-│ +++ return items.reduce(0.0) { $0 + $1.price }
-└─ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-┌─ Retain closing
-│ }
-└─ =
-```
-
-### Operation Legend
-
-| Symbol | Operation | Description |
-|--------|-----------|-------------|
-| `====` | Retain    | Keep text as is |
-| `----` | Delete    | Remove text |
-| `++++` | Insert    | Add new text |
-| `▼`    | Position  | Current operation point |
-| `┌─┐`  | Section   | Groups related changes |
-| `└─┘`  | Border    | Section boundary |
-
-### Base64 Operations (Built-in)
-
-```swift
-// Source Code
-let sourceCode = """
-func oldMethod() {
-    print("Hello")
-}
-"""
-
-let destinationCode = """
-func newMethod() {
-    print("Hello, World!")
-}
-"""
-
-// Create base64 diff (automatically encodes)
-let base64Diff = try MultiLineDiff.createBase64Diff(
-    source: sourceCode,
-    destination: destinationCode,
-    useToddAlgorithm: true  // Optional: use Todd algorithm
-)
-
-// Apply base64 diff (automatically decodes)
-let result = try MultiLineDiff.applyBase64Diff(
-    to: sourceCode,
-    base64Diff: base64Diff
-)
-
-// Verify transformation
-assert(result == destinationCode)
-
-// The base64 string contains encoded operations:
-print(base64Diff)
-// Example output:
-// W3sicmV0YWluIjo1fSx7InJlcGxhY2UiOiJuZXcifSx7InJldGFpbiI6N31d...
-
-// Operations represented in the base64:
-// ✅ Retain "func "
-// ❌ Delete "old"
-// ➕ Insert "new"
-// ✅ Retain "Method"
-// ❌ Delete old print statement
-// ➕ Insert new print statement
-// ✅ Retain closing brace
-```
-
-### File Operations with Base64
-
-```swift
-// Save base64 diff to file
-let fileURL = URL(fileURLWithPath: "diff.base64")
-try base64Diff.write(to: fileURL, atomically: true, encoding: .utf8)
-
-// Load and apply base64 diff from file
-let loadedBase64 = try String(contentsOf: fileURL, encoding: .utf8)
-let reconstructed = try MultiLineDiff.applyBase64Diff(
-    to: sourceCode,
-    base64Diff: loadedBase64
-)
 ```
