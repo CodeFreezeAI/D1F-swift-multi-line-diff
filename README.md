@@ -63,7 +63,7 @@ MultiLineDiff uses base64 encoding for several critical reasons:
 | **Time Complexity** | O(n) | Linear time complexity | 🟢🟢🟢 Low |
 | **Space Complexity** | O(1) | Constant space usage | 🟢🟢🟡 Moderate |
 | **Best Case** | Ω(1) | Minimal changes between strings | 🟢🟢🟢 Fast |
-| **Worst Case** | O(n) | Complete string replacement | 🟢🟢🟡 Moderate |
+| **Worst Case** | O(n) | Complete string replacement | 🟠🟡🟡 Efficient |
 | **Average Case** | Θ(n) | Proportional to input string length | 🟢🟢🟡 Moderate |
 
 #### Performance Gradient
