@@ -204,3 +204,5 @@ MIT
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request. 
+
+(c) 2025 Todd Bruss
