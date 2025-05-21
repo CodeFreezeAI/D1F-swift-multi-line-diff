@@ -75,4 +75,28 @@ extension MultiLineDiff {
         }
         return try decodeDiffFromJSON(data)
     }
+    
+    /// Gets the base64 string representation of a diff result directly
+    /// - Parameter diff: The diff result to encode
+    /// - Returns: A base64 encoded string representing the diff operations
+    /// - Throws: An error if encoding fails
+    public static func diffToBase64(_ diff: DiffResult) throws -> String {
+        let encoder = JSONEncoder()
+        let operationsData = try encoder.encode(diff.operations)
+        return operationsData.base64EncodedString()
+    }
+    
+    /// Creates a diff result from a base64 encoded string
+    /// - Parameter base64String: The base64 encoded string containing the diff operations
+    /// - Returns: The decoded diff result
+    /// - Throws: An error if decoding fails
+    public static func diffFromBase64(_ base64String: String) throws -> DiffResult {
+        guard let operationsData = Data(base64Encoded: base64String) else {
+            throw DiffError.decodingFailed
+        }
+        
+        let decoder = JSONDecoder()
+        let operations = try decoder.decode([DiffOperation].self, from: operationsData)
+        return DiffResult(operations: operations)
+    }
 }

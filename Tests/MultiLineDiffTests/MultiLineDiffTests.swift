@@ -331,8 +331,8 @@ import Foundation
     // Encode to JSON string
     let jsonString = try MultiLineDiff.encodeDiffToJSONString(diff)
     
-    // Should contain base64Operations key
-    #expect(jsonString.contains("base64Operations"), "JSON should contain base64Operations key")
+    // Should contain base64 key
+    #expect(jsonString.contains("base64"), "JSON should contain base64 key")
     
     // Decode back
     let decodedDiff = try MultiLineDiff.decodeDiffFromJSONString(jsonString)
@@ -396,7 +396,7 @@ import Foundation
     print("JSON String: \(jsonString)")
     
     // Verify JSON structure
-    #expect(jsonString.contains("base64Operations"), "Should contain base64Operations key")
+    #expect(jsonString.contains("base64"), "Should contain base64 key")
     
     // Decode back
     let decodedDiff = try MultiLineDiff.decodeDiffFromJSONString(jsonString)
@@ -421,6 +421,52 @@ import Foundation
             throw TestError("Operation types don't match at index \(index)")
         }
     }
+}
+
+@Test func testDiffBase64EncodingDecoding() throws {
+    // Create a diff with various operations
+    let operations: [DiffOperation] = [
+        .retain(10),
+        .delete(5),
+        .insert("Hello, world!\nWith newlines\tand tabs"),
+        .retain(3)
+    ]
+    
+    let diff = DiffResult(operations: operations)
+    
+    // Convert to base64
+    let base64String = try MultiLineDiff.diffToBase64(diff)
+    print("Base64 String: \(base64String)")
+    
+    // Decode back from base64
+    let decodedDiff = try MultiLineDiff.diffFromBase64(base64String)
+    
+    // Verify operations match
+    #expect(decodedDiff.operations.count == diff.operations.count, "Operation count should match")
+    
+    for (index, op) in diff.operations.enumerated() {
+        let decodedOp = decodedDiff.operations[index]
+        
+        switch (op, decodedOp) {
+        case (.retain(let count1), .retain(let count2)):
+            #expect(count1 == count2, "Retain count should match")
+            
+        case (.insert(let text1), .insert(let text2)):
+            #expect(text1 == text2, "Insert text should match")
+            
+        case (.delete(let count1), .delete(let count2)):
+            #expect(count1 == count2, "Delete count should match")
+            
+        default:
+            throw TestError("Operation types don't match at index \(index)")
+        }
+    }
+    
+    // Verify that applying both diffs produces the same result
+    let source = "0123456789xxxxx123" // Matches the retain(10), delete(5), retain(3) pattern
+    let result1 = try MultiLineDiff.applyDiff(to: source, diff: diff)
+    let result2 = try MultiLineDiff.applyDiff(to: source, diff: decodedDiff)
+    #expect(result1 == result2, "Both diffs should produce the same result")
 }
 
 @Test func testLargeFileWithRegularChanges() throws {
@@ -751,5 +797,191 @@ class TestFileManager {
     
     deinit {
         try? cleanup()
+    }
+}
+
+@Test func testCreateAndApplyBase64Diff() throws {
+    // Test with simple text changes
+    let source = "Hello, world!"
+    let destination = "Hello, Swift!"
+    
+    // Test Brus algorithm
+    let base64DiffBrus = try MultiLineDiff.createBase64Diff(source: source, destination: destination)
+    let resultBrus = try MultiLineDiff.applyBase64Diff(to: source, base64Diff: base64DiffBrus)
+    #expect(resultBrus == destination, "Brus base64 diff should correctly transform source to destination")
+    
+    // Test Todd algorithm
+    let base64DiffTodd = try MultiLineDiff.createBase64Diff(source: source, destination: destination, useToddAlgorithm: true)
+    let resultTodd = try MultiLineDiff.applyBase64Diff(to: source, base64Diff: base64DiffTodd, useToddAlgorithm: true)
+    #expect(resultTodd == destination, "Todd base64 diff should correctly transform source to destination")
+    
+    // Verify both algorithms produce the same final result
+    #expect(resultBrus == resultTodd, "Both algorithms should produce the same result")
+}
+
+@Test func testCreateAndApplyBase64DiffWithComplexContent() throws {
+    // Test with complex content including whitespace and special characters
+    let source = """
+    function example() {
+        // Old implementation
+        console.log("Hello");
+        return 42;
+    }
+    """
+    
+    let destination = """
+    function example() {
+        // New implementation with tabs and spaces
+        console.log("Hello, world!");
+        return {
+            status: "success",
+            value: 42
+        };
+    }
+    """
+    
+    // Test Brus algorithm
+    let base64DiffBrus = try MultiLineDiff.createBase64Diff(source: source, destination: destination)
+    print("Brus algorithm base64 diff: \(base64DiffBrus)")
+    let resultBrus = try MultiLineDiff.applyBase64Diff(to: source, base64Diff: base64DiffBrus)
+    #expect(resultBrus == destination, "Brus base64 diff should handle complex content with whitespace")
+    
+    // Test Todd algorithm
+    let base64DiffTodd = try MultiLineDiff.createBase64Diff(source: source, destination: destination, useToddAlgorithm: true)
+    print("Todd algorithm base64 diff: \(base64DiffTodd)")
+    let resultTodd = try MultiLineDiff.applyBase64Diff(to: source, base64Diff: base64DiffTodd, useToddAlgorithm: true)
+    #expect(resultTodd == destination, "Todd base64 diff should handle complex content with whitespace")
+    
+    // Compare diff sizes
+    print("\nDiff size comparison:")
+    print("- Brus base64 length: \(base64DiffBrus.count)")
+    print("- Todd base64 length: \(base64DiffTodd.count)")
+    
+    // Verify both algorithms produce the same final result
+    #expect(resultBrus == resultTodd, "Both algorithms should produce the same result")
+    
+    // Verify that invalid base64 throws an error
+    do {
+        _ = try MultiLineDiff.applyBase64Diff(to: source, base64Diff: "invalid base64!")
+        throw TestError("Expected error for invalid base64")
+    } catch {
+        // Error is expected
+    }
+}
+
+@Test func testBase64DiffWithSpecialCharacters() throws {
+    // Test with various special characters and edge cases
+    let source = """
+    function test() {
+        // Special chars: 🚀 © ® ™ € £ ¥
+        const regex = /^[a-zA-Z0-9]+$/;
+        const path = "C:\\Program Files\\App";
+        const json = '{"key": "value"}';
+        return `Template ${value}\n\t\r\n`;
+    }
+    """
+    
+    let destination = """
+    function test() {
+        // Updated special chars: 🎉 © ® ™ € £ ¥ 🌟
+        const regex = new RegExp('^[a-zA-Z0-9]+$');
+        const path = "C:\\\\Program Files\\\\App\\\\New";
+        const json = JSON.stringify({"key": "value"});
+        return `Template literal ${value}\n\t\r\n    `;
+    }
+    """
+    
+    // Test both algorithms
+    for useTodd in [false, true] {
+        let base64Diff = try MultiLineDiff.createBase64Diff(source: source, destination: destination, useToddAlgorithm: useTodd)
+        let result = try MultiLineDiff.applyBase64Diff(to: source, base64Diff: base64Diff, useToddAlgorithm: useTodd)
+        
+        // Verify exact preservation
+        #expect(result == destination, "\(useTodd ? "Todd" : "Brus") algorithm should preserve special characters")
+        
+        // Verify base64 string is valid
+        #expect(base64Diff.range(of: "^[A-Za-z0-9+/]*={0,2}$", options: .regularExpression) != nil,
+                "Base64 string should be valid")
+    }
+}
+
+@Test func testBase64DiffEdgeCases() throws {
+    // Test various edge cases
+    let testCases = [
+        // Empty strings
+        ("", ""),
+        // Single character changes
+        ("a", "b"),
+        // Only whitespace changes
+        ("  ", "    "),
+        ("\t", "\n"),
+        // Repeated characters
+        ("aaa", "aaaa"),
+        // Very long line
+        (String(repeating: "a", count: 1000), String(repeating: "b", count: 1000)),
+        // Multiple empty lines with explicit newlines
+        ("a\nb\nc\n", "a\nb\nc\nd\n"),
+        // Mixed whitespace
+        (" \t \n ", "\n \t \n"),
+        // Unicode boundaries
+        ("Hello 🌍", "Hello 🌎"),
+        // Zero-width characters
+        ("a\u{200B}b", "ab"),
+        // Control characters
+        ("a\u{0000}b", "a\u{0001}b"),
+        // Pure newlines
+        ("\n", "\n\n"),
+        // Mixed content and newlines
+        ("abc\ndef\n", "abc\ndef\nghi\n")
+    ]
+    
+    for (source, destination) in testCases {
+        // Test both algorithms
+        for useTodd in [false, true] {
+            let base64Diff = try MultiLineDiff.createBase64Diff(source: source, destination: destination, useToddAlgorithm: useTodd)
+            let result = try MultiLineDiff.applyBase64Diff(to: source, base64Diff: base64Diff, useToddAlgorithm: useTodd)
+            
+            #expect(result == destination, "Edge case failed: \(source.debugDescription) -> \(destination.debugDescription) with \(useTodd ? "Todd" : "Brus") algorithm")
+            
+            // Additional verification for newline cases
+            if source.contains("\n") || destination.contains("\n") {
+                let resultNewlines = result.components(separatedBy: "\n").count - 1
+                let destNewlines = destination.components(separatedBy: "\n").count - 1
+                
+                #expect(resultNewlines == destNewlines, 
+                       "Newline count mismatch: expected \(destNewlines), got \(resultNewlines) with \(useTodd ? "Todd" : "Brus") algorithm")
+            }
+        }
+    }
+}
+
+@Test func testBase64DiffPerformance() throws {
+    // Generate large test data
+    let sourceLines = (1...1000).map { "Line \($0): " + String(repeating: "a", count: 50) }
+    let destLines = sourceLines.enumerated().map { index, line in
+        index % 5 == 0 ? line.replacingOccurrences(of: "a", with: "b") : line
+    }
+    
+    let source = sourceLines.joined(separator: "\n")
+    let destination = destLines.joined(separator: "\n")
+    
+    // Test both algorithms
+    for useTodd in [false, true] {
+        let startTime = Date()
+        let base64Diff = try MultiLineDiff.createBase64Diff(source: source, destination: destination, useToddAlgorithm: useTodd)
+        let createTime = Date().timeIntervalSince(startTime)
+        
+        let applyStartTime = Date()
+        let result = try MultiLineDiff.applyBase64Diff(to: source, base64Diff: base64Diff, useToddAlgorithm: useTodd)
+        let applyTime = Date().timeIntervalSince(applyStartTime)
+        
+        // Verify correctness
+        #expect(result == destination, "\(useTodd ? "Todd" : "Brus") algorithm failed for large file")
+        
+        // Print performance metrics
+        print("\(useTodd ? "Todd" : "Brus") Algorithm Performance:")
+        print("- Create time: \(String(format: "%.3f", createTime))s")
+        print("- Apply time: \(String(format: "%.3f", applyTime))s")
+        print("- Base64 length: \(base64Diff.count)")
     }
 }

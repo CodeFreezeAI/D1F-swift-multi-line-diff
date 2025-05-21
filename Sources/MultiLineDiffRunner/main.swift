@@ -708,4 +708,68 @@ func demonstrateToddDiff() {
 }
 
 // Execute the Todd diff comparison
-demonstrateToddDiff() 
+demonstrateToddDiff()
+
+// Function to demonstrate base64 diff functionality
+func demonstrateBase64Diff() {
+    print("\nDemonstrating Base64 Diff Operations:")
+    
+    let source = """
+    class Example {
+        func greet() {
+            print("Hello")
+        }
+    }
+    """
+    
+    let destination = """
+    class Example {
+        // Added documentation
+        func greet(name: String) {
+            print("Hello, \\(name)!")
+        }
+    }
+    """
+    
+    do {
+        // Create base64 diff
+        let base64Diff = try MultiLineDiff.createBase64Diff(source: source, destination: destination)
+        print("\n  Base64 diff created:")
+        print("  - Length: \(base64Diff.count) characters")
+        print("  - Diff: \(base64Diff)")
+        
+        // Apply base64 diff
+        let result = try MultiLineDiff.applyBase64Diff(to: source, base64Diff: base64Diff)
+        let success = result == destination
+        
+        print("\n  Applied base64 diff:")
+        print("  - Success: \(success ? "✅" : "❌")")
+        
+        // Compare with JSON format
+        let diff = MultiLineDiff.createDiffBrus(source: source, destination: destination)
+        let jsonString = try MultiLineDiff.encodeDiffToJSONString(diff)
+        
+        print("\n  Format comparison:")
+        print("  - Base64 length: \(base64Diff.count)")
+        print("  - JSON length: \(jsonString.count)")
+        print("  - Size reduction: \(Int((1 - Double(base64Diff.count) / Double(jsonString.count)) * 100))%")
+        
+    } catch {
+        print("  ❌ ERROR: \(error)")
+    }
+}
+
+// Run all demonstrations
+print("=== MultiLineDiff Demonstrations ===\n")
+
+print("1. File-based diff operations:")
+demonstrateCodeFileDiff()
+
+print("\n2. Large file handling:")
+demonstrateLargeFileDiffWithPatterns()
+
+print("\n3. Algorithm comparison (Brus vs Todd):")
+demonstrateToddDiff()
+
+print("\n4. Base64 operations:")
+demonstrateBase64Diff() 

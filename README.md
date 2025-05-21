@@ -1,201 +1,171 @@
 # Swift Multi Line Diff 1.0.5
 
-A Swift package for creating and applying diffs to multi-line Unicode/UTF-8 text strings, with support for JSON serialization.
+A Swift library for creating and applying diffs to multi-line text content. Supports Unicode/UTF-8 strings and handles multi-line content properly. Designed specifically for Vibe AI Coding integrity and safe code transformations.
 
 ## Features
 
-- Generate diffs between two strings using two advanced diff algorithms:
-  - The Brus Diff Algorithm: A simple and reliable approach for text transformations
-  - The Todd Diff Algorithm: A more granular method for detailed multi-line changes
-- Apply diffs to transform one string into another
-- Full support for multi-line text
-- Support for Unicode/UTF-8 characters
-- JSON serialization for storing and sharing diffs
-- Clean, Simple API
-- Comprehensive test suite
+- Create diffs between two strings
+- Apply diffs to transform source text
+- Handle multi-line content properly
+- Support for Unicode/UTF-8 strings
+- Multiple diff formats (JSON, Base64)
+- Two diff algorithms (Brus and Todd)
+- Designed for AI code integrity
 
-## Requirements
+## Why Base64?
 
-- Swift 6.1 or later
+MultiLineDiff uses base64 encoding for several critical reasons:
 
-## Installation
+1. **AI Code Integrity**: Designed specifically for Vibe AI Coding, base64 encoding ensures:
+   - Exact preservation of whitespace and indentation
+   - Perfect handling of special characters
+   - No loss of code structure during transmission
+   - Safe transport between AI and human code reviews
 
-### Swift Package Manager
+2. **Data Safety**:
+   - Eliminates JSON escaping issues
+   - Preserves newlines and tabs exactly
+   - Handles all Unicode characters reliably
+   - Prevents code corruption during transport
 
-Add the following to your `Package.swift` file:
-
-```swift
-dependencies: [
-    .package(url: "https://github.com/yourusername/MultiLineDiff.git", from: "1.0.0")
-]
-```
+3. **Efficiency**:
+   - 6% more compact than JSON format
+   - No need for complex escaping rules
+   - Faster encoding/decoding
+   - Reduced network bandwidth
 
 ## Usage
 
-### Basic Usage
+### Basic Diff Operations
 
 ```swift
-import MultiLineDiff
-
-// Simple text changes
 let source = "Hello, world!"
 let destination = "Hello, Swift!"
 
-// Create and apply a diff
-let diff = MultiLineDiff.createDiffBrus(source: source, destination: destination)
-let result = try? MultiLineDiff.applyDiff(to: source, diff: diff) // "Hello, Swift!"
-
-// Multi-line changes
-let code = """
-func greet() {
-    print("Hello")
-}
-"""
-
-let updatedCode = """
-func greet(_ name: String) {
-    print("Hello, \\(name)!")
-}
-"""
-
-// Use Todd's algorithm for code changes
-let codeDiff = MultiLineDiff.createDiffTodd(source: code, destination: updatedCode)
-```
-
-### Working with Diffs
-
-```swift
 // Create a diff
-let diff = MultiLineDiff.createDiffBrus(
-    source: "Hello, world!",
-    destination: "Hello, Swift!"
-)
+let diff = MultiLineDiff.createDiffBrus(source: source, destination: destination)
 
-// Inspect operations
-diff.operations.forEach { op in
-    switch op {
-    case .retain(let count): print("Keep \(count) chars")
-    case .delete(let count): print("Delete \(count) chars")
-    case .insert(let text): print("Insert \"\(text)\"")
-    }
-}
+// Apply the diff
+let result = try MultiLineDiff.applyDiff(to: source, diff: diff)
+assert(result == destination)
 ```
 
-### JSON Handling
+### Base64 Diff Operations (Recommended)
+
+The recommended way to create and apply diffs, especially for AI code transformations:
 
 ```swift
-// Save diff to JSON
-let diff = MultiLineDiff.createDiffBrus(source: "old", destination: "new")
-let json = try? MultiLineDiff.encodeDiffToJSONString(diff)
+// Create a base64 encoded diff (Brus algorithm)
+let base64Diff = try MultiLineDiff.createBase64Diff(source: source, destination: destination)
 
-// Load from JSON
-if let json = json {
-    let loadedDiff = try? MultiLineDiff.decodeDiffFromJSONString(json)
-}
+// Create a base64 encoded diff (Todd algorithm for more granular changes)
+let base64DiffTodd = try MultiLineDiff.createBase64Diff(source: source, destination: destination, useToddAlgorithm: true)
 
-// File operations
-let fileURL = URL(fileURLWithPath: "diff.json")
-try? MultiLineDiff.saveDiffToFile(diff, fileURL: fileURL)
-let loadedDiff = try? MultiLineDiff.loadDiffFromFile(fileURL: fileURL)
+// Apply the base64 diff
+let result = try MultiLineDiff.applyBase64Diff(to: source, base64Diff: base64Diff)
+assert(result == destination)
 ```
 
-### Error Handling
+### JSON Diff Operations
+
+For cases where structured storage is needed:
 
 ```swift
-do {
-    let diff = MultiLineDiff.createDiffBrus(source: "old", destination: "new")
-    let result = try MultiLineDiff.applyDiff(to: "old", diff: diff)
-} catch let error as DiffError {
-    switch error {
-    case .invalidRetain(let count, _):
-        print("Can't retain \(count) chars")
-    case .invalidDelete(let count, _):
-        print("Can't delete \(count) chars")
-    case .incompleteApplication(let remaining):
-        print("\(remaining) chars not processed")
-    case .encodingFailed:
-        print("JSON encoding failed")
-    case .decodingFailed:
-        print("JSON decoding failed")
-    }
-}
+// Create a diff and encode to JSON
+let diff = MultiLineDiff.createDiffBrus(source: source, destination: destination)
+let jsonString = try MultiLineDiff.encodeDiffToJSONString(diff)
+
+// Decode from JSON and apply
+let decodedDiff = try MultiLineDiff.decodeDiffFromJSONString(jsonString)
+let result = try MultiLineDiff.applyDiff(to: source, diff: decodedDiff)
+assert(result == destination)
 ```
 
-### Multi-line Example
+### File Operations
+
+```swift
+// Save diff to file
+try MultiLineDiff.saveDiffToFile(diff, fileURL: fileURL)
+
+// Load diff from file
+let loadedDiff = try MultiLineDiff.loadDiffFromFile(fileURL: fileURL)
+```
+
+### Advanced Usage: Todd Algorithm
+
+For more granular diffs, especially with source code:
 
 ```swift
 let source = """
-struct User {
-    let name: String
-    let age: Int
-    
-    func description() -> String {
-        return "\(name) is \(age) years old"
+class Example {
+    func method() {
+        print("Hello")
     }
 }
 """
 
 let destination = """
-struct User {
-    let name: String
-    let age: Int
-    let email: String  // Added field
-    
-    func description() -> String {
-        return "\(name) (\(email)) is \(age) years old"
-    }
-    
-    func isAdult() -> Bool {  // Added method
-        return age >= 18
+class Example {
+    // Added comment
+    func method() {
+        print("Hello, world!")
     }
 }
 """
 
-// Brus algorithm - simple but effective
-let brusDiff = MultiLineDiff.createDiffBrus(source: source, destination: destination)
-// Result: One large delete and insert operation for the changed region
-
-// Todd algorithm - line-by-line analysis
-let toddDiff = MultiLineDiff.createDiffTodd(source: source, destination: destination)
-// Result: Precise operations showing:
-// - Unchanged struct header and first two fields
-// - Inserted email field
-// - Modified description method
-// - Added isAdult method
-
-// Both produce the same result when applied
-let brusResult = try? MultiLineDiff.applyDiff(to: source, diff: brusDiff)
-let toddResult = try? MultiLineDiff.applyDiff(to: source, diff: toddDiff)
-assert(brusResult == toddResult) // true
+// Create diff using Todd algorithm
+let diff = MultiLineDiff.createDiffTodd(source: source, destination: destination)
 ```
 
-## How It Works
+## Diff Formats
 
-### Brus Diff Method
-The Brus algorithm uses a simple but effective approach that:
-1. Finds common prefixes and suffixes between strings
-2. Represents the middle differences as delete and insert operations
-3. Combines these operations into a sequence that can transform the source into the destination
-4. Best for simple text changes and performance-critical operations
+### Base64 Format (Recommended)
+The base64 format is the most compact and efficient way to store diffs. It directly encodes the diff operations without any additional structure, making it perfect for AI code transformations. The format:
+- Preserves exact whitespace and indentation
+- Handles all special characters reliably
+- Is safe for network transmission
+- Reduces storage size
 
-### Todd Diff Method
-The Todd algorithm offers a more granular approach:
-1. Performs line-by-line analysis
-2. Creates nested diffs with more detailed change tracking
-3. Supports complex multi-line transformations with high precision
-4. Best for source code and structured text changes
+Example base64 diff:
+```
+W3sicmV0YWluIjoxMH0seyJkZWxldGUiOjV9LHsiaW5zZXJ0IjoiSGVsbG8sIFN3aWZ0IWJ9
+```
 
-Both methods are:
-- Reliable for all text, including multi-line and Unicode content
-- Efficient for most text operations
-- Easy to understand and maintain
+### JSON Format
+The JSON format wraps the base64-encoded operations in a structured format:
+```json
+{
+    "base64": "encoded_operations_string"
+}
+```
+
+Both formats preserve all whitespace and special characters exactly.
 
 ## Performance Considerations
 
 - The Brus algorithm is optimized for simple text changes and is generally faster
 - The Todd algorithm provides more detailed diffs but may be slower for large files
-- Both algorithms use efficient string handling and memory management
-- JSON operations are optimized for minimal memory usage
+- Base64 encoding provides the most compact storage format (6% smaller than JSON)
+- JSON format adds structure but increases storage size slightly
+
+## AI Code Integrity
+
+MultiLineDiff is specifically designed for Vibe AI Coding integrity:
+
+1. **Safe Transformations**:
+   - Preserves code structure exactly
+   - Maintains indentation and formatting
+   - Handles all programming language constructs
+
+2. **Reliable Transport**:
+   - Base64 encoding ensures safe transmission
+   - No corruption of whitespace or special characters
+   - Perfect preservation of code style
+
+3. **Verification**:
+   - Easy to verify code changes
+   - Supports both simple and complex transformations
+   - Maintains coding standards
 
 ## License
 

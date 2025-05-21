@@ -109,6 +109,17 @@ private extension String {
             return emptyResult
         }
         
+        // For very simple cases, use Brus algorithm
+        if source.count <= 1 || destination.count <= 1 {
+            return createDiffBrus(source: source, destination: destination)
+        }
+        
+        // For pure whitespace changes, use Brus algorithm
+        if source.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+           destination.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return createDiffBrus(source: source, destination: destination)
+        }
+        
         let sourceLines = source.split(separator: "\n", omittingEmptySubsequences: false)
         let destLines = destination.split(separator: "\n", omittingEmptySubsequences: false)
         
@@ -117,24 +128,87 @@ private extension String {
         
         let comparison = SequenceComparisonResult(source: sourceLines, destination: destLines)
         
-        // Process operations sequentially for now
+        // Track the last operation type to combine consecutive operations
+        var lastOpType: DiffOperationType? = nil
+        var currentRetainCount = 0
+        var currentDeleteCount = 0
+        var currentInsertText = ""
+        
+        // Helper to flush accumulated operations
+        func flushOperations() {
+            if currentRetainCount > 0 {
+                result.append(.retain(currentRetainCount))
+                currentRetainCount = 0
+            }
+            if currentDeleteCount > 0 {
+                result.append(.delete(currentDeleteCount))
+                currentDeleteCount = 0
+            }
+            if !currentInsertText.isEmpty {
+                result.append(.insert(currentInsertText))
+                currentInsertText = ""
+            }
+        }
+        
+        // Process operations sequentially
         for op in comparison.operations {
             switch op {
             case .retain(let index):
-                let buffer = StringBuffer(capacity: sourceLines[index].count + 1)
-                buffer.append(sourceLines[index], isLastLine: index == sourceLines.count - 1)
-                let lineDiff = createDiffBrus(source: buffer.result, destination: buffer.result)
-                result.append(contentsOf: lineDiff.operations)
+                let line = sourceLines[index]
+                let isLastLine = index == sourceLines.count - 1
+                
+                if lastOpType != .retain {
+                    flushOperations()
+                }
+                
+                currentRetainCount += line.count
+                if !isLastLine {
+                    currentRetainCount += 1 // Add newline
+                }
+                lastOpType = .retain
                 
             case .delete(let index):
-                let deleteDiff = createLineDiff(line: sourceLines[index], index: index, 
-                                             totalLines: sourceLines.count, isSource: true)
-                result.append(contentsOf: deleteDiff.operations)
+                let line = sourceLines[index]
+                let isLastLine = index == sourceLines.count - 1
+                
+                if lastOpType != .delete {
+                    flushOperations()
+                }
+                
+                currentDeleteCount += line.count
+                if !isLastLine {
+                    currentDeleteCount += 1 // Add newline
+                }
+                lastOpType = .delete
                 
             case .insert(let index):
-                let insertDiff = createLineDiff(line: destLines[index], index: index, 
-                                             totalLines: destLines.count, isSource: false)
-                result.append(contentsOf: insertDiff.operations)
+                let line = destLines[index]
+                let isLastLine = index == destLines.count - 1
+                
+                if lastOpType != .insert {
+                    flushOperations()
+                }
+                
+                currentInsertText += String(line)
+                if !isLastLine {
+                    currentInsertText += "\n"
+                }
+                lastOpType = .insert
+            }
+        }
+        
+        // Flush any remaining operations
+        flushOperations()
+        
+        // Handle trailing newlines
+        let sourceEndsWithNewline = source.hasSuffix("\n")
+        let destEndsWithNewline = destination.hasSuffix("\n")
+        
+        if sourceEndsWithNewline != destEndsWithNewline {
+            if destEndsWithNewline {
+                result.append(.insert("\n"))
+            } else {
+                result.append(.delete(1))
             }
         }
         
@@ -193,6 +267,32 @@ private extension String {
         }
         
         return result
+    }
+    
+    /// Creates a base64 encoded diff between two strings
+    /// - Parameters:
+    ///   - source: The original string
+    ///   - destination: The modified string
+    ///   - useToddAlgorithm: Whether to use Todd's more granular algorithm (default: false)
+    /// - Returns: A base64 encoded string representing the diff operations
+    /// - Throws: An error if encoding fails
+    public static func createBase64Diff(source: String, destination: String, useToddAlgorithm: Bool = false) throws -> String {
+        let diff = useToddAlgorithm ? 
+            createDiffTodd(source: source, destination: destination) :
+            createDiffBrus(source: source, destination: destination)
+        return try diffToBase64(diff)
+    }
+    
+    /// Applies a base64 encoded diff to a source string
+    /// - Parameters:
+    ///   - source: The original string
+    ///   - base64Diff: The base64 encoded diff to apply
+    ///   - useToddAlgorithm: Whether this is a Todd algorithm diff (default: false)
+    /// - Returns: The resulting string after applying the diff
+    /// - Throws: An error if decoding or applying the diff fails
+    public static func applyBase64Diff(to source: String, base64Diff: String, useToddAlgorithm: Bool = false) throws -> String {
+        let diff = try diffFromBase64(base64Diff)
+        return try applyDiff(to: source, diff: diff)
     }
     
     // MARK: - Private Implementation
@@ -266,9 +366,27 @@ private extension String {
     private static func createLineDiff(line: Substring, index: Int, totalLines: Int, isSource: Bool) -> DiffResult {
         let buffer = StringBuffer(capacity: line.count + 1)
         buffer.append(line, isLastLine: index == totalLines - 1)
+        let content = buffer.result
         
-        return isSource ? createDiffBrus(source: buffer.result, destination: "") :
-                         createDiffBrus(source: "", destination: buffer.result)
+        if isSource {
+            // For source lines, we need to handle the newline separately
+            if content.hasSuffix("\n") {
+                return DiffResult(operations: [
+                    .delete(content.count - 1),  // Delete content without newline
+                    .delete(1)                   // Delete newline separately
+                ])
+            }
+            return DiffResult(operations: [.delete(content.count)])
+        } else {
+            // For destination lines, we need to handle the newline separately
+            if content.hasSuffix("\n") {
+                return DiffResult(operations: [
+                    .insert(String(content.dropLast())),  // Insert content without newline
+                    .insert("\n")                         // Insert newline separately
+                ])
+            }
+            return DiffResult(operations: [.insert(content)])
+        }
     }
     
     /// Result of comparing two sequences
@@ -341,6 +459,10 @@ private extension String {
         case retain(Int)
         case insert(Int)
         case delete(Int)
+    }
+    
+    private enum DiffOperationType {
+        case retain, delete, insert
     }
 }
 
