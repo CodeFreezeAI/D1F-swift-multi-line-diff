@@ -617,7 +617,7 @@ print(base64Diff)
 
 // Operations represented in the base64:
 // ==== Retain "func "
-// ~~~~� Replace "old" with "new"
+// ~~~~ Replace "old" with "new"
 // ==== Retain "Method"
 // ~~~~ Replace print statement
 // ==== Retain closing brace
