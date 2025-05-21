@@ -146,109 +146,97 @@ assert(reconstructedCode == destinationCode, "Diff application failed")
 
 ## 🔍 Diff Operation Insights
 
-### Operation Types
+### Operation Symbols
 
-| Operation | Symbol | Meaning |
-|-----------|--------|---------|
-| Retain    | ✅ | Keep existing content |
-| Delete    | ❌ | Remove content |
-| Insert    | ➕ | Add new content |
-| Replace   | 🔄 | Swap out content |
+| Symbol | Operation | Description |
+|--------|-----------|-------------|
+| `====` | Retain    | Keep text as is |
+| `----` | Delete    | Remove text |
+| `++++` | Insert    | Add new text |
+| `~~~~` | Replace   | Change text |
+| `▼`    | Position  | Current operation point |
+| `┌─┐`  | Section   | Groups related changes |
+| `└─┘`  | Border    | Section boundary |
 
 ### Basic Examples
 
 ```swift
 Source:      "Hello, world!"
 Destination: "Hello, Swift!"
-Operations:   ✅✅✅✅✅✅ 🔄     // "Hello, " retained, "world" replaced with "Swift"
+Operation:    ====== ~~~~     // "Hello, " retained, "world" replaced
+             ▼
 ```
 
 ### Multi-Line Example
 
 ```swift
-// Source
-func oldMethod() {
-    print("Hello")
-}
+┌─ Source
+│ func oldMethod() {
+│     print("Hello")
+│ }
+└─────────────────
 
-// Destination
-func newMethod() {
-    print("Hello, World!")
-}
+┌─ Destination
+│ func newMethod() {
+│     print("Hello, World!")
+│ }
+└─────────────────
 
-// Operations:
-func ✅🔄✅ () {          // "func " retained, "old" → "new", "Method" retained
-    🔄                   // print statement replaced
-}✅                      // closing brace retained
+┌─ Operations
+│ func ==== ~~~~ ==== () {    // retain, replace "old", retain "Method"
+│     ~~~~~~~~~~~~~~~~        // replace print statement
+│ }====                       // retain closing brace
+└─────────────────
 ```
 
-### Real-World Complex Example (Algorithm Comparison)
+### Real-World Complex Example
 
 ```swift
-// Source Code
-func calculateTotal(items: [Product]) -> Double {
-    var total = 0.0
-    for item in items {
-        total += item.price
-    }
-    return total
-}
-
-// Destination Code
-func calculateTotal(items: [Product]) -> Double {
-    return items.reduce(0.0) { $0 + $1.price }
-}
-
-// Todd Algorithm (.todd) - Semantic Understanding
-┌─ Analysis
-│ ✅ Signature preserved (semantic match)
-│ 🔄 Loop construct transformed to functional approach
-│ ❌ Imperative accumulator removed
-│ ➕ Functional reduce operation added
-└─ Result: More granular, semantic-aware changes
-
-// Brus Algorithm (.brus) - Character-based
-┌─ Analysis
-│ ✅ Matching prefix
-│ ❌ Bulk content removal
-│ ➕ New content insertion
-│ ✅ Matching suffix
-└─ Result: Simpler, character-based changes
-
-// Visual Comparison
-Todd Algorithm:
-┌─ Signature
+┌─ Source
 │ func calculateTotal(items: [Product]) -> Double {
-│ ✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅
-└─ Semantic preservation
+│     var total = 0.0
+│     for item in items {
+│         total += item.price
+│     }
+│     return total
+│ }
+└─────────────────
 
-┌─ Implementation
-│ ❌ var total = 0.0
-│ ❌ for item in items {
-│ ❌     total += item.price
-│ ❌ }
-│ ❌ return total
-│ ➕ return items.reduce(0.0) { $0 + $1.price }
-└─ Semantic transformation
+┌─ Destination
+│ func calculateTotal(items: [Product]) -> Double {
+│     return items.reduce(0.0) { $0 + $1.price }
+│ }
+└─────────────────
 
-Brus Algorithm:
-┌─ Content
-│ ✅ func calculateTotal(items: [Product]) -> Double {
-│ ❌ [entire old implementation]
-│ ➕ [entire new implementation]
-│ ✅ }
-└─ Character-based changes
+┌─ Operations
+│ ==================================== {    // retain signature
+│ ----                                      // delete old implementation
+│     var total = 0.0
+│     for item in items {
+│         total += item.price
+│     }
+│     return total
+│ ++++                                      // insert new implementation
+│     return items.reduce(0.0) { $0 + $1.price }
+│ }====                                     // retain closing brace
+└─────────────────
+```
 
-// Performance Impact
-Todd (.todd):
-- More operations but semantically meaningful
-- Better for code refactoring
-- Preserves code structure
+### Algorithm Comparison
 
-Brus (.brus):
-- Fewer operations but less granular
-- Better for simple text changes
-- Faster for basic transformations
+```swift
+┌─ Todd Algorithm (.todd)
+│ ==== function signature preserved
+│ ~~~~ implementation transformed semantically
+│ ==== closing brace retained
+└─────────────────
+
+┌─ Brus Algorithm (.brus)
+│ ==== matching prefix
+│ ---- bulk content removal
+│ ++++ new content insertion
+│ ==== matching suffix
+└─────────────────
 ```
 
 ### When to Use Each Algorithm
@@ -586,7 +574,6 @@ func calculateTotal(items: [Product]) -> Double {
 | `----` | Delete    | Remove text |
 | `++++` | Insert    | Add new text |
 | `~~~~` | Replace   | Change text |
-| `||||` | Match     | Shows matching characters |
 | `▼`    | Position  | Current operation point |
 | `┌─┐`  | Section   | Groups related changes |
 | `└─┘`  | Border    | Section boundary |
