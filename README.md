@@ -268,7 +268,7 @@ Operation:    ====== ----- ++++++   // "Hello, " retained, "world" deleted, "Swi
 | **Time Complexity** | O(n) | Linear time complexity | 🟢🟢🟢 Low |
 | **Space Complexity** | O(1) | Constant space usage | 🟢🟢🟡 Moderate |
 | **Best Case** | Ω(1) | Minimal changes between strings | 🟢🟢🟢 Fast |
-| **Worst Case** | O(n) | Complete string replacement | 🟢🟢🟢 Efficient |
+| **Worst Case** | O(n) | Complete string replacement | 🟢🟢🟡 Efficient |
 | **Average Case** | Θ(n) | Proportional to input string length | 🟢🟢🟡 Moderate |
 
 #### Performance Gradient
@@ -284,15 +284,15 @@ Speed:          🟢🟢🟢
 |--------|------------|-------------|----------------------|
 | **Time Complexity** | O(n log n) | Logarithmic-linear time complexity | 🟢🟠🟡 Moderate |
 | **Space Complexity** | O(n) | Linear space usage | 🟢🟢🟡 Moderate |
-| **Best Case** | Ω(n) | Minimal structural changes | 🟢🟠🟡 Effective |
-| **Worst Case** | O(n²) | Highly complex text transformations | 🟠🟡🟡 High |
+| **Best Case** | Ω(n) | Minimal structural changes | 🟢🟢🟡 Effective |
+| **Worst Case** | O(n²) | Highly complex text transformations | 🟢🟠🟡 High |
 | **Average Case** | Θ(n log n) | Semantic analysis overhead | 🟢🟠🟡 Moderate |
 
 #### Performance Gradient
 ```
-Complexity:     🟢🟢🟢
+Complexity:     🟢🟠🟡
 Memory Usage:   🟢🟢🟡
-Speed:          🟢🟢🟢
+Speed:          🟢🟠🟡
 ```
 
 ### Comparative Performance Visualization
