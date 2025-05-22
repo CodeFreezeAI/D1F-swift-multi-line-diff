@@ -215,7 +215,7 @@ Operation:    ====== ----- ++++++   // "Hello, " retained, "world" deleted, "Swi
 │ │ --- }
 │ │ --- return total
 │ │ +++ return items.reduce(0.0) { $0 + $1.price }
-│ └─ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+│ └─ 
 │ }====                                     // retain closing brace
 └─────────────────
 ```
