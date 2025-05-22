@@ -392,6 +392,11 @@ public struct DiffMetadata: Equatable, Codable {
             return insertText
         }
         
+        // Handle empty operations case explicitly
+        if diff.operations.isEmpty {
+            return source
+        }
+        
         // Try to identify if this is a truncated source with newline issues
         if allowTruncatedSource && diff.metadata != nil {
             let newlines = source.filter { $0 == "\n" }.count
@@ -912,6 +917,11 @@ public struct DiffMetadata: Equatable, Codable {
         
         // Simple substring search for the context
         guard !contextChars.isEmpty else { return 0 }
+        
+        // Make sure context isn't longer than the source
+        if contextChars.count > sourceChars.count {
+            return nil
+        }
         
         for i in 0...(sourceChars.count - contextChars.count) {
             var match = true
