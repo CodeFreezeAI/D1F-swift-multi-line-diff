@@ -269,16 +269,8 @@ public struct DiffMetadata: Equatable, Codable {
             break  // Continue with diff calculation
         }
         
-        // Determine the most appropriate diff strategy
-        let strategy = determineDiffStrategy(source: source, destination: destination)
-        
-        // Select algorithm based on strategy
-        switch strategy {
-        case .brus:
-            return createDiffBrus(source: source, destination: destination)
-        case .todd:
-            break  // Continue with Todd algorithm
-        }
+        // This method is only called when we explicitly want the Todd algorithm,
+        // so we should not check determineDiffStrategy here
         
         let sourceLines = source.split(separator: "\n", omittingEmptySubsequences: false)
         let destLines = destination.split(separator: "\n", omittingEmptySubsequences: false)
@@ -740,14 +732,13 @@ public struct DiffMetadata: Equatable, Codable {
         if let sourceStartLine = metadata.sourceStartLine {
             // Calculate line position in the source file
             var lineCount = 0
-            var charOffset = 0
             
             // This is a more reliable way to find line positions in Swift strings
-            for (index, char) in source.enumerated() {
+            for (_, char) in source.enumerated() {
                 if char == "\n" {
                     lineCount += 1
                     if lineCount >= sourceStartLine {
-                        charOffset = index + 1 // Position after the newline
+                        // Found the position after the newline
                         break
                     }
                 }
@@ -949,7 +940,8 @@ public struct DiffMetadata: Equatable, Codable {
         // For truncated sources, we need to be more intelligent about how we handle operations
         
         // Check if the last operation is a retain (common in truncated diffs to keep the end intact)
-        let hasTrailingRetain = operations.last.map { op -> Bool in 
+        // We don't actually use this value but it could be useful in future extensions
+        _ = operations.last.map { op -> Bool in 
             if case .retain = op { return true } else { return false }
         } ?? false
         
@@ -996,6 +988,7 @@ public struct DiffMetadata: Equatable, Codable {
         sourceStartLine: Int? = nil,
         destStartLine: Int? = nil
     ) throws -> String {
+        // Create diff with the explicitly requested algorithm
         let diff = createDiff(
             source: source,
             destination: destination,

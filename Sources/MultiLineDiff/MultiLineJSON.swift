@@ -32,33 +32,6 @@ extension MultiLineDiff {
         if let metadata = diff.metadata {
             let metadataData = try encoder.encode(metadata)
             wrapper["metadata"] = metadataData.base64EncodedString()
-            
-            // Create truncation information structure
-            var truncationInfo: [String: Any] = [:]
-            
-            if let sourceStartLine = metadata.sourceStartLine {
-                truncationInfo["sourceStartLine"] = sourceStartLine
-            }
-            
-            if let precedingContext = metadata.precedingContext {
-                truncationInfo["precedingContextLength"] = precedingContext.count
-                truncationInfo["precedingContextSample"] = precedingContext.prefix(10)
-            }
-            
-            if let followingContext = metadata.followingContext {
-                truncationInfo["followingContextLength"] = followingContext.count
-                truncationInfo["followingContextSample"] = followingContext.suffix(10)
-            }
-            
-            if !truncationInfo.isEmpty {
-                // Encode truncation info as base64 and store in "trunk" key
-                do {
-                    let truncationData = try JSONSerialization.data(withJSONObject: truncationInfo)
-                    wrapper["trunk"] = truncationData.base64EncodedString()
-                } catch {
-                    // If encoding fails, just continue without the trunk data
-                }
-            }
         }
         
         // Re-encode the complete wrapper
@@ -105,42 +78,6 @@ extension MultiLineDiff {
                     metadata = try? decoder.decode(DiffMetadata.self, from: metadataData)
                 }
                 
-                // Look for truncation info in the "trunk" key
-                var truncationInfo: [String: Any]? = nil
-                
-                // Decode from trunk base64 data
-                if let trunkBase64 = json["trunk"] as? String,
-                   let trunkData = Data(base64Encoded: trunkBase64),
-                   let decodedInfo = try? JSONSerialization.jsonObject(with: trunkData) as? [String: Any] {
-                    truncationInfo = decodedInfo
-                }
-                // Legacy support - try old formats if needed
-                else if let legacyBase64 = json["truncationInfoBase64"] as? String,
-                        let legacyData = Data(base64Encoded: legacyBase64),
-                        let decodedInfo = try? JSONSerialization.jsonObject(with: legacyData) as? [String: Any] {
-                    truncationInfo = decodedInfo
-                }
-                else if let legacyInfo = json["truncationInfo"] as? [String: Any] {
-                    truncationInfo = legacyInfo
-                }
-                
-                // Use truncation info to enhance metadata if needed
-                if let truncationInfo = truncationInfo, metadata != nil {
-                    if let sourceStartLine = truncationInfo["sourceStartLine"] as? Int,
-                       metadata!.sourceStartLine == nil {
-                        metadata = DiffMetadata(
-                            sourceStartLine: sourceStartLine,
-                            sourceEndLine: metadata!.sourceEndLine,
-                            destStartLine: metadata!.destStartLine,
-                            destEndLine: metadata!.destEndLine,
-                            sourceTotalLines: metadata!.sourceTotalLines,
-                            destTotalLines: metadata!.destTotalLines,
-                            precedingContext: metadata!.precedingContext,
-                            followingContext: metadata!.followingContext
-                        )
-                    }
-                }
-                
                 return DiffResult(operations: operations, metadata: metadata)
             }
         } catch {
@@ -185,34 +122,6 @@ extension MultiLineDiff {
         if let metadata = diff.metadata {
             let metadataData = try encoder.encode(metadata)
             wrapper["meta"] = metadataData.base64EncodedString()
-            
-            // Add truncation information as "trunk" data
-            var truncationInfo: [String: Any] = [:]
-            
-            if let sourceStartLine = metadata.sourceStartLine {
-                truncationInfo["sourceStartLine"] = sourceStartLine
-            }
-            
-            if let precedingContext = metadata.precedingContext,
-               !precedingContext.isEmpty {
-                truncationInfo["precedingContextLength"] = precedingContext.count
-                truncationInfo["precedingContextSample"] = precedingContext.prefix(min(10, precedingContext.count))
-            }
-            
-            if let followingContext = metadata.followingContext,
-               !followingContext.isEmpty {
-                truncationInfo["followingContextLength"] = followingContext.count
-                truncationInfo["followingContextSample"] = followingContext.suffix(min(10, followingContext.count))
-            }
-            
-            if !truncationInfo.isEmpty {
-                do {
-                    let truncationData = try JSONSerialization.data(withJSONObject: truncationInfo)
-                    wrapper["trunk"] = truncationData.base64EncodedString()
-                } catch {
-                    // If encoding fails, continue without trunk data
-                }
-            }
         }
         
         // Convert the wrapper to data and base64
@@ -248,41 +157,19 @@ extension MultiLineDiff {
                        let metaData = Data(base64Encoded: metaBase64) {
                         metadata = try? decoder.decode(DiffMetadata.self, from: metaData)
                         
-                        // Check for trunk data and use it to enhance metadata
-                        if metadata != nil {
-                            // Try to decode trunk data if available
-                            if let trunkBase64 = json["trunk"] as? String,
-                               let trunkData = Data(base64Encoded: trunkBase64),
-                               let truncationInfo = try? JSONSerialization.jsonObject(with: trunkData) as? [String: Any],
-                               let sourceStartLine = truncationInfo["sourceStartLine"] as? Int,
-                               metadata!.sourceStartLine == nil {
-                                
-                                // Update metadata with trunk information
-                                metadata = DiffMetadata(
-                                    sourceStartLine: sourceStartLine,
-                                    sourceEndLine: metadata!.sourceEndLine,
-                                    destStartLine: metadata!.destStartLine,
-                                    destEndLine: metadata!.destEndLine,
-                                    sourceTotalLines: metadata!.sourceTotalLines,
-                                    destTotalLines: metadata!.destTotalLines,
-                                    precedingContext: metadata!.precedingContext,
-                                    followingContext: metadata!.followingContext
-                                )
-                            }
-                            // Legacy support for old format
-                            else if let truncatedAt = json["truncatedAt"] as? Int,
-                                    metadata!.sourceStartLine == nil {
-                                metadata = DiffMetadata(
-                                    sourceStartLine: truncatedAt,
-                                    sourceEndLine: metadata!.sourceEndLine,
-                                    destStartLine: metadata!.destStartLine,
-                                    destEndLine: metadata!.destEndLine,
-                                    sourceTotalLines: metadata!.sourceTotalLines,
-                                    destTotalLines: metadata!.destTotalLines,
-                                    precedingContext: metadata!.precedingContext,
-                                    followingContext: metadata!.followingContext
-                                )
-                            }
+                        // Legacy support for old format
+                        if let truncatedAt = json["truncatedAt"] as? Int,
+                                metadata!.sourceStartLine == nil {
+                            metadata = DiffMetadata(
+                                sourceStartLine: truncatedAt,
+                                sourceEndLine: metadata!.sourceEndLine,
+                                destStartLine: metadata!.destStartLine,
+                                destEndLine: metadata!.destEndLine,
+                                sourceTotalLines: metadata!.sourceTotalLines,
+                                destTotalLines: metadata!.destTotalLines,
+                                precedingContext: metadata!.precedingContext,
+                                followingContext: metadata!.followingContext
+                            )
                         }
                     }
                     
