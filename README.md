@@ -165,6 +165,28 @@ Operation:    ====== ----- ++++++   // "Hello, " retained, "world" deleted, "Swi
              Hello, world Swift
 ```
 
+### Multi-Line Example
+
+```swift
+┌─ Source
+│ func oldMethod() {
+│     print("Hello")
+│ }
+└─────────────────
+
+┌─ Destination
+│ func newMethod() {
+│     print("Hello, World!")
+│ }
+└─────────────────
+
+┌─ Operations
+│ func ==== ---- ++++ ==== () {    // retain "func ", delete "old", insert "new", retain "Method"
+│     ---- +++++++++++++++++++     // delete old print statement, insert new print statement
+│ }====                            // retain closing brace
+└─────────────────
+```
+
 ### More Complex Example
 
 ```swift
