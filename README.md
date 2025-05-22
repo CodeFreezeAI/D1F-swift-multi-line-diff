@@ -128,6 +128,7 @@ assert(result == destinationCode, "Applied diff should match destination code")
 
 ### Base64 Diff Decoding Example
 
+```swift
 // Decode Base64 Diff
 func decodeBase64Diff(_ base64String: String) -> String {
     guard let decodedData = Data(base64Encoded: base64String),
@@ -139,6 +140,7 @@ func decodeBase64Diff(_ base64String: String) -> String {
 
 // Example of Base64 Diff Decoding
 let decodedDiffOperations = decodeBase64Diff(base64Diff)
+```
 
 ## 🔍 Diff Operation Insights
 
@@ -288,16 +290,16 @@ Speed:          🟢🟢🟢
 
 #### Performance Gradient
 ```
-Complexity:     🟢🟠🟡
-Memory Usage:   🟢🟠🟡
-Speed:          🟠🟡🟡
+Complexity:     🟢🟢🟢
+Memory Usage:   🟢🟢🟡
+Speed:          🟢🟢🟢
 ```
 
 ### Comparative Performance Visualization
 
 ```
 Brus Algorithm:  🟢🟢🟢
-Todd Algorithm:  🟢🟠🟡
+Todd Algorithm:  🟢🟢🟢
 ```
 
 ## 📦 Usage Examples
