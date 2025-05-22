@@ -848,7 +848,7 @@ class TestFileManager {
     
     // Test Todd algorithm
     let base64DiffTodd = try MultiLineDiff.createBase64Diff(source: source, destination: destination, useToddAlgorithm: true)
-    let resultTodd = try MultiLineDiff.applyBase64Diff(to: source, base64Diff: base64DiffTodd, useToddAlgorithm: true)
+    let resultTodd = try MultiLineDiff.applyBase64Diff(to: source, base64Diff: base64DiffTodd)
     #expect(resultTodd == destination, "Todd base64 diff should correctly transform source to destination")
     
     // Verify both algorithms produce the same final result
@@ -885,7 +885,7 @@ class TestFileManager {
     // Test Todd algorithm
     let base64DiffTodd = try MultiLineDiff.createBase64Diff(source: source, destination: destination, useToddAlgorithm: true)
     print("Todd algorithm base64 diff: \(base64DiffTodd)")
-    let resultTodd = try MultiLineDiff.applyBase64Diff(to: source, base64Diff: base64DiffTodd, useToddAlgorithm: true)
+    let resultTodd = try MultiLineDiff.applyBase64Diff(to: source, base64Diff: base64DiffTodd)
     #expect(resultTodd == destination, "Todd base64 diff should handle complex content with whitespace")
     
     // Compare diff sizes
@@ -930,7 +930,7 @@ class TestFileManager {
     // Test both algorithms
     for useTodd in [false, true] {
         let base64Diff = try MultiLineDiff.createBase64Diff(source: source, destination: destination, useToddAlgorithm: useTodd)
-        let result = try MultiLineDiff.applyBase64Diff(to: source, base64Diff: base64Diff, useToddAlgorithm: useTodd)
+        let result = try MultiLineDiff.applyBase64Diff(to: source, base64Diff: base64Diff)
         
         // Verify exact preservation
         #expect(result == destination, "\(useTodd ? "Todd" : "Brus") algorithm should preserve special characters")
@@ -975,7 +975,7 @@ class TestFileManager {
         // Test both algorithms
         for useTodd in [false, true] {
             let base64Diff = try MultiLineDiff.createBase64Diff(source: source, destination: destination, useToddAlgorithm: useTodd)
-            let result = try MultiLineDiff.applyBase64Diff(to: source, base64Diff: base64Diff, useToddAlgorithm: useTodd)
+            let result = try MultiLineDiff.applyBase64Diff(to: source, base64Diff: base64Diff)
             
             #expect(result == destination, "Edge case failed: \(source.debugDescription) -> \(destination.debugDescription) with \(useTodd ? "Todd" : "Brus") algorithm")
             
@@ -1008,7 +1008,7 @@ class TestFileManager {
         let createTime = Date().timeIntervalSince(startTime)
         
         let applyStartTime = Date()
-        let result = try MultiLineDiff.applyBase64Diff(to: source, base64Diff: base64Diff, useToddAlgorithm: useTodd)
+        let result = try MultiLineDiff.applyBase64Diff(to: source, base64Diff: base64Diff)
         let applyTime = Date().timeIntervalSince(applyStartTime)
         
         // Verify correctness
@@ -1020,4 +1020,67 @@ class TestFileManager {
         print("- Apply time: \(String(format: "%.3f", applyTime))s")
         print("- Base64 length: \(base64Diff.count)")
     }
+}
+
+// MARK: - Truncated String Tests
+
+@Test func testApplyDiffToTruncatedString() throws {
+    // Create a very simple test
+    let source = "Hello, world!"
+    let truncatedSource = "world"
+    
+    // Create a basic diff to change "world" to "Swift"
+    let operations: [DiffOperation] = [
+        .delete(5), // Delete "world"
+        .insert("Swift") // Insert "Swift"
+    ]
+    
+    let diff = DiffResult(operations: operations)
+    
+    // With allowTruncatedSource, we should be able to apply the diff
+    let result = try MultiLineDiff.applyDiff(to: truncatedSource, diff: diff, allowTruncatedSource: true)
+    #expect(result == "Swift", "Should replace 'world' with 'Swift'")
+}
+
+@Test func testCreateAndApplyDiffWithTruncatedData() throws {
+    // Create a very simple test case to demonstrate the concept
+    let fullSource = "Line 1\nLine 2\nLine 3\nLine 4\nLine 5"
+    let truncatedSource = "Line 3\nLine 4"
+    
+    // Change "Line 4" to "Modified Line 4"
+    let truncatedDestination = "Line 3\nModified Line 4"
+    
+    // Create diff for the truncated portion
+    let operations: [DiffOperation] = [
+        .retain(7),  // Retain "Line 3\n"
+        .delete(6),  // Delete "Line 4"
+        .insert("Modified Line 4")  // Insert new text
+    ]
+    
+    // Create metadata to help with alignment
+    let metadata = DiffMetadata(
+        sourceStartLine: 2,  // Line 3 is at index 2 (0-based)
+        sourceTotalLines: 5,
+        precedingContext: "Line 2\nLine 3",
+        followingContext: "Line 4\nLine 5"
+    )
+    
+    // Create diff with metadata
+    let diff = DiffResult(operations: operations, metadata: metadata)
+    
+    // Expected result after applying to full source
+    let expectedResult = "Line 1\nLine 2\nLine 3\nModified Line 4\nLine 5"
+    
+    // Test direct application with a specialized diff for the full source
+    let fullOperations: [DiffOperation] = [
+        .retain(21),  // Retain until Line 4
+        .delete(6),   // Delete "Line 4"
+        .insert("Modified Line 4"),  // Insert modified text
+        .retain(7)    // Retain the rest
+    ]
+    
+    let fullDiff = DiffResult(operations: fullOperations)
+    let result = try MultiLineDiff.applyDiff(to: fullSource, diff: fullDiff)
+    
+    #expect(result == expectedResult, "Full diff should apply correctly")
 }

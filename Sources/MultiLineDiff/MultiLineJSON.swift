@@ -23,12 +23,19 @@ extension MultiLineDiff {
         // First encode the operations to data
         let operationsData = try encoder.encode(diff.operations)
         
-        // Create a wrapper with base64 encoded operations
-        let wrapper = [
+        // Create a wrapper with base64 encoded operations and metadata
+        var wrapper: [String: Any] = [
             "base64": operationsData.base64EncodedString()
         ]
         
-        return try encoder.encode(wrapper)
+        // Add metadata if available
+        if let metadata = diff.metadata {
+            let metadataData = try encoder.encode(metadata)
+            wrapper["metadata"] = metadataData.base64EncodedString()
+        }
+        
+        // Re-encode the complete wrapper
+        return try JSONSerialization.data(withJSONObject: wrapper, options: prettyPrinted ? [.sortedKeys, .prettyPrinted] : [])
     }
     
     /// Encodes a diff result to a JSON string
@@ -53,16 +60,26 @@ extension MultiLineDiff {
         let decoder = JSONDecoder()
         
         // Decode the wrapper first
-        let wrapper = try decoder.decode([String: String].self, from: data)
+        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: String] else {
+            throw DiffError.decodingFailed
+        }
         
-        guard let base64String = wrapper["base64"],
+        guard let base64String = json["base64"],
               let operationsData = Data(base64Encoded: base64String) else {
             throw DiffError.decodingFailed
         }
         
         // Decode the operations from the base64 data
         let operations = try decoder.decode([DiffOperation].self, from: operationsData)
-        return DiffResult(operations: operations)
+        
+        // Decode metadata if available
+        var metadata: DiffMetadata? = nil
+        if let metadataBase64 = json["metadata"],
+           let metadataData = Data(base64Encoded: metadataBase64) {
+            metadata = try? decoder.decode(DiffMetadata.self, from: metadataData)
+        }
+        
+        return DiffResult(operations: operations, metadata: metadata)
     }
     
     /// Decodes a diff result from a JSON string
@@ -82,8 +99,23 @@ extension MultiLineDiff {
     /// - Throws: An error if encoding fails
     public static func diffToBase64(_ diff: DiffResult) throws -> String {
         let encoder = JSONEncoder()
+        
+        // Create a compound object with both operations and metadata
+        var wrapper: [String: Any] = [:]
+        
+        // Encode operations
         let operationsData = try encoder.encode(diff.operations)
-        return operationsData.base64EncodedString()
+        wrapper["ops"] = operationsData.base64EncodedString()
+        
+        // Encode metadata if available
+        if let metadata = diff.metadata {
+            let metadataData = try encoder.encode(metadata)
+            wrapper["meta"] = metadataData.base64EncodedString()
+        }
+        
+        // Convert the wrapper to data and base64
+        let wrapperData = try JSONSerialization.data(withJSONObject: wrapper)
+        return wrapperData.base64EncodedString()
     }
     
     /// Creates a diff result from a base64 encoded string
@@ -91,12 +123,40 @@ extension MultiLineDiff {
     /// - Returns: The decoded diff result
     /// - Throws: An error if decoding fails
     public static func diffFromBase64(_ base64String: String) throws -> DiffResult {
-        guard let operationsData = Data(base64Encoded: base64String) else {
+        guard let data = Data(base64Encoded: base64String) else {
             throw DiffError.decodingFailed
         }
         
+        // Try to decode as a wrapper first
+        if let json = try? JSONSerialization.jsonObject(with: data) as? [String: String] {
+            let decoder = JSONDecoder()
+            
+            // Handle new format with metadata
+            if let opsBase64 = json["ops"] {
+                guard let opsData = Data(base64Encoded: opsBase64) else {
+                    throw DiffError.decodingFailed
+                }
+                
+                let operations = try decoder.decode([DiffOperation].self, from: opsData)
+                
+                // Try to decode metadata
+                var metadata: DiffMetadata? = nil
+                if let metaBase64 = json["meta"],
+                   let metaData = Data(base64Encoded: metaBase64) {
+                    metadata = try? decoder.decode(DiffMetadata.self, from: metaData)
+                }
+                
+                return DiffResult(operations: operations, metadata: metadata)
+            }
+        }
+        
+        // Fall back to old format (operations only)
         let decoder = JSONDecoder()
-        let operations = try decoder.decode([DiffOperation].self, from: operationsData)
-        return DiffResult(operations: operations)
+        do {
+            let operations = try decoder.decode([DiffOperation].self, from: data)
+            return DiffResult(operations: operations)
+        } catch {
+            throw DiffError.decodingFailed
+        }
     }
 }

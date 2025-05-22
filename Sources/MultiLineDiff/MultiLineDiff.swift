@@ -80,10 +80,57 @@ private extension String {
     }
 }
 
+/// Represents metadata about the diff source and destination
+public struct DiffMetadata: Equatable, Codable {
+    /// The start line of the section being diffed in the source
+    public let sourceStartLine: Int?
+    /// The end line of the section being diffed in the source
+    public let sourceEndLine: Int?
+    /// The start line of the section being diffed in the destination
+    public let destStartLine: Int?
+    /// The end line of the section being diffed in the destination
+    public let destEndLine: Int?
+    /// The total number of lines in the source
+    public let sourceTotalLines: Int?
+    /// The total number of lines in the destination
+    public let destTotalLines: Int?
+    /// The first few characters of the section before the diff (context)
+    public let precedingContext: String?
+    /// The first few characters of the section after the diff (context)
+    public let followingContext: String?
+    
+    public init(
+        sourceStartLine: Int? = nil,
+        sourceEndLine: Int? = nil,
+        destStartLine: Int? = nil,
+        destEndLine: Int? = nil,
+        sourceTotalLines: Int? = nil,
+        destTotalLines: Int? = nil,
+        precedingContext: String? = nil,
+        followingContext: String? = nil
+    ) {
+        self.sourceStartLine = sourceStartLine
+        self.sourceEndLine = sourceEndLine
+        self.destStartLine = destStartLine
+        self.destEndLine = destEndLine
+        self.sourceTotalLines = sourceTotalLines
+        self.destTotalLines = destTotalLines
+        self.precedingContext = precedingContext
+        self.followingContext = followingContext
+    }
+}
+
 /// Represents the result of a diff operation
 @frozen public struct DiffResult: Equatable, Codable {
     /// The sequence of operations that transform the source text into the destination text
     public let operations: [DiffOperation]
+    /// Optional metadata about the diff, useful for truncated strings
+    public let metadata: DiffMetadata?
+    
+    public init(operations: [DiffOperation], metadata: DiffMetadata? = nil) {
+        self.operations = operations
+        self.metadata = metadata
+    }
 }
 
 /// Represents the available diff algorithms
@@ -100,19 +147,50 @@ private extension String {
     /// - Parameters:
     ///   - source: The original string
     ///   - destination: The modified string
-    ///   - algorithm: The algorithm to use (defaults to .brus)
+    ///   - algorithm: The algorithm to use (defaults to .todd)
+    ///   - includeMetadata: Whether to include metadata in the diff result
+    ///   - sourceStartLine: The line number where the source string starts (0-indexed)
+    ///   - destStartLine: The line number where the destination string starts (0-indexed)
     /// - Returns: A DiffResult containing the operations to transform source into destination
     public static func createDiff(
         source: String,
         destination: String,
-        algorithm: DiffAlgorithm = .todd
+        algorithm: DiffAlgorithm = .todd,
+        includeMetadata: Bool = true,
+        sourceStartLine: Int? = nil,
+        destStartLine: Int? = nil
     ) -> DiffResult {
+        // Calculate diff using the selected algorithm
+        let result: DiffResult
         switch algorithm {
         case .brus:
-            return createDiffBrus(source: source, destination: destination)
+            result = createDiffBrus(source: source, destination: destination)
         case .todd:
-            return createDiffTodd(source: source, destination: destination)
+            result = createDiffTodd(source: source, destination: destination)
         }
+        
+        // If metadata isn't needed, return the result as is
+        guard includeMetadata else {
+            return result
+        }
+        
+        // Generate metadata for the diff
+        let sourceLines = source.split(separator: "\n", omittingEmptySubsequences: false)
+        let destLines = destination.split(separator: "\n", omittingEmptySubsequences: false)
+        
+        let metadata = DiffMetadata(
+            sourceStartLine: sourceStartLine,
+            sourceEndLine: sourceStartLine.map { $0 + sourceLines.count - 1 },
+            destStartLine: destStartLine,
+            destEndLine: destStartLine.map { $0 + destLines.count - 1 },
+            sourceTotalLines: sourceLines.count,
+            destTotalLines: destLines.count,
+            precedingContext: source.prefix(min(30, source.count)).description,
+            followingContext: source.suffix(min(30, source.count)).description
+        )
+        
+        // Return result with metadata
+        return DiffResult(operations: result.operations, metadata: metadata)
     }
     
     /// Creates a diff between two strings
@@ -301,30 +379,59 @@ private extension String {
     /// - Parameters:
     ///   - source: The original string
     ///   - diff: The diff to apply
+    ///   - allowTruncatedSource: Whether to allow applying diff to truncated source string
     /// - Returns: The resulting string after applying the diff
     /// - Throws: An error if the diff cannot be applied correctly
-    public static func applyDiff(to source: String, diff: DiffResult) throws -> String {
+    public static func applyDiff(
+        to source: String,
+        diff: DiffResult,
+        allowTruncatedSource: Bool = false
+    ) throws -> String {
         var result = String()
         var currentIndex = source.startIndex
         
-        for operation in diff.operations {
+        // If we're allowing truncated source and have metadata, we can try to adjust operations
+        var adjustedOperations = diff.operations
+        if allowTruncatedSource, let metadata = diff.metadata {
+            // Attempt to adjust operations if needed
+            adjustedOperations = try adjustOperationsForTruncatedSource(
+                operations: diff.operations,
+                source: source,
+                metadata: metadata
+            )
+        }
+        
+        for operation in adjustedOperations {
             switch operation {
             case .retain(let count):
-                // Validate and apply retain operation
-                guard currentIndex < source.endIndex else {
-                    throw DiffError.invalidRetain(count: count, remainingLength: 0)
+                // Check if we're at the end already
+                if currentIndex >= source.endIndex {
+                    if allowTruncatedSource {
+                        // Skip retain if we're allowing truncated source
+                        continue
+                    } else {
+                        throw DiffError.invalidRetain(count: count, remainingLength: 0)
+                    }
                 }
                 
+                // Calculate the endIndex, limiting to the source's endIndex
                 let endIndex = source.index(currentIndex, offsetBy: count, 
                                          limitedBy: source.endIndex) ?? source.endIndex
                 
-                // Validate retain count
+                // Check if we can retain the requested amount
                 let retainLength = source.distance(from: currentIndex, to: endIndex)
-                guard retainLength == count else {
-                    throw DiffError.invalidRetain(
-                        count: count, 
-                        remainingLength: source.distance(from: currentIndex, to: source.endIndex)
-                    )
+                if retainLength != count {
+                    if allowTruncatedSource {
+                        // Only retain what's available
+                        result.append(contentsOf: source[currentIndex..<endIndex])
+                        currentIndex = endIndex
+                        continue
+                    } else {
+                        throw DiffError.invalidRetain(
+                            count: count, 
+                            remainingLength: source.distance(from: currentIndex, to: source.endIndex)
+                        )
+                    }
                 }
                 
                 result.append(contentsOf: source[currentIndex..<endIndex])
@@ -335,35 +442,143 @@ private extension String {
                 result.append(text)
                 
             case .delete(let count):
-                // Validate and skip deletion
-                guard currentIndex < source.endIndex else {
-                    throw DiffError.invalidDelete(count: count, remainingLength: 0)
+                // Check if we're at the end already
+                if currentIndex >= source.endIndex {
+                    if allowTruncatedSource {
+                        // Skip delete if we're allowing truncated source
+                        continue
+                    } else {
+                        throw DiffError.invalidDelete(count: count, remainingLength: 0)
+                    }
                 }
                 
+                // Calculate the endIndex, limiting to the source's endIndex
                 let endIndex = source.index(currentIndex, offsetBy: count, 
                                          limitedBy: source.endIndex) ?? source.endIndex
                 
-                // Validate delete count
+                // Check if we can delete the requested amount
                 let deleteLength = source.distance(from: currentIndex, to: endIndex)
-                guard deleteLength == count else {
-                    throw DiffError.invalidDelete(
-                        count: count, 
-                        remainingLength: source.distance(from: currentIndex, to: source.endIndex)
-                    )
+                if deleteLength != count {
+                    if allowTruncatedSource {
+                        // Only delete what's available
+                        currentIndex = endIndex
+                        continue
+                    } else {
+                        throw DiffError.invalidDelete(
+                            count: count, 
+                            remainingLength: source.distance(from: currentIndex, to: source.endIndex)
+                        )
+                    }
                 }
                 
                 currentIndex = endIndex
             }
         }
         
-        // Ensure entire source is consumed
-        guard currentIndex == source.endIndex else {
-            throw DiffError.incompleteApplication(
-                unconsumedLength: source.distance(from: currentIndex, to: source.endIndex)
-            )
+        // Check if there's remaining content in the source
+        if currentIndex < source.endIndex {
+            if allowTruncatedSource {
+                // Don't throw an error if we're allowing truncated source
+            } else {
+                throw DiffError.incompleteApplication(
+                    unconsumedLength: source.distance(from: currentIndex, to: source.endIndex)
+                )
+            }
         }
         
         return result
+    }
+    
+    /// Adjusts operations to work with truncated source
+    /// - Parameters:
+    ///   - operations: The original operations
+    ///   - source: The truncated source
+    ///   - metadata: The diff metadata
+    /// - Returns: The adjusted operations
+    /// - Throws: An error if operations cannot be adjusted
+    private static func adjustOperationsForTruncatedSource(
+        operations: [DiffOperation],
+        source: String,
+        metadata: DiffMetadata
+    ) throws -> [DiffOperation] {
+        // If there's no metadata or no context, we can't make adjustments
+        guard let precedingContext = metadata.precedingContext,
+              !precedingContext.isEmpty else {
+            return operations
+        }
+        
+        // Check if source is truncated at the beginning
+        let isTruncatedAtBeginning = !source.hasPrefix(precedingContext) && 
+                                    source.count < (precedingContext.count * 2)
+        
+        // If not truncated, return original operations
+        if !isTruncatedAtBeginning {
+            return operations
+        }
+        
+        // Find where the truncated source aligns with the original
+        // by searching for overlap between source and context
+        var skipCharacters = 0
+        var found = false
+        
+        // Try to find where the truncated source begins in the context
+        for i in 1..<min(precedingContext.count, source.count) {
+            let contextSuffix = precedingContext.suffix(i)
+            let sourcePrefix = source.prefix(i)
+            
+            if contextSuffix == sourcePrefix {
+                skipCharacters = precedingContext.count - i
+                found = true
+            }
+        }
+        
+        // If we couldn't find an alignment, return the original operations
+        if !found {
+            return operations
+        }
+        
+        // Adjust operations by skipping characters at the beginning
+        var adjustedOperations = [DiffOperation]()
+        var charsToSkip = skipCharacters
+        
+        for operation in operations {
+            switch operation {
+            case .retain(let count):
+                if charsToSkip >= count {
+                    // Skip this retain operation entirely
+                    charsToSkip -= count
+                } else if charsToSkip > 0 {
+                    // Partial retain
+                    adjustedOperations.append(.retain(count - charsToSkip))
+                    charsToSkip = 0
+                } else {
+                    // Keep retain as is
+                    adjustedOperations.append(operation)
+                }
+                
+            case .delete(let count):
+                if charsToSkip >= count {
+                    // Skip this delete operation entirely
+                    charsToSkip -= count
+                } else if charsToSkip > 0 {
+                    // Partial delete
+                    adjustedOperations.append(.delete(count - charsToSkip))
+                    charsToSkip = 0
+                } else {
+                    // Keep delete as is
+                    adjustedOperations.append(operation)
+                }
+                
+            case .insert:
+                // We should only skip insert operations if we're still
+                // consuming chars to skip after all retains/deletes
+                if charsToSkip == 0 {
+                    adjustedOperations.append(operation)
+                }
+            }
+        }
+        
+        return adjustedOperations
     }
     
     /// Creates a base64 encoded diff between two strings
@@ -371,13 +586,26 @@ private extension String {
     ///   - source: The original string
     ///   - destination: The modified string
     ///   - useToddAlgorithm: Whether to use Todd's more granular algorithm (default: false)
+    ///   - includeMetadata: Whether to include metadata in the diff result
+    ///   - sourceStartLine: The line number where the source string starts (0-indexed)
+    ///   - destStartLine: The line number where the destination string starts (0-indexed)
     /// - Returns: A base64 encoded string representing the diff operations
     /// - Throws: An error if encoding fails
-    public static func createBase64Diff(source: String, destination: String, useToddAlgorithm: Bool = false) throws -> String {
+    public static func createBase64Diff(
+        source: String,
+        destination: String,
+        useToddAlgorithm: Bool = false,
+        includeMetadata: Bool = true,
+        sourceStartLine: Int? = nil,
+        destStartLine: Int? = nil
+    ) throws -> String {
         let diff = createDiff(
             source: source,
             destination: destination,
-            algorithm: useToddAlgorithm ? .todd : .brus
+            algorithm: useToddAlgorithm ? .todd : .brus,
+            includeMetadata: includeMetadata,
+            sourceStartLine: sourceStartLine,
+            destStartLine: destStartLine
         )
         return try diffToBase64(diff)
     }
@@ -386,12 +614,16 @@ private extension String {
     /// - Parameters:
     ///   - source: The original string
     ///   - base64Diff: The base64 encoded diff to apply
-    ///   - useToddAlgorithm: Whether this is a Todd algorithm diff (default: false)
+    ///   - allowTruncatedSource: Whether to allow applying diff to truncated source string
     /// - Returns: The resulting string after applying the diff
     /// - Throws: An error if decoding or applying the diff fails
-    public static func applyBase64Diff(to source: String, base64Diff: String, useToddAlgorithm: Bool = false) throws -> String {
+    public static func applyBase64Diff(
+        to source: String,
+        base64Diff: String,
+        allowTruncatedSource: Bool = false
+    ) throws -> String {
         let diff = try diffFromBase64(base64Diff)
-        return try applyDiff(to: source, diff: diff)
+        return try applyDiff(to: source, diff: diff, allowTruncatedSource: allowTruncatedSource)
     }
     
     // MARK: - Private Implementation
