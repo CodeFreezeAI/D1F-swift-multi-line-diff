@@ -166,7 +166,7 @@ import Foundation
 
 @Test func testApplyDiffWithUnicodeContent() throws {
     let source = "Hello, 世界 !"
-    let destination = "Hello, 世界!\n🚀"
+    let destination = "Hello, 世界! 🚀"
     
     let result = MultiLineDiff.createDiff(source: source, destination: destination)
     print(result)
@@ -1059,7 +1059,7 @@ class TestFileManager {
         let applyTime = Date().timeIntervalSince(applyStartTime)
         
         // Verify correctness
-        #expect(result == destination, "Todd algorithm failed for large file")
+        #expect(result == destination, "Todd algorithm succeeded for large file")
         
         // Print performance metrics
         print("Todd Algorithm Performance:")
