@@ -111,7 +111,6 @@ runTest("Round Trip Tests") {
     ]
     
     for (source, destination) in testCases {
-        print("  Testing: \"\(source)\" -> \"\(destination)\"")
         let diff = MultiLineDiff.createDiff(source: source, destination: destination)
         let result = try MultiLineDiff.applyDiff(to: source, diff: diff)
         if result != destination {
@@ -123,16 +122,10 @@ runTest("Round Trip Tests") {
     return true
 }
 
-print("All tests completed.")
 
-// MARK: - Real World Examples with FileManager
-
-print("\n=== Real World Examples ===\n")
 
 // Example: Working with actual source code files
-func demonstrateCodeFileDiff() {
-    print("Creating and applying diffs to source code files:")
-    
+func demonstrateCodeFileDiff() -> Bool {
     do {
         // Create temporary directory
         let fileManager = FileManager.default
@@ -140,7 +133,6 @@ func demonstrateCodeFileDiff() {
         
         // Create directory
         try fileManager.createDirectory(at: tempDirURL, withIntermediateDirectories: true)
-        print("  🏷️ LABELED TEMP DIRECTORY: \(tempDirURL.path)")
         
         // Original version of the view controller
         let originalCode = """
@@ -284,74 +276,42 @@ func demonstrateCodeFileDiff() {
         let originalFileURL = tempDirURL.appendingPathComponent("ViewController.swift")
         let updatedFileURL = tempDirURL.appendingPathComponent("ViewControllerUpdated.swift")
         let outputFileURL = tempDirURL.appendingPathComponent("ViewControllerOutput.swift")
+        let diffFileURL = tempDirURL.appendingPathComponent("ViewControllerDiff.json")
         
         try originalCode.write(to: originalFileURL, atomically: true, encoding: .utf8)
         try updatedCode.write(to: updatedFileURL, atomically: true, encoding: .utf8)
-        
-        print("  Created original and updated code files")
         
         // Create diff between files
         let originalCodeContent = try String(contentsOf: originalFileURL, encoding: .utf8)
         let updatedCodeContent = try String(contentsOf: updatedFileURL, encoding: .utf8)
         
         let diff = MultiLineDiff.createDiff(source: originalCodeContent, destination: updatedCodeContent)
-        print("  Created diff with \(diff.operations.count) operations")
         
         // Save diff to file
-        let diffFileURL = tempDirURL.appendingPathComponent("ViewControllerDiff.json")
         try MultiLineDiff.saveDiffToFile(diff, fileURL: diffFileURL)
-        print("  Saved diff to: \(diffFileURL.path)")
         
-        // Also save a human-readable JSON string to a text file for inspection
-        let diffJsonString = try MultiLineDiff.encodeDiffToJSONString(diff)
-        let diffTextFileURL = tempDirURL.appendingPathComponent("ViewControllerDiff.txt")
-        try diffJsonString.data(using: .utf8)?.write(to: diffTextFileURL)
-        print("  Saved human-readable diff to: \(diffTextFileURL.path)")
-        
-        // Load diff back from file for verification
-        let loadedDiff = try MultiLineDiff.loadDiffFromFile(fileURL: diffFileURL)
-        print("  Loaded diff from file (operations: \(loadedDiff.operations.count))")
+        // Load diff back from file
+        _ = try MultiLineDiff.loadDiffFromFile(fileURL: diffFileURL)
         
         // Apply diff
         let result = try MultiLineDiff.applyDiff(to: originalCodeContent, diff: diff)
         
         // Write result
         try result.write(to: outputFileURL, atomically: true, encoding: .utf8)
-        print("  Applied diff and wrote output to file")
         
         // Verify
         let outputContent = try String(contentsOf: outputFileURL, encoding: .utf8)
-        if outputContent == updatedCodeContent {
-            print("  ✅ SUCCESS: Output matches the updated code")
-        } else {
-            print("  ❌ FAILURE: Output does not match the updated code")
-        }
+        let success = outputContent == updatedCodeContent
         
-        // Display one sample operation
-        if let sampleOp = diff.operations.first(where: { 
-            if case .insert = $0 { return true } else { return false }
-        }) {
-            print("\n  Sample operation: \(sampleOp.description)")
-        }
-        
-        print("\n  Files available at:")
-        print("  - Original: \(originalFileURL.path)")
-        print("  - Updated: \(updatedFileURL.path)")
-        print("  - Output: \(outputFileURL.path)")
-        
-        // Optional: Clean up
-        // try fileManager.removeItem(at: tempDirURL)
-        // print("  Cleaned up temporary directory")
+        return success
         
     } catch {
-        print("  ❌ ERROR: \(error)")
+        return false
     }
 }
 
 // Example: Working with large files and regular pattern changes
-func demonstrateLargeFileDiffWithPatterns() {
-    print("\nCreating and applying diffs to large files with regular change patterns:")
-    
+func demonstrateLargeFileDiffWithPatterns() -> Bool {
     do {
         // Create temporary directory
         let fileManager = FileManager.default
@@ -359,7 +319,6 @@ func demonstrateLargeFileDiffWithPatterns() {
         
         // Create directory
         try fileManager.createDirectory(at: tempDirURL, withIntermediateDirectories: true)
-        print("  🏷️ LABELED TEMP DIRECTORY: \(tempDirURL.path)")
         
         // Generate a large source code file with numbered lines (simulating a real-world file)
         var originalLines: [String] = []
@@ -467,8 +426,6 @@ func demonstrateLargeFileDiffWithPatterns() {
         try originalContent.data(using: .utf8)?.write(to: originalFileURL)
         try modifiedContent.data(using: .utf8)?.write(to: modifiedFileURL)
         
-        print("  Created original and modified large files")
-        
         // Create the diff
         let diff = MultiLineDiff.createDiff(source: originalContent, destination: modifiedContent)
         
@@ -494,46 +451,38 @@ func demonstrateLargeFileDiffWithPatterns() {
             }
         }
         
-        print("  Created diff with \(diff.operations.count) operations:")
-        print("    - Insert operations: \(insertCount) (total \(insertedChars) characters)")
-        print("    - Delete operations: \(deleteCount) (total \(deletedChars) characters)")
-        print("    - Retain operations: \(retainCount) (total \(retainedChars) characters)")
-        
         // Save diff to file
         try MultiLineDiff.saveDiffToFile(diff, fileURL: diffFileURL)
-        print("  Saved diff to: \(diffFileURL.path)")
         
         // Load diff from file
         let loadedDiff = try MultiLineDiff.loadDiffFromFile(fileURL: diffFileURL)
-        print("  Loaded diff from file")
         
         // Apply the loaded diff
         let result = try MultiLineDiff.applyDiff(to: originalContent, diff: loadedDiff)
         
         // Verify result matches expected
         let matches = result == modifiedContent
-        print("  Applied diff to original content: \(matches ? "✅ SUCCESS" : "❌ FAILURE")")
         
         // Save result
         try result.data(using: .utf8)?.write(to: outputFileURL)
-        print("  Saved output to: \(outputFileURL.path)")
         
-        print("\n  Files available at:")
-        print("  - Original: \(originalFileURL.path)")
-        print("  - Modified: \(modifiedFileURL.path)")
-        print("  - Output: \(outputFileURL.path)")
-        print("  - Diff: \(diffFileURL.path)")
+        return matches
     } catch {
-        print("  ❌ ERROR: \(error)")
+        return false
     }
 }
 
 // Example: Comparing Brus vs. Todd diff algorithm
-func demonstrateAlgorithmComparison() {
-    print("\nComparing Brus vs. Todd Diff Algorithms:")
-    
+func demonstrateAlgorithmComparison() -> Bool {
     do {
-        // Create a sample file with multiple changes
+        // Create temporary directory
+        let fileManager = FileManager.default
+        let tempDirURL = fileManager.temporaryDirectory.appendingPathComponent("ALGORITHM_COMPARISON_DEMO-\(UUID().uuidString)")
+        
+        // Create directory
+        try fileManager.createDirectory(at: tempDirURL, withIntermediateDirectories: true)
+        
+        // Original content with multiple sections and extra lines
         let sourceCode = """
         import Foundation
         
@@ -613,110 +562,172 @@ func demonstrateAlgorithmComparison() {
         }
         """
         
-        // Create temporary directory
-        let fileManager = FileManager.default
-        let tempDirURL = fileManager.temporaryDirectory.appendingPathComponent("ALGORITHM_COMPARISON_DEMO-\(UUID().uuidString)")
+        // Performance measurement function
+        func measurePerformance(algorithm: DiffAlgorithm, runs: Int) -> (
+            createDiffTime: Double, 
+            applyDiffTime: Double, 
+            totalTime: Double,
+            diff: DiffResult
+        ) {
+            var totalCreateDiffTime: Int64 = 0
+            var totalApplyDiffTime: Int64 = 0
+            var diff: DiffResult = MultiLineDiff.createDiff(source: "", destination: "")
+            
+            for _ in 0..<runs {
+                // Measure create diff time
+                let createDiffStartTime = getCurrentTimeMs()
+                diff = MultiLineDiff.createDiff(
+                    source: sourceCode, 
+                    destination: modifiedCode, 
+                    algorithm: algorithm
+                )
+                let createDiffEndTime = getCurrentTimeMs()
+                totalCreateDiffTime += (createDiffEndTime - createDiffStartTime)
+                
+                // Measure apply diff time
+                let applyDiffStartTime = getCurrentTimeMs()
+                _ = try? MultiLineDiff.applyDiff(to: sourceCode, diff: diff)
+                let applyDiffEndTime = getCurrentTimeMs()
+                totalApplyDiffTime += (applyDiffEndTime - applyDiffStartTime)
+            }
+            
+            let averageCreateDiffTime = Double(totalCreateDiffTime) / Double(runs)
+            let averageApplyDiffTime = Double(totalApplyDiffTime) / Double(runs)
+            let totalAverageTime = averageCreateDiffTime + averageApplyDiffTime
+            
+            return (
+                createDiffTime: averageCreateDiffTime, 
+                applyDiffTime: averageApplyDiffTime, 
+                totalTime: totalAverageTime,
+                diff: diff
+            )
+        }
         
-        // Create directory
-        try fileManager.createDirectory(at: tempDirURL, withIntermediateDirectories: true)
-        print("  🏷️ LABELED TEMP DIRECTORY: \(tempDirURL.path)")
+        // Measure performance for both algorithms
+        let runs = 1000
+        let brusMeasurement = measurePerformance(algorithm: .brus, runs: runs)
+        let toddMeasurement = measurePerformance(algorithm: .todd, runs: runs)
         
-        // Save files
-        let originalFileURL = tempDirURL.appendingPathComponent("User.swift")
-        let modifiedFileURL = tempDirURL.appendingPathComponent("User.modified.swift")
-        
-        try sourceCode.data(using: .utf8)?.write(to: originalFileURL)
-        try modifiedCode.data(using: .utf8)?.write(to: modifiedFileURL)
-        
-        // Create diffs with both algorithms
-        let brusDiff = MultiLineDiff.createDiff(source: sourceCode, destination: modifiedCode, algorithm: .brus)
-        let toddDiff = MultiLineDiff.createDiff(source: sourceCode, destination: modifiedCode, algorithm: .todd)
-        
-        // Save diffs to files
-        let brusDiffFileURL = tempDirURL.appendingPathComponent("brus_diff.json")
-        let toddDiffFileURL = tempDirURL.appendingPathComponent("todd_diff.json")
-        
-        try MultiLineDiff.saveDiffToFile(brusDiff, fileURL: brusDiffFileURL)
-        try MultiLineDiff.saveDiffToFile(toddDiff, fileURL: toddDiffFileURL)
-        
-        // Count operations by type
-        func countOperations(_ diff: DiffResult) -> (retain: Int, insert: Int, delete: Int) {
+        // Analyze operations
+        func analyzeOperations(_ diff: DiffResult) -> (
+            totalOperations: Int, 
+            retainCount: Int, 
+            insertCount: Int, 
+            deleteCount: Int,
+            retainChars: Int,
+            insertChars: Int,
+            deleteChars: Int
+        ) {
             var retainCount = 0
             var insertCount = 0
             var deleteCount = 0
+            var retainChars = 0
+            var insertChars = 0
+            var deleteChars = 0
             
             for op in diff.operations {
                 switch op {
-                case .retain: retainCount += 1
-                case .insert: insertCount += 1
-                case .delete: deleteCount += 1
+                case .retain(let count): 
+                    retainCount += 1
+                    retainChars += count
+                case .insert(let text): 
+                    insertCount += 1
+                    insertChars += text.count
+                case .delete(let count): 
+                    deleteCount += 1
+                    deleteChars += count
                 }
             }
             
-            return (retainCount, insertCount, deleteCount)
+            return (
+                diff.operations.count, 
+                retainCount, 
+                insertCount, 
+                deleteCount,
+                retainChars,
+                insertChars,
+                deleteChars
+            )
         }
         
-        let brusOpCounts = countOperations(brusDiff)
-        let toddOpCounts = countOperations(toddDiff)
+        let brusStat = analyzeOperations(brusMeasurement.diff)
+        let toddStat = analyzeOperations(toddMeasurement.diff)
         
-        // Print comparison
-        print("\n  Brus Diff Algorithm:")
-        print("    -  Total operations: \(brusDiff.operations.count)")
-        print("    - Retain operations: \(brusOpCounts.retain)")
-        print("    - Insert operations: \(brusOpCounts.insert)")
-        print("    - Delete operations: \(brusOpCounts.delete)")
+        // Print detailed comparison
+        print("\n=== Diff Algorithm Comparison ===")
+        print("Source Code Length: \(sourceCode.count) chars")
+        print("Modified Code Length: \(modifiedCode.count) chars")
+        print("Total Runs: \(runs)")
         
-        print("\n  Todd Diff Algorithm:")
-        print("    -  Total operations: \(toddDiff.operations.count)")
-        print("    - Retain operations: \(toddOpCounts.retain)")
-        print("    - Insert operations: \(toddOpCounts.insert)")
-        print("    - Delete operations: \(toddOpCounts.delete)")
+        print("\n--- Brus Algorithm ---")
+        print("Total Operations: \(brusStat.totalOperations)")
+        print("  - Retain Operations: \(brusStat.retainCount) (\(brusStat.retainChars) chars)")
+        print("  - Insert Operations: \(brusStat.insertCount) (\(brusStat.insertChars) chars)")
+        print("  - Delete Operations: \(brusStat.deleteCount) (\(brusStat.deleteChars) chars)")
+        print("  - Create Diff Time: \(String(format: "%.4f", brusMeasurement.createDiffTime)) ms")
+        print("  - Apply Diff Time: \(String(format: "%.4f", brusMeasurement.applyDiffTime)) ms")
+        print("  - Total Time: \(String(format: "%.4f", brusMeasurement.totalTime)) ms")
+        
+        print("\n--- Todd Algorithm ---")
+        print("Total Operations: \(toddStat.totalOperations)")
+        print("  - Retain Operations: \(toddStat.retainCount) (\(toddStat.retainChars) chars)")
+        print("  - Insert Operations: \(toddStat.insertCount) (\(toddStat.insertChars) chars)")
+        print("  - Delete Operations: \(toddStat.deleteCount) (\(toddStat.deleteChars) chars)")
+        print("  - Create Diff Time: \(String(format: "%.4f", toddMeasurement.createDiffTime)) ms")
+        print("  - Apply Diff Time: \(String(format: "%.4f", toddMeasurement.applyDiffTime)) ms")
+        print("  - Total Time: \(String(format: "%.4f", toddMeasurement.totalTime)) ms")
+        
+        // Performance comparison
+        let createDiffSpeedDifference = abs(brusMeasurement.createDiffTime - toddMeasurement.createDiffTime)
+        let applyDiffSpeedDifference = abs(brusMeasurement.applyDiffTime - toddMeasurement.applyDiffTime)
+        let totalTimeSpeedDifference = abs(brusMeasurement.totalTime - toddMeasurement.totalTime)
+        
+        let fasterCreateDiffAlgorithm = brusMeasurement.createDiffTime < toddMeasurement.createDiffTime ? "Brus" : "Todd"
+        let fasterApplyDiffAlgorithm = brusMeasurement.applyDiffTime < toddMeasurement.applyDiffTime ? "Brus" : "Todd"
+        let fasterTotalTimeAlgorithm = brusMeasurement.totalTime < toddMeasurement.totalTime ? "Brus" : "Todd"
+        
+        print("\n--- Performance Summary ---")
+        print("Faster Create Diff Algorithm: \(fasterCreateDiffAlgorithm)")
+        print("Create Diff Speed Difference: \(String(format: "%.4f", createDiffSpeedDifference)) ms")
+        print("Faster Apply Diff Algorithm: \(fasterApplyDiffAlgorithm)")
+        print("Apply Diff Speed Difference: \(String(format: "%.4f", applyDiffSpeedDifference)) ms")
+        print("Faster Total Time Algorithm: \(fasterTotalTimeAlgorithm)")
+        print("Total Time Speed Difference: \(String(format: "%.4f", totalTimeSpeedDifference)) ms\n")
         
         // Apply both diffs to verify they work
-        let brusResult = try MultiLineDiff.applyDiff(to: sourceCode, diff: brusDiff)
-        let toddResult = try MultiLineDiff.applyDiff(to: sourceCode, diff: toddDiff)
+        let brusResult = try MultiLineDiff.applyDiff(to: sourceCode, diff: brusMeasurement.diff)
+        let toddResult = try MultiLineDiff.applyDiff(to: sourceCode, diff: toddMeasurement.diff)
         
         let brusMatches = brusResult == modifiedCode
         let toddMatches = toddResult == modifiedCode
         let bothFilesMatch = toddResult == brusResult
-        
-        print("\n  Results:")
-        print("    - Brus diff correctly transforms source: \(brusMatches ? "✅" : "❌")")
-        print("    - Todd diff correctly transforms source: \(toddMatches ? "✅" : "❌")")
-        print("    - Todd = Brus results are a dead match!: \(bothFilesMatch ? "✅" : "❌")")
 
-        print("\n  Files available at:")
-        print("    - Original: \(originalFileURL.path)")
-        print("    - Modified: \(modifiedFileURL.path)")
-        print("    - Brus Diff: \(brusDiffFileURL.path)")
-        print("    - Todd Diff: \(toddDiffFileURL.path)")
+        return brusMatches && toddMatches && bothFilesMatch
 
     } catch {
-        print("  ❌ ERROR: \(error)")
+        return false
     }
 }
 
-func demonstrateBase64Diff() {
-    print("\nDemonstrating Base64 Diff Operations:")
-    
-    let source = """
-    class Example {
-        func greet() {
-            print("Hello")
-        }
-    }
-    """
-    
-    let destination = """
-    class Example {
-        // Added documentation
-        func greet(name: String) {
-            print("Hello, \\(name)!")
-        }
-    }
-    """
-    
+func demonstrateBase64Diff() -> Bool {
     do {
+        let source = """
+        class Example {
+            func greet() {
+                print("Hello")
+            }
+        }
+        """
+        
+        let destination = """
+        class Example {
+            // Added documentation
+            func greet(name: String) {
+                print("Hello, \\(name)!")
+            }
+        }
+        """
+        
         // Create diff result with full metadata
         let diffResult = MultiLineDiff.createDiff(
             source: source, 
@@ -729,84 +740,26 @@ func demonstrateBase64Diff() {
         let jsonString = try MultiLineDiff.encodeDiffToJSONString(diffResult, prettyPrinted: true)
         
         // Decode both formats
-        let base64DecodedDiff = try MultiLineDiff.diffFromBase64(base64Diff)
-        let jsonDecodedDiff = try MultiLineDiff.decodeDiffFromJSONString(jsonString)
-        
-        // Print full metadata details
-        print("\n=== Full Metadata Comparison ===")
-        
-        print("\n--- Base64 Decoded Metadata ---")
-        if let metadata = base64DecodedDiff.metadata {
-            print("Source Start Line: \(metadata.sourceStartLine ?? -1)")
-            print("Source End Line: \(metadata.sourceEndLine ?? -1)")
-            print("Dest Start Line: \(metadata.destStartLine ?? -1)")
-            print("Dest End Line: \(metadata.destEndLine ?? -1)")
-            print("Source Total Lines: \(metadata.sourceTotalLines ?? -1)")
-            print("Dest Total Lines: \(metadata.destTotalLines ?? -1)")
-            print("Preceding Context: \(metadata.precedingContext ?? "N/A")")
-            print("Following Context: \(metadata.followingContext ?? "N/A")")
-            print("Insert Operations: \(metadata.insertOperations ?? -1)")
-            print("Delete Operations: \(metadata.deleteOperations ?? -1)")
-            print("Retain Operations: \(metadata.retainOperations ?? -1)")
-            print("Change Type: \(metadata.changeType?.rawValue ?? "N/A")")
-            print("Change Percentage: \(metadata.changePercentage ?? -1)%")
-            print("Algorithm Used: \(metadata.algorithmUsed?.rawValue ?? "N/A")")
-            print("Diff ID: \(metadata.diffId ?? "N/A")")
-        }
-        
-        print("\n--- JSON Decoded Metadata ---")
-        if let metadata = jsonDecodedDiff.metadata {
-            print("Source Start Line: \(metadata.sourceStartLine ?? -1)")
-            print("Source End Line: \(metadata.sourceEndLine ?? -1)")
-            print("Dest Start Line: \(metadata.destStartLine ?? -1)")
-            print("Dest End Line: \(metadata.destEndLine ?? -1)")
-            print("Source Total Lines: \(metadata.sourceTotalLines ?? -1)")
-            print("Dest Total Lines: \(metadata.destTotalLines ?? -1)")
-            print("Preceding Context: \(metadata.precedingContext ?? "N/A")")
-            print("Following Context: \(metadata.followingContext ?? "N/A")")
-            print("Insert Operations: \(metadata.insertOperations ?? -1)")
-            print("Delete Operations: \(metadata.deleteOperations ?? -1)")
-            print("Retain Operations: \(metadata.retainOperations ?? -1)")
-            print("Change Type: \(metadata.changeType?.rawValue ?? "N/A")")
-            print("Change Percentage: \(metadata.changePercentage ?? -1)%")
-            print("Algorithm Used: \(metadata.algorithmUsed?.rawValue ?? "N/A")")
-            print("Diff ID: \(metadata.diffId ?? "N/A")")
-        }
-        
-        print("\n=== Full Encoding Details ===")
-        print("\nBase64 Diff:")
-        print(base64Diff)
-        
-        print("\nJSON Diff:")
-        print(jsonString)
+        _ = try MultiLineDiff.diffFromBase64(base64Diff)
+        _ = try MultiLineDiff.decodeDiffFromJSONString(jsonString)
         
         // Format comparison
-        let base64Bytes = base64Diff.data(using: .utf8)?.count ?? 0
-        let jsonBytes = jsonString.data(using: .utf8)?.count ?? 0
-        let sizeReduction = jsonBytes > 0 ? 
-            Double(base64Bytes - jsonBytes) / Double(jsonBytes) * 100 : 0
-        
-        print("\n  Format comparison:")
-        print("  - Base64 length: \(base64Bytes) bytes")
-        print("  - JSON length: \(jsonBytes) bytes")
-        print("  - Size reduction: \(String(format: "%.2f", sizeReduction))%")
+        _ = base64Diff.data(using: .utf8)?.count ?? 0
+        _ = jsonString.data(using: .utf8)?.count ?? 0
         
         // Apply base64 diff
         let result = try MultiLineDiff.applyBase64Diff(to: source, base64Diff: base64Diff)
         let success = result == destination
         
-        print("\n  Applied base64 diff:")
-        print("  - Success: \(success ? "✅" : "❌")")
+        return success
         
     } catch {
-        print("  ❌ ERROR: \(error)")
+        return false
     }
 }
 
 // Example: Working with truncated diffs - demonstrating both use cases
-func demonstrateTruncatedDiff() {
-    print("\nDemonstrating Truncated Diff Scenarios:")
-    
+func demonstrateTruncatedDiff() -> Bool {
     do {
         // Create temporary directory
         let fileManager = FileManager.default
@@ -814,7 +767,6 @@ func demonstrateTruncatedDiff() {
         
         // Create directory
         try fileManager.createDirectory(at: tempDirURL, withIntermediateDirectories: true)
-        print("  LABELED TEMP DIRECTORY: \(tempDirURL.path)")
         
         // Original content with multiple sections and extra lines
         let originalContent = """
@@ -886,18 +838,7 @@ func demonstrateTruncatedDiff() {
         try truncatedContent.write(to: truncatedFileURL, atomically: true, encoding: .utf8)
         try modifiedContent.write(to: modifiedFileURL, atomically: true, encoding: .utf8)
         
-        print("  Created files:")
-        print("    - Original (full source): \(originalFileURL.lastPathComponent)")
-        print("    - Truncated Source (sections 2-3): \(truncatedFileURL.lastPathComponent)")
-        print("    - Full Modified: \(modifiedFileURL.lastPathComponent)")
-        
-        // We don't need the full diff for this demonstration - we're only interested in 
-        // applying a diff created from truncated content to the full original file
-        
-        // Create a diff specifically for just the truncated section
-        
         // Extract the corresponding section from the modified content (sections 2-3)
-        // Safe range finding with optional binding
         guard let modifiedTruncatedStart = modifiedContent.range(of: "## Section 2: Main Content"),
               let modifiedTruncatedEnd = modifiedContent.range(of: "Line 6: Expanded final thoughts") else {
             throw NSError(domain: "DiffDemo", code: 1, userInfo: [NSLocalizedDescriptionKey: "Could not find specified ranges in modified content"])
@@ -915,14 +856,9 @@ func demonstrateTruncatedDiff() {
         // Save this "truncated modified" content to a file for inspection
         let truncatedModifiedFileURL = tempDirURL.appendingPathComponent("truncated-modified.txt")
         try String(modifiedTruncatedSection).write(to: truncatedModifiedFileURL, atomically: true, encoding: .utf8)
-        print("    - Truncated Modified: \(truncatedModifiedFileURL.lastPathComponent)")
         
-        print("  Extracted corresponding section from modified content")
-       
         // Create diff from truncated source to truncated modified section with proper metadata
-        // This is the key step: creating a diff that can be applied to the full file
         let truncatedModifiedContent = String(modifiedTruncatedSection)
-        print("  Creating diff: truncated source → truncated modified")
         
         let truncatedDiff = MultiLineDiff.createDiff(
             source: truncatedContent,
@@ -934,9 +870,6 @@ func demonstrateTruncatedDiff() {
         // Save metadata about the truncated section to a file for inspection
         let truncatedDiffFileURL = tempDirURL.appendingPathComponent("TruncatedDiff.json")
         try MultiLineDiff.saveDiffToFile(truncatedDiff, fileURL: truncatedDiffFileURL)
-        print("  Saved truncated diff to: \(truncatedDiffFileURL.path)")
-        
-        print("  Created truncated diff with \(truncatedDiff.operations.count) operations")
         
         // Approach 1: Create a modified version of the original file that updates only section 2 and 3
         let partiallyModifiedOutput = originalContent.replacingOccurrences(
@@ -944,114 +877,26 @@ func demonstrateTruncatedDiff() {
             with: String(modifiedTruncatedSection)
         )
         
-        // We're only focusing on applying a truncated diff to a full file
-        // No need to create a whole-file replacement diff
-        
-        // This is the key operation we want to demonstrate:
         // Apply the truncated diff to the full original file
-        // This only updates the sections that were in the truncated content
         let resultFromTruncated = try MultiLineDiff.applyDiff(
             to: originalContent, 
             diff: truncatedDiff, 
             allowTruncatedSource: true
         )
         
-        // We're only demonstrating the truncated diff application
-        // No whole-file replacement is needed for this test
+        // Check if the result matches the partially modified output
+        let truncatedDiffWorkedCorrectly = partiallyModifiedOutput == resultFromTruncated
         
-        // Just check the truncated diff result
-        print("  Partial update matches expected: \(partiallyModifiedOutput == resultFromTruncated ? "✅" : "❌")")
-        
-        // Save the result of applying the truncated diff to the output file
-        let outputFileURL = tempDirURL.appendingPathComponent("output.txt")
-        try resultFromTruncated.data(using: .utf8)?.write(to: outputFileURL)
-        print("  Applied truncated diff to the original file and wrote result to output.txt")
-        
-        // Verify the result
-        let outputContent = try String(contentsOf: outputFileURL, encoding: .utf8)
-        
-        print("\n  Output Content:")
-        print(outputContent)
-        
-        print("\n  Modified Content:")
-        print(modifiedContent)
-        
-        // More detailed comparison to show what actually changed
-        let originalLines = originalContent.split(separator: "\n")
-        let outputLines = outputContent.split(separator: "\n")
-        
-        print("\n  Detailed Line Comparison (Output vs Original):")
-        for (index, line) in outputLines.enumerated() {
-            if index < originalLines.count {
-                let changed = line != originalLines[index]
-                let marker = changed ? "🔄" : "  "
-                print("    Line \(index): \(marker) \(line)")
-                
-                // For changed lines, show the original below for comparison
-                if changed {
-                    print("             was: \(originalLines[index])")
-                }
-            } else {
-                print("    Line \(index): ➕ (New line) \(line)")
-            }
-        }
-        
-        // Identify which sections were from the truncated content
-        print("\n  Truncated Section in Output (should be modified):")
-        // Find line number where truncated content starts in original
-        let truncatedSectionStartLine = originalContent.prefix(upTo: originalContent.range(of: truncatedContent)!.lowerBound)
-            .split(separator: "\n")
-            .count
-        
-        let truncatedEndLine = truncatedSectionStartLine + truncatedContent.split(separator: "\n").count - 1
-        
-        for (index, line) in outputLines.enumerated() {
-            if index >= truncatedSectionStartLine && index <= truncatedEndLine {
-                print("    Line \(index): ✅ (TRUNCATED SECTION) \(line)")
-            }
-        }
-        
-        // For truncated diffs, we want to verify that:
-        // 1. The original sections not in the truncated diff were preserved
-        // 2. The sections in the truncated diff were properly updated
-        
-        // For verification, create an expected output by directly updating just the truncated section
-        let expectedOutput = originalContent.replacingOccurrences(
-            of: truncatedContent,
-            with: String(modifiedTruncatedSection)
-        )
-        
-        // Compare the result from applying the truncated diff with our expected output
-        let truncatedDiffWorkedCorrectly = outputContent == expectedOutput
-        
-        print("  RESULT OF APPLYING TRUNCATED DIFF:")
-        print("  - Matches expected output (original with only truncated part updated): \(truncatedDiffWorkedCorrectly ? "✅" : "❌")")
-        
-        if truncatedDiffWorkedCorrectly {
-            print("  SUCCESS: Truncated diff was correctly applied to full file (only changing the truncated section)")
-        } else {
-            print("  FAILURE: Truncated diff application failed")
-            print("  Differences detected")
-        }
-        
-        print("\n  Files available at:")
-        print("    - Original: \(originalFileURL.path)")
-        print("    - Truncated Source: \(truncatedFileURL.path)")
-        print("    - Truncated Modified: \(truncatedModifiedFileURL.path)")
-        print("    - Full Modified: \(modifiedFileURL.path)")
-        print("    - Output: \(outputFileURL.path)")
-        print("    - Truncated Diff: \(truncatedDiffFileURL.path)")
+        return truncatedDiffWorkedCorrectly
         
     } catch {
-        print("  ERROR: \(error)")
+        return false
     }
 }
 
 // Update the main function to call the new demonstration
 func main() throws {
     let startTime = getCurrentTimeMs()
-    print("🚀 MultiLineDiff Runner Started at: \(Date())")
-    print("-----------------------------------")
     
     // Test empty strings
     runTest("Empty Strings") {
@@ -1074,22 +919,25 @@ func main() throws {
     }
     
     // Run demonstrations
-    print("=== MultiLineDiff Demonstrations ===\n")
+    runTest("File-based diff operations") {
+        return demonstrateCodeFileDiff()
+    }
     
-    print("1. File-based diff operations:")
-    demonstrateCodeFileDiff()
+    runTest("Large file handling") {
+        return demonstrateLargeFileDiffWithPatterns()
+    }
     
-    print("\n2. Large file handling:")
-    demonstrateLargeFileDiffWithPatterns()
+    runTest("Algorithm comparison (Brus vs Todd)") {
+        return demonstrateAlgorithmComparison()
+    }
     
-    print("\n3. Algorithm comparison (Brus vs Todd):")
-    demonstrateAlgorithmComparison()
+    runTest("Base64 operations") {
+        return demonstrateBase64Diff()
+    }
     
-    print("\n4. Base64 operations:")
-    demonstrateBase64Diff()
-    
-    print("\n5. Truncated diff operations:")
-    demonstrateTruncatedDiff()
+    runTest("Truncated diff operations") {
+        return demonstrateTruncatedDiff()
+    }
     
     let endTime = getCurrentTimeMs()
     let totalExecutionTime = Double(endTime - startTime) / 1000.0

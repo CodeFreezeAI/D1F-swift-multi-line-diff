@@ -79,7 +79,6 @@ import Foundation
     hello
     1
     signal(SIGINT) { _ in
-        print("Shutting down...")
         exit(1)
     }
     xxx
@@ -89,20 +88,15 @@ import Foundation
     1
     hello
      signal(SIGINT) { _ in
-         print("Shutting down...")
          exit(0)
      }
     """
     
     let result = MultiLineDiff.createDiff(source: source, destination: destination)
     
-    print(result)
-    
     // Verify the diff can be applied correctly
     let applied = try MultiLineDiff.applyDiff(to: source, diff: result)
     #expect(applied == destination)
-    
-    print(applied)
 }
 
 @Test func testApplyDiffWithEmptyStrings() throws {
@@ -158,9 +152,7 @@ import Foundation
     
     // Use Brus algorithm explicitly for consistent behavior
     let result = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .brus)
-    print(result)
     let applied = try MultiLineDiff.applyDiff(to: source, diff: result)
-    print(applied)
     #expect(applied == destination)
 }
 
@@ -169,9 +161,7 @@ import Foundation
     let destination = "Hello, 世界! 🚀"
     
     let result = MultiLineDiff.createDiff(source: source, destination: destination)
-    print(result)
     let applied = try MultiLineDiff.applyDiff(to: source, diff: result)
-    print(applied)
     #expect(applied == destination)
 }
 
@@ -351,7 +341,6 @@ import Foundation
     
     // Display operations for debugging
     for op in diff.operations {
-        print("Operation: \(op.description)")
     }
 }
 
@@ -430,9 +419,6 @@ import Foundation
     // Encode to JSON string
     let jsonString = try MultiLineDiff.encodeDiffToJSONString(diff)
     
-    print("JSON Encoding Test:")
-    print("JSON String: \(jsonString)")
-    
     // Verify JSON structure
     #expect(jsonString.contains("df"), "Should contain base64 key")
     
@@ -474,7 +460,6 @@ import Foundation
     
     // Convert to base64
     let base64String = try MultiLineDiff.diffToBase64(diff)
-    print("Base64 String: \(base64String)")
     
     // Decode back from base64
     let decodedDiff = try MultiLineDiff.diffFromBase64(base64String)
@@ -579,16 +564,8 @@ import Foundation
     // Save result
     try result.data(using: .utf8)?.write(to: outputFileURL)
     
-    // Diagnostic information
-    print("Original content length: \(originalContent.count)")
-    print("Modified content length: \(modifiedContent.count)")
-    print("Result content length: \(result.count)")
-    print("Diff operations count: \(loadedDiff.operations.count)")
-    
     // Print first few diff operations for debugging
-    print("First 10 diff operations:")
     for (index, op) in loadedDiff.operations.prefix(10).enumerated() {
-        print("\(index): \(op.description)")
     }
     
     // Verify result matches modified content
@@ -680,12 +657,10 @@ private func generateDiffStats(_ diff: DiffResult) -> (insertedLines: Int, delet
         var property2: Int = 0
         
         func method1() {
-            print("Method 1")
             doSomething()
         }
         
         func method2() {
-            print("Method 2")
         }
         
         private func doSomething() {
@@ -708,12 +683,10 @@ private func generateDiffStats(_ diff: DiffResult) -> (insertedLines: Int, delet
         
         // Methods
         func method1() {
-            print("Method 1 - updated")
             doSomethingElse()
         }
         
         func method2() {
-            print("Method 2")
         }
         
         func newMethod() {
@@ -738,13 +711,9 @@ private func generateDiffStats(_ diff: DiffResult) -> (insertedLines: Int, delet
     // Compare with brus algorithm
     let brusDiff = MultiLineDiff.createDiff(source: source, destination: destination)
     
-    print("Todd operations count: \(diff.operations.count)")
-    print("Brus operations count: \(brusDiff.operations.count)")
-    
     // Print first few operations for debugging
     let maxOps = min(5, diff.operations.count)
     for i in 0..<maxOps {
-        print("Todd op \(i): \(diff.operations[i].description)")
     }
 }
 
@@ -884,7 +853,6 @@ class TestFileManager {
     
     // Test Brus algorithm
     let base64DiffBrus = try MultiLineDiff.createBase64Diff(source: source, destination: destination)
-    print("Brus algorithm base64 diff: \(base64DiffBrus)")
     let resultBrus = try MultiLineDiff.applyBase64Diff(to: source, base64Diff: base64DiffBrus)
     #expect(resultBrus == destination, "Brus base64 diff should handle complex content with whitespace")
     
@@ -894,14 +862,8 @@ class TestFileManager {
         destination: destination, 
         algorithm: .todd
     )
-    print("Todd algorithm base64 diff: \(base64DiffTodd)")
     let resultTodd = try MultiLineDiff.applyBase64Diff(to: source, base64Diff: base64DiffTodd)
     #expect(resultTodd == destination, "Todd base64 diff should handle complex content with whitespace")
-    
-    // Compare diff sizes
-    print("\nDiff size comparison:")
-    print("- Brus base64 length: \(base64DiffBrus.count)")
-    print("- Todd base64 length: \(base64DiffTodd.count)")
     
     // Verify both algorithms produce the same final result
     #expect(resultBrus == resultTodd, "Both algorithms should produce the same result")
@@ -1037,14 +999,9 @@ class TestFileManager {
         #expect(result == destination, "Brus algorithm failed for large file")
         
         // Print performance metrics
-        print("Brus Algorithm Performance:")
-        print("- Create time: \(String(format: "%.3f", createTime))s")
-        print("- Apply time: \(String(format: "%.3f", applyTime))s")
-        print("- Base64 length: \(brusDiff.count)")
         
         // Print a sample of operations for debugging
         let operations = diffResult.operations.prefix(3)
-        print("- Brus sample operations: \(operations.map { $0.description }.joined(separator: ", "))")
     }
     
     // Test Todd algorithm (explicitly set to .todd)
@@ -1062,28 +1019,18 @@ class TestFileManager {
         #expect(result == destination, "Todd algorithm succeeded for large file")
         
         // Print performance metrics
-        print("Todd Algorithm Performance:")
-        print("- Create time: \(String(format: "%.3f", createTime))s")
-        print("- Apply time: \(String(format: "%.3f", applyTime))s")
-        print("- Base64 length: \(toddDiff.count)")
         
         // Print a sample of operations for debugging
         let operations = diffResult.operations.prefix(3)
-        print("- Todd sample operations: \(operations.map { $0.description }.joined(separator: ", "))")
     }
     
     // Verify the diffs are actually different
     #expect(brusDiff != toddDiff, "Brus and Todd algorithms should produce different diffs")
-    print("Algorithms produce different diffs: \(brusDiff != toddDiff)")
     
     if brusDiff == toddDiff {
-        print("WARNING: Both algorithms produced identical base64 diffs!")
         
         // Compare first 100 characters for debugging
         let prefixLength = min(100, brusDiff.count)
-        print("First \(prefixLength) characters of diffs:")
-        print("Brus: \(brusDiff.prefix(prefixLength))")
-        print("Todd: \(toddDiff.prefix(prefixLength))")
     }
 }
 
