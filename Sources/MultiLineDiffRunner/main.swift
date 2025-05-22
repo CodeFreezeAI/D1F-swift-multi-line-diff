@@ -136,11 +136,11 @@ func demonstrateCodeFileDiff() {
     do {
         // Create temporary directory
         let fileManager = FileManager.default
-        let tempDirURL = fileManager.temporaryDirectory.appendingPathComponent("MultiLineDiffDemo-\(UUID().uuidString)")
+        let tempDirURL = fileManager.temporaryDirectory.appendingPathComponent("CODE_FILE_DIFF_DEMO-\(UUID().uuidString)")
         
         // Create directory
         try fileManager.createDirectory(at: tempDirURL, withIntermediateDirectories: true)
-        print("  Created temp directory at: \(tempDirURL.path)")
+        print("  🏷️ LABELED TEMP DIRECTORY: \(tempDirURL.path)")
         
         // Original version of the view controller
         let originalCode = """
@@ -355,11 +355,11 @@ func demonstrateLargeFileDiffWithPatterns() {
     do {
         // Create temporary directory
         let fileManager = FileManager.default
-        let tempDirURL = fileManager.temporaryDirectory.appendingPathComponent("MultiLineDiffLargeDemo-\(UUID().uuidString)")
+        let tempDirURL = fileManager.temporaryDirectory.appendingPathComponent("LARGE_FILE_DIFF_DEMO-\(UUID().uuidString)")
         
         // Create directory
         try fileManager.createDirectory(at: tempDirURL, withIntermediateDirectories: true)
-        print("  Created temp directory at: \(tempDirURL.path)")
+        print("  🏷️ LABELED TEMP DIRECTORY: \(tempDirURL.path)")
         
         // Generate a large source code file with numbered lines (simulating a real-world file)
         var originalLines: [String] = []
@@ -613,12 +613,13 @@ func demonstrateAlgorithmComparison() {
         }
         """
         
+        // Create temporary directory
         let fileManager = FileManager.default
-        let tempDirURL = fileManager.temporaryDirectory.appendingPathComponent("MultiLineDiffDemo-\(UUID().uuidString)")
+        let tempDirURL = fileManager.temporaryDirectory.appendingPathComponent("ALGORITHM_COMPARISON_DEMO-\(UUID().uuidString)")
         
         // Create directory
         try fileManager.createDirectory(at: tempDirURL, withIntermediateDirectories: true)
-        print("  Created temp directory at: \(tempDirURL.path)")
+        print("  🏷️ LABELED TEMP DIRECTORY: \(tempDirURL.path)")
         
         // Save files
         let originalFileURL = tempDirURL.appendingPathComponent("User.swift")
@@ -743,7 +744,249 @@ func demonstrateBase64Diff() {
     }
 }
 
-// Main execution with timing
+// Example: Working with truncated diffs - demonstrating both use cases
+func demonstrateTruncatedDiff() {
+    print("\nDemonstrating Truncated Diff Scenarios:")
+    
+    do {
+        // Create temporary directory
+        let fileManager = FileManager.default
+        let tempDirURL = fileManager.temporaryDirectory.appendingPathComponent("TRUNCATEDDIFFDEMO-\(UUID().uuidString)")
+        
+        // Create directory
+        try fileManager.createDirectory(at: tempDirURL, withIntermediateDirectories: true)
+        print("  LABELED TEMP DIRECTORY: \(tempDirURL.path)")
+        
+        // Original content with multiple sections and extra lines
+        let originalContent = """
+        # Document Header
+        This is the original document header with important context.
+        Additional header information and metadata.
+        
+        ## Section 1: Initial Content
+        Line 1: Original first section content
+        Line 2: More details about the first section
+        Line 2a: Some additional context in the first section
+        Line 2b: Even more information that wasn't here before
+        
+        ## Section 2: Main Content
+        Line 3: Original main section content
+        Line 4: Detailed explanation of the main section
+        
+        ## Section 3: Conclusion
+        Line 5: Concluding remarks
+        Line 6: Final thoughts
+        
+        ## Section 4: Extra Content
+        Line 7: This is completely new section not in the truncated content
+        Line 8: Another line that doesn't exist in the truncated version
+        """
+        
+        // Truncated content (beginning of the file is missing)
+        let truncatedContent = """
+        ## Section 2: Main Content
+        Line 3: Original main section content
+        Line 4: Detailed explanation of the main section
+        
+        ## Section 3: Conclusion
+        Line 5: Concluding remarks
+        Line 6: Final thoughts
+        """
+        
+        // Modified content with changes (matches the new structure)
+        let modifiedContent = """
+        # Document Header
+        This is the UPDATED document header with important context.
+        Additional header information and metadata.
+        
+        ## Section 1: Initial Content
+        Line 1: MODIFIED first section content
+        Line 2: Updated details about the first section
+        Line 2a: Some additional context in the first section
+        Line 2b: Even more information that wasn't here before
+        
+        ## Section 2: Main Content
+        Line 3: UPDATED main section content
+        Line 4: Comprehensive explanation of the main section
+        
+        ## Section 3: Conclusion
+        Line 5: Enhanced concluding remarks
+        Line 6: Expanded final thoughts
+        
+        ## Section 4: Extra Content
+        Line 7: This is completely new section not in the truncated content
+        Line 8: Another line that doesn't exist in the truncated version
+        """
+        
+        // Save files
+        let originalFileURL = tempDirURL.appendingPathComponent("original.txt")
+        let truncatedFileURL = tempDirURL.appendingPathComponent("truncated.txt")
+        let modifiedFileURL = tempDirURL.appendingPathComponent("modified.txt")
+        
+        try originalContent.write(to: originalFileURL, atomically: true, encoding: .utf8)
+        try truncatedContent.write(to: truncatedFileURL, atomically: true, encoding: .utf8)
+        try modifiedContent.write(to: modifiedFileURL, atomically: true, encoding: .utf8)
+        
+        print("  Created files:")
+        print("    - Original (full source): \(originalFileURL.lastPathComponent)")
+        print("    - Truncated Source (sections 2-3): \(truncatedFileURL.lastPathComponent)")
+        print("    - Full Modified: \(modifiedFileURL.lastPathComponent)")
+        
+        // We don't need the full diff for this demonstration - we're only interested in 
+        // applying a diff created from truncated content to the full original file
+        
+        // Create a diff specifically for just the truncated section
+        
+        // Extract the corresponding section from the modified content (sections 2-3)
+        let modifiedTruncatedStart = modifiedContent.range(of: "## Section 2: Main Content")!
+        let modifiedTruncatedEnd = modifiedContent.range(of: "Line 6: Expanded final thoughts")!.upperBound
+        let modifiedTruncatedSection = modifiedContent[modifiedTruncatedStart.lowerBound..<modifiedTruncatedEnd]
+        
+        // Save this "truncated modified" content to a file for inspection
+        let truncatedModifiedFileURL = tempDirURL.appendingPathComponent("truncated-modified.txt")
+        try String(modifiedTruncatedSection).write(to: truncatedModifiedFileURL, atomically: true, encoding: .utf8)
+        print("    - Truncated Modified: \(truncatedModifiedFileURL.lastPathComponent)")
+        
+        print("  Extracted corresponding section from modified content")
+        
+        // Calculate line number of the truncated section in the original file
+        let originalLinesBefore = originalContent.prefix(upTo: originalContent.range(of: truncatedContent)!.lowerBound)
+            .split(separator: "\n")
+            .count
+        
+        print("  Truncated section starts at line \(originalLinesBefore) in original file")
+        
+        // Create diff from truncated source to truncated modified section with proper metadata
+        // This is the key step: creating a diff that can be applied to the full file
+        let truncatedModifiedContent = String(modifiedTruncatedSection)
+        print("  Creating diff: truncated source → truncated modified")
+        
+        let truncatedDiff = MultiLineDiff.createDiff(
+            source: truncatedContent,
+            destination: truncatedModifiedContent,
+            includeMetadata: true,
+            sourceStartLine: originalLinesBefore
+        )
+        
+        // Save metadata about the truncated section to a file for inspection
+        let truncatedDiffFileURL = tempDirURL.appendingPathComponent("TruncatedDiff.json")
+        try MultiLineDiff.saveDiffToFile(truncatedDiff, fileURL: truncatedDiffFileURL)
+        print("  Saved truncated diff to: \(truncatedDiffFileURL.path)")
+        
+        print("  Created truncated diff with \(truncatedDiff.operations.count) operations")
+        
+        // Approach 1: Create a modified version of the original file that updates only section 2 and 3
+        let partiallyModifiedOutput = originalContent.replacingOccurrences(
+            of: truncatedContent,
+            with: String(modifiedTruncatedSection)
+        )
+        
+        // We're only focusing on applying a truncated diff to a full file
+        // No need to create a whole-file replacement diff
+        
+        // This is the key operation we want to demonstrate:
+        // Apply the truncated diff to the full original file
+        // This only updates the sections that were in the truncated content
+        let resultFromTruncated = try MultiLineDiff.applyDiff(
+            to: originalContent, 
+            diff: truncatedDiff, 
+            allowTruncatedSource: true
+        )
+        
+        // We're only demonstrating the truncated diff application
+        // No whole-file replacement is needed for this test
+        
+        // Just check the truncated diff result
+        print("  Partial update matches expected: \(partiallyModifiedOutput == resultFromTruncated ? "✅" : "❌")")
+        
+        // Save the result of applying the truncated diff to the output file
+        let outputFileURL = tempDirURL.appendingPathComponent("output.txt")
+        try resultFromTruncated.write(to: outputFileURL, atomically: true, encoding: .utf8)
+        print("  Applied truncated diff to the original file and wrote result to output.txt")
+        
+        // We've already written the output file above
+        
+        // Verify the result
+        let outputContent = try String(contentsOf: outputFileURL, encoding: .utf8)
+        
+        print("\n  Output Content:")
+        print(outputContent)
+        
+        print("\n  Modified Content:")
+        print(modifiedContent)
+        
+        // More detailed comparison to show what actually changed
+        let originalLines = originalContent.split(separator: "\n")
+        let outputLines = outputContent.split(separator: "\n")
+        
+        print("\n  Detailed Line Comparison (Output vs Original):")
+        for (index, line) in outputLines.enumerated() {
+            if index < originalLines.count {
+                let changed = line != originalLines[index]
+                let marker = changed ? "🔄" : "  "
+                print("    Line \(index): \(marker) \(line)")
+                
+                // For changed lines, show the original below for comparison
+                if changed {
+                    print("             was: \(originalLines[index])")
+                }
+            } else {
+                print("    Line \(index): ➕ (New line) \(line)")
+            }
+        }
+        
+        // Identify which sections were from the truncated content
+        print("\n  Truncated Section in Output (should be modified):")
+        // Find line number where truncated content starts in original
+        let truncatedStartLine = originalContent.prefix(upTo: originalContent.range(of: truncatedContent)!.lowerBound)
+            .split(separator: "\n")
+            .count
+        
+        let truncatedEndLine = truncatedStartLine + truncatedContent.split(separator: "\n").count - 1
+        
+        for (index, line) in outputLines.enumerated() {
+            if index >= truncatedStartLine && index <= truncatedEndLine {
+                print("    Line \(index): ✅ (TRUNCATED SECTION) \(line)")
+            }
+        }
+        
+        // For truncated diffs, we want to verify that:
+        // 1. The original sections not in the truncated diff were preserved
+        // 2. The sections in the truncated diff were properly updated
+        
+        // For verification, create an expected output by directly updating just the truncated section
+        let expectedOutput = originalContent.replacingOccurrences(
+            of: truncatedContent,
+            with: String(modifiedTruncatedSection)
+        )
+        
+        // Compare the result from applying the truncated diff with our expected output
+        let truncatedDiffWorkedCorrectly = outputContent == expectedOutput
+        
+        print("  RESULT OF APPLYING TRUNCATED DIFF:")
+        print("  - Matches expected output (original with only truncated part updated): \(truncatedDiffWorkedCorrectly ? "✅" : "❌")")
+        
+        if truncatedDiffWorkedCorrectly {
+            print("  SUCCESS: Truncated diff was correctly applied to full file (only changing the truncated section)")
+        } else {
+            print("  FAILURE: Truncated diff application failed")
+            print("  Differences detected")
+        }
+        
+        print("\n  Files available at:")
+        print("    - Original: \(originalFileURL.path)")
+        print("    - Truncated Source: \(truncatedFileURL.path)")
+        print("    - Truncated Modified: \(truncatedModifiedFileURL.path)")
+        print("    - Full Modified: \(modifiedFileURL.path)")
+        print("    - Output: \(outputFileURL.path)")
+        print("    - Truncated Diff: \(truncatedDiffFileURL.path)")
+        
+    } catch {
+        print("  ERROR: \(error)")
+    }
+}
+
+// Update the main function to call the new demonstration
 func main() {
     let startTime = getCurrentTimeMs()
     print("🚀 MultiLineDiff Runner Started at: \(Date())")
@@ -784,6 +1027,9 @@ func main() {
     print("\n4. Base64 operations:")
     demonstrateBase64Diff()
     
+    print("\n5. Truncated diff operations:")
+    demonstrateTruncatedDiff()
+    
     let endTime = getCurrentTimeMs()
     let totalExecutionTime = Double(endTime - startTime) / 1000.0
     
@@ -796,3 +1042,4 @@ func main() {
 
 // Run the main function
 main()
+
