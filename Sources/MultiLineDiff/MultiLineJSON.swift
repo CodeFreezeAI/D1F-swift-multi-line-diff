@@ -47,13 +47,13 @@ extension MultiLineDiff {
         
         // Create a wrapper with base64 encoded operations and metadata
         var wrapper: [String: Any] = [
-            "base64": operationsData.base64EncodedString()
+            "df": operationsData.base64EncodedString()
         ]
         
         // Add metadata if available
         if let metadata = diff.metadata {
             let metadataData = try encoder.encode(metadata)
-            wrapper["metadata"] = metadataData.base64EncodedString()
+            wrapper["md"] = metadataData.base64EncodedString()
         }
         
         // Re-encode the complete wrapper
@@ -85,7 +85,7 @@ extension MultiLineDiff {
         do {
             if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
                 // Extract base64 operations string
-                guard let base64String = json["base64"] as? String,
+                guard let base64String = json["df"] as? String,
                       let operationsData = Data(base64Encoded: base64String) else {
                     throw DiffError.decodingFailed
                 }
@@ -95,7 +95,7 @@ extension MultiLineDiff {
                 
                 // Decode metadata if available
                 var metadata: DiffMetadata? = nil
-                if let metadataBase64 = json["metadata"] as? String,
+                if let metadataBase64 = json["md"] as? String,
                    let metadataData = Data(base64Encoded: metadataBase64) {
                     metadata = try? decoder.decode(DiffMetadata.self, from: metadataData)
                 }
@@ -161,12 +161,12 @@ extension MultiLineDiff {
         
         // Encode operations
         let operationsData = try encoder.encode(diff.operations)
-        wrapper["ops"] = operationsData.base64EncodedString()
+        wrapper["op"] = operationsData.base64EncodedString()
         
         // Encode metadata if available
         if let metadata = diff.metadata {
             let metadataData = try encoder.encode(metadata)
-            wrapper["meta"] = metadataData.base64EncodedString()
+            wrapper["mt"] = metadataData.base64EncodedString()
         }
         
         // Convert the wrapper to data and base64
@@ -189,7 +189,7 @@ extension MultiLineDiff {
                 let decoder = JSONDecoder()
                 
                 // Handle new format with metadata
-                if let opsBase64 = json["ops"] as? String {
+                if let opsBase64 = json["op"] as? String {
                     guard let opsData = Data(base64Encoded: opsBase64) else {
                         throw DiffError.decodingFailed
                     }
@@ -198,24 +198,9 @@ extension MultiLineDiff {
                     
                     // Try to decode metadata
                     var metadata: DiffMetadata? = nil
-                    if let metaBase64 = json["meta"] as? String,
+                    if let metaBase64 = json["mt"] as? String,
                        let metaData = Data(base64Encoded: metaBase64) {
                         metadata = try? decoder.decode(DiffMetadata.self, from: metaData)
-                        
-                        // Legacy support for old format
-                        if let truncatedAt = json["truncatedAt"] as? Int,
-                                metadata!.sourceStartLine == nil {
-                            metadata = DiffMetadata(
-                                sourceStartLine: truncatedAt,
-                                sourceEndLine: metadata!.sourceEndLine,
-                                destStartLine: metadata!.destStartLine,
-                                destEndLine: metadata!.destEndLine,
-                                sourceTotalLines: metadata!.sourceTotalLines,
-                                destTotalLines: metadata!.destTotalLines,
-                                precedingContext: metadata!.precedingContext,
-                                followingContext: metadata!.followingContext
-                            )
-                        }
                     }
                     
                     return DiffResult(operations: operations, metadata: metadata)

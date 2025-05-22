@@ -717,11 +717,79 @@ func demonstrateBase64Diff() {
     """
     
     do {
-        // Create base64 diff
-        let base64Diff = try MultiLineDiff.createBase64Diff(source: source, destination: destination)
-        print("\n  Base64 diff created:")
-        print("  - Length: \(base64Diff.count) characters")
-        print("  - Diff: \(base64Diff)")
+        // Create diff result with full metadata
+        let diffResult = MultiLineDiff.createDiff(
+            source: source, 
+            destination: destination, 
+            includeMetadata: true
+        )
+        
+        // Convert to Base64 and JSON
+        let base64Diff = try MultiLineDiff.diffToBase64(diffResult)
+        let jsonString = try MultiLineDiff.encodeDiffToJSONString(diffResult, prettyPrinted: true)
+        
+        // Decode both formats
+        let base64DecodedDiff = try MultiLineDiff.diffFromBase64(base64Diff)
+        let jsonDecodedDiff = try MultiLineDiff.decodeDiffFromJSONString(jsonString)
+        
+        // Print full metadata details
+        print("\n=== Full Metadata Comparison ===")
+        
+        print("\n--- Base64 Decoded Metadata ---")
+        if let metadata = base64DecodedDiff.metadata {
+            print("Source Start Line: \(metadata.sourceStartLine ?? -1)")
+            print("Source End Line: \(metadata.sourceEndLine ?? -1)")
+            print("Dest Start Line: \(metadata.destStartLine ?? -1)")
+            print("Dest End Line: \(metadata.destEndLine ?? -1)")
+            print("Source Total Lines: \(metadata.sourceTotalLines ?? -1)")
+            print("Dest Total Lines: \(metadata.destTotalLines ?? -1)")
+            print("Preceding Context: \(metadata.precedingContext ?? "N/A")")
+            print("Following Context: \(metadata.followingContext ?? "N/A")")
+            print("Insert Operations: \(metadata.insertOperations ?? -1)")
+            print("Delete Operations: \(metadata.deleteOperations ?? -1)")
+            print("Retain Operations: \(metadata.retainOperations ?? -1)")
+            print("Change Type: \(metadata.changeType?.rawValue ?? "N/A")")
+            print("Change Percentage: \(metadata.changePercentage ?? -1)%")
+            print("Algorithm Used: \(metadata.algorithmUsed?.rawValue ?? "N/A")")
+            print("Diff ID: \(metadata.diffId ?? "N/A")")
+        }
+        
+        print("\n--- JSON Decoded Metadata ---")
+        if let metadata = jsonDecodedDiff.metadata {
+            print("Source Start Line: \(metadata.sourceStartLine ?? -1)")
+            print("Source End Line: \(metadata.sourceEndLine ?? -1)")
+            print("Dest Start Line: \(metadata.destStartLine ?? -1)")
+            print("Dest End Line: \(metadata.destEndLine ?? -1)")
+            print("Source Total Lines: \(metadata.sourceTotalLines ?? -1)")
+            print("Dest Total Lines: \(metadata.destTotalLines ?? -1)")
+            print("Preceding Context: \(metadata.precedingContext ?? "N/A")")
+            print("Following Context: \(metadata.followingContext ?? "N/A")")
+            print("Insert Operations: \(metadata.insertOperations ?? -1)")
+            print("Delete Operations: \(metadata.deleteOperations ?? -1)")
+            print("Retain Operations: \(metadata.retainOperations ?? -1)")
+            print("Change Type: \(metadata.changeType?.rawValue ?? "N/A")")
+            print("Change Percentage: \(metadata.changePercentage ?? -1)%")
+            print("Algorithm Used: \(metadata.algorithmUsed?.rawValue ?? "N/A")")
+            print("Diff ID: \(metadata.diffId ?? "N/A")")
+        }
+        
+        print("\n=== Full Encoding Details ===")
+        print("\nBase64 Diff:")
+        print(base64Diff)
+        
+        print("\nJSON Diff:")
+        print(jsonString)
+        
+        // Format comparison
+        let base64Bytes = base64Diff.data(using: .utf8)?.count ?? 0
+        let jsonBytes = jsonString.data(using: .utf8)?.count ?? 0
+        let sizeReduction = jsonBytes > 0 ? 
+            Double(base64Bytes - jsonBytes) / Double(jsonBytes) * 100 : 0
+        
+        print("\n  Format comparison:")
+        print("  - Base64 length: \(base64Bytes) bytes")
+        print("  - JSON length: \(jsonBytes) bytes")
+        print("  - Size reduction: \(String(format: "%.2f", sizeReduction))%")
         
         // Apply base64 diff
         let result = try MultiLineDiff.applyBase64Diff(to: source, base64Diff: base64Diff)
@@ -729,15 +797,6 @@ func demonstrateBase64Diff() {
         
         print("\n  Applied base64 diff:")
         print("  - Success: \(success ? "✅" : "❌")")
-        
-        // Compare with JSON format
-        let diff = MultiLineDiff.createDiff(source: source, destination: destination)
-        let jsonString = try MultiLineDiff.encodeDiffToJSONString(diff)
-        
-        print("\n  Format comparison:")
-        print("  - Base64 length: \(base64Diff.count)")
-        print("  - JSON length: \(jsonString.count)")
-        print("  - Size reduction: \(Int((1 - Double(base64Diff.count) / Double(jsonString.count)) * 100))%")
         
     } catch {
         print("  ❌ ERROR: \(error)")
@@ -838,9 +897,20 @@ func demonstrateTruncatedDiff() {
         // Create a diff specifically for just the truncated section
         
         // Extract the corresponding section from the modified content (sections 2-3)
-        let modifiedTruncatedStart = modifiedContent.range(of: "## Section 2: Main Content")!
-        let modifiedTruncatedEnd = modifiedContent.range(of: "Line 6: Expanded final thoughts")!.upperBound
-        let modifiedTruncatedSection = modifiedContent[modifiedTruncatedStart.lowerBound..<modifiedTruncatedEnd]
+        // Safe range finding with optional binding
+        guard let modifiedTruncatedStart = modifiedContent.range(of: "## Section 2: Main Content"),
+              let modifiedTruncatedEnd = modifiedContent.range(of: "Line 6: Expanded final thoughts") else {
+            throw NSError(domain: "DiffDemo", code: 1, userInfo: [NSLocalizedDescriptionKey: "Could not find specified ranges in modified content"])
+        }
+        let modifiedTruncatedSection = modifiedContent[modifiedTruncatedStart.lowerBound..<modifiedTruncatedEnd.upperBound]
+        
+        // Safe prefix and range finding
+        guard let truncatedContentRange = originalContent.range(of: truncatedContent) else {
+            throw NSError(domain: "DiffDemo", code: 2, userInfo: [NSLocalizedDescriptionKey: "Could not find truncated content in original content"])
+        }
+        let originalLinesBefore = originalContent.prefix(upTo: truncatedContentRange.lowerBound)
+            .split(separator: "\n")
+            .count
         
         // Save this "truncated modified" content to a file for inspection
         let truncatedModifiedFileURL = tempDirURL.appendingPathComponent("truncated-modified.txt")
@@ -848,14 +918,7 @@ func demonstrateTruncatedDiff() {
         print("    - Truncated Modified: \(truncatedModifiedFileURL.lastPathComponent)")
         
         print("  Extracted corresponding section from modified content")
-        
-        // Calculate line number of the truncated section in the original file
-        let originalLinesBefore = originalContent.prefix(upTo: originalContent.range(of: truncatedContent)!.lowerBound)
-            .split(separator: "\n")
-            .count
-        
-        print("  Truncated section starts at line \(originalLinesBefore) in original file")
-        
+       
         // Create diff from truncated source to truncated modified section with proper metadata
         // This is the key step: creating a diff that can be applied to the full file
         let truncatedModifiedContent = String(modifiedTruncatedSection)
@@ -901,10 +964,8 @@ func demonstrateTruncatedDiff() {
         
         // Save the result of applying the truncated diff to the output file
         let outputFileURL = tempDirURL.appendingPathComponent("output.txt")
-        try resultFromTruncated.write(to: outputFileURL, atomically: true, encoding: .utf8)
+        try resultFromTruncated.data(using: .utf8)?.write(to: outputFileURL)
         print("  Applied truncated diff to the original file and wrote result to output.txt")
-        
-        // We've already written the output file above
         
         // Verify the result
         let outputContent = try String(contentsOf: outputFileURL, encoding: .utf8)
@@ -938,14 +999,14 @@ func demonstrateTruncatedDiff() {
         // Identify which sections were from the truncated content
         print("\n  Truncated Section in Output (should be modified):")
         // Find line number where truncated content starts in original
-        let truncatedStartLine = originalContent.prefix(upTo: originalContent.range(of: truncatedContent)!.lowerBound)
+        let truncatedSectionStartLine = originalContent.prefix(upTo: originalContent.range(of: truncatedContent)!.lowerBound)
             .split(separator: "\n")
             .count
         
-        let truncatedEndLine = truncatedStartLine + truncatedContent.split(separator: "\n").count - 1
+        let truncatedEndLine = truncatedSectionStartLine + truncatedContent.split(separator: "\n").count - 1
         
         for (index, line) in outputLines.enumerated() {
-            if index >= truncatedStartLine && index <= truncatedEndLine {
+            if index >= truncatedSectionStartLine && index <= truncatedEndLine {
                 print("    Line \(index): ✅ (TRUNCATED SECTION) \(line)")
             }
         }
@@ -987,7 +1048,7 @@ func demonstrateTruncatedDiff() {
 }
 
 // Update the main function to call the new demonstration
-func main() {
+func main() throws {
     let startTime = getCurrentTimeMs()
     print("🚀 MultiLineDiff Runner Started at: \(Date())")
     print("-----------------------------------")
@@ -1041,5 +1102,9 @@ func main() {
 }
 
 // Run the main function
-main()
+do {
+    try main()
+} catch {
+    print("Error in main function: \(error)")
+}
 

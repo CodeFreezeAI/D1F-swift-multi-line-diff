@@ -370,7 +370,7 @@ import Foundation
     let jsonString = try MultiLineDiff.encodeDiffToJSONString(diff)
     
     // Should contain base64 key
-    #expect(jsonString.contains("base64"), "JSON should contain base64 key")
+    #expect(jsonString.contains("df"), "JSON should contain base64 key")
     
     // Decode back
     let decodedDiff = try MultiLineDiff.decodeDiffFromJSONString(jsonString)
@@ -434,7 +434,7 @@ import Foundation
     print("JSON String: \(jsonString)")
     
     // Verify JSON structure
-    #expect(jsonString.contains("base64"), "Should contain base64 key")
+    #expect(jsonString.contains("df"), "Should contain base64 key")
     
     // Decode back
     let decodedDiff = try MultiLineDiff.decodeDiffFromJSONString(jsonString)
@@ -849,7 +849,11 @@ class TestFileManager {
     #expect(resultBrus == destination, "Brus base64 diff should correctly transform source to destination")
     
     // Test Todd algorithm
-    let base64DiffTodd = try MultiLineDiff.createBase64Diff(source: source, destination: destination, useToddAlgorithm: true)
+    let base64DiffTodd = try MultiLineDiff.createBase64Diff(
+        source: source, 
+        destination: destination, 
+        algorithm: .todd
+    )
     let resultTodd = try MultiLineDiff.applyBase64Diff(to: source, base64Diff: base64DiffTodd)
     #expect(resultTodd == destination, "Todd base64 diff should correctly transform source to destination")
     
@@ -885,7 +889,11 @@ class TestFileManager {
     #expect(resultBrus == destination, "Brus base64 diff should handle complex content with whitespace")
     
     // Test Todd algorithm
-    let base64DiffTodd = try MultiLineDiff.createBase64Diff(source: source, destination: destination, useToddAlgorithm: true)
+    let base64DiffTodd = try MultiLineDiff.createBase64Diff(
+        source: source, 
+        destination: destination, 
+        algorithm: .todd
+    )
     print("Todd algorithm base64 diff: \(base64DiffTodd)")
     let resultTodd = try MultiLineDiff.applyBase64Diff(to: source, base64Diff: base64DiffTodd)
     #expect(resultTodd == destination, "Todd base64 diff should handle complex content with whitespace")
@@ -931,7 +939,11 @@ class TestFileManager {
     
     // Test both algorithms
     for useTodd in [false, true] {
-        let base64Diff = try MultiLineDiff.createBase64Diff(source: source, destination: destination, useToddAlgorithm: useTodd)
+        let base64Diff = try MultiLineDiff.createBase64Diff(
+            source: source, 
+            destination: destination, 
+            algorithm: useTodd ? .todd : .brus
+        )
         let result = try MultiLineDiff.applyBase64Diff(to: source, base64Diff: base64Diff)
         
         // Verify exact preservation
@@ -979,7 +991,7 @@ class TestFileManager {
         let base64Diff = try MultiLineDiff.createBase64Diff(
             source: source,
             destination: destination,
-            useToddAlgorithm: false
+            algorithm: .brus
         )
         let result = try MultiLineDiff.applyBase64Diff(to: source, base64Diff: base64Diff)
         

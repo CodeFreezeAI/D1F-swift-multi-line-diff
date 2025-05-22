@@ -104,22 +104,78 @@ private extension String {
 /// Represents metadata about the diff source and destination
 public struct DiffMetadata: Equatable, Codable {
     /// The start line of the section being diffed in the source
-    public let sourceStartLine: Int?
-    /// The end line of the section being diffed in the source
-    public let sourceEndLine: Int?
-    /// The start line of the section being diffed in the destination
-    public let destStartLine: Int?
-    /// The end line of the section being diffed in the destination
-    public let destEndLine: Int?
-    /// The total number of lines in the source
-    public let sourceTotalLines: Int?
-    /// The total number of lines in the destination
-    public let destTotalLines: Int?
-    /// The first few characters of the section before the diff (context)
-    public let precedingContext: String?
-    /// The first few characters of the section after the diff (context)
-    public let followingContext: String?
+    @CodableDefault<NullableInt>
+    public var sourceStartLine: Int?
     
+    /// The end line of the section being diffed in the source
+    @CodableDefault<NullableInt>
+    public var sourceEndLine: Int?
+    
+    /// The start line of the section being diffed in the destination
+    @CodableDefault<NullableInt>
+    public var destStartLine: Int?
+    
+    /// The end line of the section being diffed in the destination
+    @CodableDefault<NullableInt>
+    public var destEndLine: Int?
+    
+    /// The total number of lines in the source
+    @CodableDefault<NullableInt>
+    public var sourceTotalLines: Int?
+    
+    /// The total number of lines in the destination
+    @CodableDefault<NullableInt>
+    public var destTotalLines: Int?
+    
+    /// The first few characters of the section before the diff (context)
+    @CodableDefault<NullableString>
+    public var precedingContext: String?
+    
+    /// The first few characters of the section after the diff (context)
+    @CodableDefault<NullableString>
+    public var followingContext: String?
+    
+    /// Number of insert operations in the diff
+    @CodableDefault<NullableInt>
+    public var insertOperations: Int?
+    
+    /// Number of delete operations in the diff
+    @CodableDefault<NullableInt>
+    public var deleteOperations: Int?
+    
+    /// Number of retain operations in the diff
+    @CodableDefault<NullableInt>
+    public var retainOperations: Int?
+    
+    /// Indicates the type of changes
+    public enum ChangeType: String, Codable {
+        case minor
+        case moderate
+        case major
+        case structural
+    }
+    
+    /// Type of changes in the diff
+    @CodableDefault<NullableEnum<ChangeType>>
+    public var changeType: ChangeType?
+    
+    /// Percentage of text that has changed
+    @CodableDefault<NullableDouble>
+    public var changePercentage: Double?
+    
+    /// Time taken to generate the diff
+    @CodableDefault<NullableDouble>
+    public var diffGenerationTime: Double?
+    
+    /// Algorithm used to generate the diff
+    @CodableDefault<NullableEnum<DiffAlgorithm>>
+    public var algorithmUsed: DiffAlgorithm?
+    
+    /// Unique identifier for tracking this specific diff
+    @CodableDefault<NullableString>
+    public var diffId: String?
+    
+    // Simplified initializer
     public init(
         sourceStartLine: Int? = nil,
         sourceEndLine: Int? = nil,
@@ -128,7 +184,15 @@ public struct DiffMetadata: Equatable, Codable {
         sourceTotalLines: Int? = nil,
         destTotalLines: Int? = nil,
         precedingContext: String? = nil,
-        followingContext: String? = nil
+        followingContext: String? = nil,
+        insertOperations: Int? = nil,
+        deleteOperations: Int? = nil,
+        retainOperations: Int? = nil,
+        changeType: ChangeType? = nil,
+        changePercentage: Double? = nil,
+        diffGenerationTime: Double? = nil,
+        algorithmUsed: DiffAlgorithm? = nil,
+        diffId: String? = nil
     ) {
         self.sourceStartLine = sourceStartLine
         self.sourceEndLine = sourceEndLine
@@ -138,6 +202,99 @@ public struct DiffMetadata: Equatable, Codable {
         self.destTotalLines = destTotalLines
         self.precedingContext = precedingContext
         self.followingContext = followingContext
+        self.insertOperations = insertOperations
+        self.deleteOperations = deleteOperations
+        self.retainOperations = retainOperations
+        self.changeType = changeType
+        self.changePercentage = changePercentage
+        self.diffGenerationTime = diffGenerationTime
+        self.algorithmUsed = algorithmUsed
+        self.diffId = diffId
+    }
+    
+    public static func == (lhs: DiffMetadata, rhs: DiffMetadata) -> Bool {
+        return lhs.sourceStartLine == rhs.sourceStartLine &&
+               lhs.sourceEndLine == rhs.sourceEndLine &&
+               lhs.destStartLine == rhs.destStartLine &&
+               lhs.destEndLine == rhs.destEndLine &&
+               lhs.sourceTotalLines == rhs.sourceTotalLines &&
+               lhs.destTotalLines == rhs.destTotalLines &&
+               lhs.precedingContext == rhs.precedingContext &&
+               lhs.followingContext == rhs.followingContext &&
+               lhs.insertOperations == rhs.insertOperations &&
+               lhs.deleteOperations == rhs.deleteOperations &&
+               lhs.retainOperations == rhs.retainOperations &&
+               lhs.changeType == rhs.changeType &&
+               lhs.changePercentage == rhs.changePercentage &&
+               lhs.diffGenerationTime == rhs.diffGenerationTime &&
+               lhs.algorithmUsed == rhs.algorithmUsed &&
+               lhs.diffId == rhs.diffId
+    }
+}
+
+// Property wrapper for handling optional default values
+@propertyWrapper
+public struct CodableDefault<T: DefaultValue> {
+    public var wrappedValue: T.Value
+    
+    public init(wrappedValue: T.Value) {
+        self.wrappedValue = wrappedValue
+    }
+}
+
+extension CodableDefault: Codable {
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        wrappedValue = try container.decode(T.Value.self)
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(wrappedValue)
+    }
+}
+
+// Protocols and types for default values
+public protocol DefaultValue {
+    associatedtype Value: Codable
+    static var defaultValue: Value { get }
+}
+
+public enum NullableInt: DefaultValue {
+    public static var defaultValue: Int? { nil }
+}
+
+public enum NullableString: DefaultValue {
+    public static var defaultValue: String? { nil }
+}
+
+public enum NullableDouble: DefaultValue {
+    public static var defaultValue: Double? { nil }
+}
+
+public enum NullableEnum<T: Codable>: DefaultValue {
+    public static var defaultValue: T? { nil }
+}
+
+// Extension to make property wrapper work with Codable
+extension KeyedDecodingContainer {
+    func decode<T>(
+        _ type: CodableDefault<T>.Type,
+        forKey key: Key
+    ) throws -> CodableDefault<T> where T: DefaultValue {
+        if let value = try decodeIfPresent(T.Value.self, forKey: key) {
+            return CodableDefault(wrappedValue: value)
+        }
+        return CodableDefault(wrappedValue: T.defaultValue)
+    }
+}
+
+extension KeyedEncodingContainer {
+    mutating func encode<T>(
+        _ value: CodableDefault<T>,
+        forKey key: Key
+    ) throws where T: DefaultValue {
+        try encode(value.wrappedValue, forKey: key)
     }
 }
 
@@ -155,11 +312,21 @@ public struct DiffMetadata: Equatable, Codable {
 }
 
 /// Represents the available diff algorithms
-@frozen public enum DiffAlgorithm {
+@frozen public enum DiffAlgorithm: String, Sendable, Codable {
     /// Simple, fast diff algorithm with O(n) time complexity
     case brus
     /// Detailed, semantic diff algorithm with O(n log n) time complexity
     case todd
+}
+
+/// Represents different encoding types for diff serialization
+public enum DiffEncoding {
+    /// Base64 encoded string representation
+    case base64
+    /// JSON string representation
+    case jsonString
+    /// Raw JSON data
+    case jsonData
 }
 
 /// The main entry point for the MultiLineDiff library
@@ -247,6 +414,44 @@ public struct DiffMetadata: Equatable, Codable {
         let precedingContextSample = source.prefix(min(contextLength, source.count)).description
         let followingContextSample = source.suffix(min(contextLength, source.count)).description
         
+        // Count operations
+        var insertCount = 0
+        var deleteCount = 0
+        var retainCount = 0
+        
+        for op in result.operations {
+            switch op {
+            case .insert: insertCount += 1
+            case .delete: deleteCount += 1
+            case .retain: retainCount += 1
+            }
+        }
+        
+        // Calculate change percentage
+        let totalChars = source.count
+        let changedChars = result.operations.reduce(0) { total, op in
+            switch op {
+            case .insert(let text): return total + text.count
+            case .delete(let count): return total + count
+            case .retain: return total
+            }
+        }
+        let changePercentage = totalChars > 0 ? Double(changedChars) / Double(totalChars) * 100 : 0
+        
+        // Determine change type
+        let changeType: DiffMetadata.ChangeType = {
+            switch changePercentage {
+            case 0: return .minor
+            case ..<10: return .minor
+            case 10..<30: return .moderate
+            case 30..<50: return .major
+            default: return .structural
+            }
+        }()
+        
+        // Generate a unique diff ID
+        let diffId = UUID().uuidString
+        
         let metadata = DiffMetadata(
             sourceStartLine: sourceStartLine,
             sourceEndLine: sourceStartLine.map { $0 + sourceLines.count - 1 },
@@ -255,7 +460,15 @@ public struct DiffMetadata: Equatable, Codable {
             sourceTotalLines: sourceLines.count,
             destTotalLines: destLines.count,
             precedingContext: precedingContextSample,
-            followingContext: followingContextSample
+            followingContext: followingContextSample,
+            insertOperations: insertCount,
+            deleteOperations: deleteCount,
+            retainOperations: retainCount,
+            changeType: changeType,
+            changePercentage: changePercentage,
+            diffGenerationTime: nil, // TODO: Add timing measurement
+            algorithmUsed: algorithm,
+            diffId: diffId
         )
         
         // Return result with metadata
@@ -1036,7 +1249,7 @@ public struct DiffMetadata: Equatable, Codable {
     /// - Parameters:
     ///   - source: The original string
     ///   - destination: The modified string
-    ///   - useToddAlgorithm: Whether to use Todd's more granular algorithm (default: false)
+    ///   - algorithm: The diff algorithm to use (default: Todd)
     ///   - includeMetadata: Whether to include metadata in the diff result
     ///   - sourceStartLine: The line number where the source string starts (0-indexed)
     ///   - destStartLine: The line number where the destination string starts (0-indexed)
@@ -1045,7 +1258,7 @@ public struct DiffMetadata: Equatable, Codable {
     public static func createBase64Diff(
         source: String,
         destination: String,
-        useToddAlgorithm: Bool = false,
+        algorithm: DiffAlgorithm = .todd,
         includeMetadata: Bool = true,
         sourceStartLine: Int? = nil,
         destStartLine: Int? = nil
@@ -1054,7 +1267,7 @@ public struct DiffMetadata: Equatable, Codable {
         let diff = createDiff(
             source: source,
             destination: destination,
-            algorithm: useToddAlgorithm ? .todd : .brus,
+            algorithm: algorithm,
             includeMetadata: includeMetadata,
             sourceStartLine: sourceStartLine,
             destStartLine: destStartLine
@@ -1075,6 +1288,87 @@ public struct DiffMetadata: Equatable, Codable {
         allowTruncatedSource: Bool = false
     ) throws -> String {
         let diff = try diffFromBase64(base64Diff)
+        return try applyDiff(to: source, diff: diff, allowTruncatedSource: allowTruncatedSource)
+    }
+    
+    /// Creates a diff in the specified encoding
+    /// - Parameters:
+    ///   - source: The original text
+    ///   - destination: The modified text
+    ///   - algorithm: Diff generation strategy (defaults to semantic Todd algorithm)
+    ///   - encoding: The desired encoding format for the diff
+    ///   - includeMetadata: Whether to generate additional context information
+    ///   - sourceStartLine: Optional starting line number for precise tracking
+    ///   - destStartLine: Optional destination starting line number
+    /// - Returns: The diff in the specified encoding
+    /// - Throws: An error if encoding fails
+    public static func createEncodedDiff(
+        source: String,
+        destination: String,
+        algorithm: DiffAlgorithm = .todd,
+        encoding: DiffEncoding = .base64,
+        includeMetadata: Bool = true,
+        sourceStartLine: Int? = nil,
+        destStartLine: Int? = nil
+    ) throws -> Any {
+        // Create the base diff result
+        let diff = createDiff(
+            source: source,
+            destination: destination,
+            algorithm: algorithm,
+            includeMetadata: includeMetadata,
+            sourceStartLine: sourceStartLine,
+            destStartLine: destStartLine
+        )
+        
+        // Encode based on the specified format
+        switch encoding {
+        case .base64:
+            return try diffToBase64(diff)
+        case .jsonString:
+            return try encodeDiffToJSONString(diff)
+        case .jsonData:
+            let jsonString = try encodeDiffToJSONString(diff)
+            return jsonString.data(using: .utf8) ?? Data()
+        }
+    }
+
+    /// Applies an encoded diff to a source string
+    /// - Parameters:
+    ///   - source: The original string
+    ///   - encodedDiff: The encoded diff to apply
+    ///   - encoding: The encoding type of the diff
+    ///   - allowTruncatedSource: Whether to allow applying diff to truncated source string
+    /// - Returns: The resulting string after applying the diff
+    /// - Throws: An error if decoding or applying the diff fails
+    public static func applyEncodedDiff(
+        to source: String,
+        encodedDiff: Any,
+        encoding: DiffEncoding,
+        allowTruncatedSource: Bool = false
+    ) throws -> String {
+        // Decode based on the specified format
+        let diff: DiffResult
+        switch encoding {
+        case .base64:
+            guard let base64String = encodedDiff as? String else {
+                throw DiffError.decodingFailed
+            }
+            diff = try diffFromBase64(base64String)
+        case .jsonString:
+            guard let jsonString = encodedDiff as? String else {
+                throw DiffError.decodingFailed
+            }
+            diff = try decodeDiffFromJSONString(jsonString)
+        case .jsonData:
+            guard let jsonData = encodedDiff as? Data,
+                  let jsonString = String(data: jsonData, encoding: .utf8) else {
+                throw DiffError.decodingFailed
+            }
+            diff = try decodeDiffFromJSONString(jsonString)
+        }
+        
+        // Apply the decoded diff
         return try applyDiff(to: source, diff: diff, allowTruncatedSource: allowTruncatedSource)
     }
     
