@@ -2,14 +2,9 @@
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
-import Foundation
 
 let package = Package(
     name: "MultiLineDiff",
-    platforms: [
-        .macOS(.v13)
-    ],
-    version: Version(1, 1, 0),
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
