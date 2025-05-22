@@ -1,4 +1,8 @@
-# MultiLineDiff 1.0.9
+# MultiLineDiff
+
+[![Swift 6.1](https://img.shields.io/badge/Swift-6.1-orange.svg)](https://swift.org)
+[![Website](https://img.shields.io/badge/website-xcf.ai-blue.svg)](https://xcf.ai)
+[![Version](https://img.shields.io/badge/version-1.1.0-green.svg)](https://github.com/toddbruss/swift-multi-line-diff)
 
 A Swift library for creating and applying diffs to multi-line text content. Supports Unicode/UTF-8 strings and handles multi-line content properly. Designed specifically for Vibe AI Coding integrity and safe code transformations.
 
@@ -11,6 +15,55 @@ A Swift library for creating and applying diffs to multi-line text content. Supp
 - Multiple diff formats (JSON, Base64)
 - Two diff algorithms (Brus and Todd)
 - Designed for AI code integrity
+- **NEW: Truncated Diff Support** 🆕
+
+## 🖥️ Platform Compatibility
+
+- **macOS**: 13.0+
+- **Swift**: 6.1+
+
+## 🚀 Truncated Diff Support
+
+MultiLineDiff now supports applying diffs to truncated sources, making it incredibly flexible for partial document transformations.
+
+### Key Truncated Diff Capabilities
+
+- Apply diffs to partial documents
+- Preserve context and metadata
+- Intelligent section replacement
+- Base64 encoding for compact representation
+
+```swift
+// Applying a diff to a truncated source
+let truncatedSource = "Section to be modified"
+let diff = MultiLineDiff.createDiff(
+    source: truncatedSource, 
+    destination: "Updated section", 
+    allowTruncatedSource: true
+)
+let result = try MultiLineDiff.applyDiff(
+    to: truncatedSource, 
+    diff: diff
+)
+```
+
+## Base64 Diff Encoding
+
+Compact and safe diff representation with built-in base64 encoding:
+
+```swift
+// Create a base64 encoded diff
+let base64Diff = try MultiLineDiff.createBase64Diff(
+    source: originalCode, 
+    destination: modifiedCode
+)
+
+// Apply base64 encoded diff
+let reconstructedCode = try MultiLineDiff.applyBase64Diff(
+    to: originalCode, 
+    base64Diff: base64Diff
+)
+```
 
 ## 🚀 Performance Optimizations for Swift 6.1
 

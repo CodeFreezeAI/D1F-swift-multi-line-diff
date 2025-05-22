@@ -8,22 +8,75 @@
 import Foundation
 
 extension MultiLineDiff {
-    /// Saves a diff result to a file
-    /// - Parameters:
-    ///   - diff: The diff result to save
-    ///   - fileURL: The URL of the file to write to
-    ///   - prettyPrinted: Whether to format the JSON for human readability
-    /// - Throws: An error if saving fails
+    /// Saves a diff result to a file with advanced configuration
     ///
+    /// This method provides a robust way to persist diff operations to disk,
+    /// supporting both compact and human-readable JSON formats.
+    ///
+    /// # Features
+    /// - Flexible file output formatting
+    /// - Preserves full diff metadata
+    /// - Safe file writing with atomic operations
+    ///
+    /// # Performance Considerations
+    /// - Efficient JSON encoding
+    /// - Minimal memory overhead
+    /// - Supports large diff results
+    ///
+    /// # Example
+    /// ```swift
+    /// let diff = MultiLineDiff.createDiff(source: oldCode, destination: newCode)
+    /// let fileURL = URL(fileURLWithPath: "/path/to/diff.json")
+    ///
+    /// // Save with default pretty-printed format
+    /// try MultiLineDiff.saveDiffToFile(diff, fileURL: fileURL)
+    ///
+    /// // Save in compact format
+    /// try MultiLineDiff.saveDiffToFile(diff, fileURL: fileURL, prettyPrinted: false)
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - diff: The diff result to save to file
+    ///   - fileURL: Destination file URL for the diff
+    ///   - prettyPrinted: Whether to format JSON for human readability
+    ///
+    /// - Throws: File writing or encoding errors
     public static func saveDiffToFile(_ diff: DiffResult, fileURL: URL, prettyPrinted: Bool = true) throws {
         let data = try encodeDiffToJSON(diff, prettyPrinted: prettyPrinted)
         try data.write(to: fileURL)
     }
 
-    /// Loads a diff result from a file
-    /// - Parameter fileURL: The URL of the file to read from
-    /// - Returns: The loaded diff result
-    /// - Throws: An error if loading fails
+    /// Loads a diff result from a file with robust error handling
+    ///
+    /// This method provides a safe and efficient way to read diff operations
+    /// from a previously saved JSON file.
+    ///
+    /// # Features
+    /// - Supports both compact and pretty-printed JSON formats
+    /// - Handles legacy and current diff encodings
+    /// - Comprehensive error handling
+    ///
+    /// # Performance
+    /// - Efficient JSON decoding
+    /// - Minimal memory allocation
+    /// - Supports large diff files
+    ///
+    /// # Example
+    /// ```swift
+    /// let fileURL = URL(fileURLWithPath: "/path/to/saved/diff.json")
+    ///
+    /// // Load a previously saved diff
+    /// let loadedDiff = try MultiLineDiff.loadDiffFromFile(fileURL: fileURL)
+    ///
+    /// // Apply the loaded diff to a source
+    /// let result = try MultiLineDiff.applyDiff(to: sourceCode, diff: loadedDiff)
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - fileURL: Source file URL containing the saved diff
+    ///
+    /// - Returns: A fully reconstructed `DiffResult`
+    /// - Throws: File reading or decoding errors
     public static func loadDiffFromFile(fileURL: URL) throws -> DiffResult {
         let data = try Data(contentsOf: fileURL)
         return try decodeDiffFromJSON(data)

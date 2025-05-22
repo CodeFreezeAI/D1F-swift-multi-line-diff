@@ -6,7 +6,28 @@ import Foundation
 // MultiLineDiff - A library for creating and applying diffs to multi-line text
 // Supports Unicode/UTF-8 strings and handles multi-line content properly
 
-/// Represents a single diff operation
+/// Represents a single diff operation with three core transformation types
+/// 
+/// DiffOperation is the fundamental building block for describing text transformations.
+/// It supports three primary operations: retain, insert, and delete.
+///
+/// - `retain`: Keeps existing characters from the source text
+/// - `insert`: Adds new content not present in the source
+/// - `delete`: Removes characters from the source text
+///
+/// # Performance Characteristics
+/// - Constant-time operation creation O(1)
+/// - Memory-efficient value type
+/// - Supports Unicode and multi-line text
+///
+/// # Example
+/// ```swift
+/// let diff: [DiffOperation] = [
+///     .retain(5),        // Keep first 5 characters
+///     .delete(3),        // Remove next 3 characters
+///     .insert("Swift")   // Insert "Swift"
+/// ]
+/// ```
 @frozen public enum DiffOperation: Sendable, Equatable, Codable {
     case retain(Int)      // Keep a number of characters from the source
     case insert(String)   // Insert new content
@@ -143,15 +164,56 @@ public struct DiffMetadata: Equatable, Codable {
 
 /// The main entry point for the MultiLineDiff library
 @frozen public enum MultiLineDiff {
-    /// Creates a diff between two strings using the specified algorithm
+    /// Creates a diff between two strings using advanced diffing algorithms
+    ///
+    /// This method provides a flexible and powerful way to generate diff operations
+    /// that transform one text into another. It supports two primary algorithms:
+    /// Brus (fast, O(n)) and Todd (semantic, O(n log n)).
+    ///
+    /// # Algorithms
+    /// - `.brus`: Optimized for simple, character-level changes
+    ///   - Fastest performance
+    ///   - Best for minimal text modifications
+    ///   - O(n) time complexity
+    ///
+    /// - `.todd`: Semantic diff with deeper analysis
+    ///   - More intelligent change detection
+    ///   - Preserves structural context
+    ///   - O(n log n) time complexity
+    ///
+    /// # Features
+    /// - Unicode/UTF-8 support
+    /// - Metadata generation
+    /// - Flexible line number tracking
+    ///
+    /// # Example
+    /// ```swift
+    /// let source = "Hello, world!"
+    /// let destination = "Hello, Swift!"
+    ///
+    /// // Default Todd algorithm
+    /// let diff = MultiLineDiff.createDiff(
+    ///     source: source,
+    ///     destination: destination
+    /// )
+    ///
+    /// // Explicitly choose Brus algorithm
+    /// let brusDiff = MultiLineDiff.createDiff(
+    ///     source: source,
+    ///     destination: destination,
+    ///     algorithm: .brus
+    /// )
+    /// ```
+    ///
     /// - Parameters:
-    ///   - source: The original string
-    ///   - destination: The modified string
-    ///   - algorithm: The algorithm to use (defaults to .todd)
-    ///   - includeMetadata: Whether to include metadata in the diff result
-    ///   - sourceStartLine: The line number where the source string starts (0-indexed)
-    ///   - destStartLine: The line number where the destination string starts (0-indexed)
-    /// - Returns: A DiffResult containing the operations to transform source into destination
+    ///   - source: The original text to transform from
+    ///   - destination: The target text to transform to
+    ///   - algorithm: Diff generation strategy (defaults to semantic Todd algorithm)
+    ///   - includeMetadata: Whether to generate additional context information
+    ///   - sourceStartLine: Optional starting line number for precise tracking
+    ///   - destStartLine: Optional destination starting line number
+    ///
+    /// - Returns: A `DiffResult` containing transformation operations
     public static func createDiff(
         source: String,
         destination: String,

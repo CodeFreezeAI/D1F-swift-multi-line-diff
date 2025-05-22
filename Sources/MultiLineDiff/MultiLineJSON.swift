@@ -8,12 +8,34 @@
 import Foundation
 
 extension MultiLineDiff {
-    /// Encodes a diff result to JSON data
+    /// Encodes a diff result to JSON data with advanced configuration
+    ///
+    /// This method transforms a `DiffResult` into a JSON representation,
+    /// supporting both compact and human-readable formats.
+    ///
+    /// # Features
+    /// - Base64 encoding of operations
+    /// - Optional metadata preservation
+    /// - Configurable JSON formatting
+    ///
+    /// # Performance
+    /// - Efficient encoding using Swift's `JSONEncoder`
+    /// - Minimal memory overhead
+    /// - Supports large diff results
+    ///
+    /// # Example
+    /// ```swift
+    /// let diff = MultiLineDiff.createDiff(source: oldCode, destination: newCode)
+    /// let jsonData = try MultiLineDiff.encodeDiffToJSON(diff)
+    /// let prettyJsonData = try MultiLineDiff.encodeDiffToJSON(diff, prettyPrinted: true)
+    /// ```
+    ///
     /// - Parameters:
     ///   - diff: The diff result to encode
-    ///   - prettyPrinted: Whether to format the JSON for human readability
-    /// - Returns: The encoded JSON data
-    /// - Throws: An error if encoding fails
+    ///   - prettyPrinted: Whether to format JSON for human readability
+    ///
+    /// - Returns: JSON-encoded representation of the diff
+    /// - Throws: Encoding errors if JSON serialization fails
     public static func encodeDiffToJSON(_ diff: DiffResult, prettyPrinted: Bool = true) throws -> Data {
         let encoder = JSONEncoder()
         if prettyPrinted {
@@ -104,10 +126,33 @@ extension MultiLineDiff {
         return try decodeDiffFromJSON(data)
     }
     
-    /// Gets the base64 string representation of a diff result directly
-    /// - Parameter diff: The diff result to encode
-    /// - Returns: A base64 encoded string representing the diff operations
-    /// - Throws: An error if encoding fails
+    /// Converts a diff result to a compact, secure Base64 encoded string
+    ///
+    /// Base64 encoding provides a safe, compact representation of diff operations
+    /// that can be easily transmitted, stored, or shared across different systems.
+    ///
+    /// # Key Benefits
+    /// - Compact representation
+    /// - Safe transmission
+    /// - Cross-platform compatibility
+    /// - Preserves metadata
+    ///
+    /// # Encoding Strategy
+    /// - Encodes operations and optional metadata
+    /// - Uses standard Base64 encoding
+    /// - Supports both Brus and Todd algorithms
+    ///
+    /// # Example
+    /// ```swift
+    /// let base64Diff = try MultiLineDiff.diffToBase64(diffResult)
+    /// // Transmit or store the base64Diff safely
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - diff: The diff result to encode
+    ///
+    /// - Returns: A Base64 encoded string representing the diff
+    /// - Throws: Encoding errors if Base64 conversion fails
     public static func diffToBase64(_ diff: DiffResult) throws -> String {
         let encoder = JSONEncoder()
         
