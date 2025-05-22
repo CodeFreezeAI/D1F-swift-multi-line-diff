@@ -1,4 +1,4 @@
-# MultiLineDiff 1.0.8
+# MultiLineDiff 1.0.9
 
 A Swift library for creating and applying diffs to multi-line text content. Supports Unicode/UTF-8 strings and handles multi-line content properly. Designed specifically for Vibe AI Coding integrity and safe code transformations.
 
