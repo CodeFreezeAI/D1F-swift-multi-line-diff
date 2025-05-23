@@ -147,7 +147,7 @@ let reconstructedCode = try MultiLineDiff.applyBase64Diff(
 | Metric | MultiLineDiff | Traditional Diff Libraries |
 |--------|---------------|----------------------------|
 | Speed | ⚡️ Ultra-Fast | 🐌 Slower |
-| Memory Usage | 💡 Low | 🧠 Higher |
+| Memory Usage | 🧠 Low | 🤯 Higher |
 | Scalability | 🚀 Excellent | 📉 Limited |
 
 ## 📦 Diff Representation Formats
@@ -326,7 +326,7 @@ Operation:    ====== ----- ++++++   // "Hello, " retained, "world" deleted, "Swi
 
 ## 🔍 Algorithm Complexity Analysis
 
-### Brus Algorithm Big O Notation
+### Brus - Simple - Algorithm Big O Notation
 
 | Metric | Complexity | Explanation | Visual Representation |
 |--------|------------|-------------|----------------------|
@@ -343,7 +343,7 @@ Memory Usage:   🟢🟢🟡
 Speed:          🟢🟢🟢
 ```
 
-### Todd Algorithm Big O Notation
+### Todd - Smart - Algorithm Big O Notation
 
 | Metric | Complexity | Explanation | Visual Representation |
 |--------|------------|-------------|----------------------|
@@ -620,14 +620,3 @@ func calculateTotal(items: [Product]) -> Double {
 │ }
 └─ =
 ```
-
-### Operation Legend
-
-| Symbol | Operation | Description |
-|--------|-----------|-------------|
-| `====` | Retain    | Keep text as is |
-| `----` | Delete    | Remove text |
-| `++++` | Insert    | Add new text |
-| `▼`    | Position  | Current operation point |
-| `┌─┐`  | Section   | Groups related changes |
-| `└─┘`  | Border    | Section boundary |
