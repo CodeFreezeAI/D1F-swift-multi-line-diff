@@ -91,6 +91,233 @@ import Foundation
     }
 }
 
+// MARK: - Swift 6.1 Enhanced String and Collection Utilities
+
+/// Swift 6.1 Enhanced String Processing Utilities
+private extension String {
+    /// Optimized common prefix detection using Swift 6.1 string enhancements
+    @_optimize(speed)
+    func commonPrefix(with other: String) -> Int {
+        // Use Swift 6.1's enhanced string comparison
+        guard !isEmpty && !other.isEmpty else { return 0 }
+        
+        return zip(self, other)
+            .prefix(while: ==)
+            .count
+    }
+    
+    /// Optimized common suffix detection using Swift 6.1 string enhancements
+    @_optimize(speed)
+    func commonSuffix(with other: String) -> Int {
+        // Use Swift 6.1's enhanced string comparison with reversed iteration
+        guard !isEmpty && !other.isEmpty else { return 0 }
+        
+        return zip(self.reversed(), other.reversed())
+            .prefix(while: ==)
+            .count
+    }
+    
+    /// Swift 6.1 enhanced Unicode-aware line splitting
+    @_optimize(speed)
+    var efficientLines: [Substring] {
+        // Leverage Swift 6.1's improved string splitting performance
+        return self.split(separator: "\n", omittingEmptySubsequences: false)
+    }
+    
+    /// Memory-efficient character access using Swift 6.1 features
+    @_optimize(speed)
+    func characterAt(offset: Int) -> Character? {
+        guard offset >= 0 && offset < count else { return nil }
+        return self[index(startIndex, offsetBy: offset)]
+    }
+    
+    /// Swift 6.1 enhanced substring extraction
+    @_optimize(speed)
+    func substring(from: Int, length: Int) -> String {
+        let startIdx = index(startIndex, offsetBy: Swift.max(0, from))
+        let endIdx = index(startIdx, offsetBy: Swift.min(length, count - from), limitedBy: endIndex) ?? endIndex
+        return String(self[startIdx..<endIdx])
+    }
+}
+
+/// Swift 6.1 Enhanced Collection Algorithms
+private extension Collection where Element: Equatable {
+    // This extension has been removed - LCS is now implemented directly in generateLCSOperations
+}
+
+// MARK: - Common Algorithm Components
+
+/// Shared components for both Brus and Todd algorithms
+private enum DiffAlgorithmCore {
+    
+    /// Enhanced common regions detection using Swift 6.1 features
+    struct EnhancedCommonRegions {
+        let prefixLength: Int
+        let suffixLength: Int
+        let sourceMiddleRange: Range<Int>
+        let destMiddleRange: Range<Int>
+        
+        @_optimize(speed)
+        init(source: String, destination: String) {
+            // Use Swift 6.1 enhanced string comparison
+            let prefixLen = source.commonPrefix(with: destination)
+            
+            // Calculate suffix avoiding prefix overlap
+            let remainingSourceCount = source.count - prefixLen
+            let remainingDestCount = destination.count - prefixLen
+            let maxSuffixLen = Swift.min(remainingSourceCount, remainingDestCount)
+            
+            let suffixLen: Int
+            if maxSuffixLen > 0 {
+                let sourceSuffix = String(source.suffix(maxSuffixLen))
+                let destSuffix = String(destination.suffix(maxSuffixLen))
+                suffixLen = sourceSuffix.commonSuffix(with: destSuffix)
+            } else {
+                suffixLen = 0
+            }
+            
+            self.prefixLength = prefixLen
+            self.suffixLength = suffixLen
+            self.sourceMiddleRange = prefixLen..<(source.count - suffixLen)
+            self.destMiddleRange = prefixLen..<(destination.count - suffixLen)
+        }
+        
+        /// Extract middle content from source
+        @_optimize(speed)
+        func sourceMiddle(from source: String) -> String {
+            guard !sourceMiddleRange.isEmpty else { return "" }
+            return source.substring(from: sourceMiddleRange.lowerBound, 
+                                  length: sourceMiddleRange.count)
+        }
+        
+        /// Extract middle content from destination  
+        @_optimize(speed)
+        func destMiddle(from destination: String) -> String {
+            guard !destMiddleRange.isEmpty else { return "" }
+            return destination.substring(from: destMiddleRange.lowerBound,
+                                       length: destMiddleRange.count)
+        }
+    }
+    
+    /// Optimized operation builder using Swift 6.1 features
+    struct OperationBuilder {
+        private var operations: [DiffOperation] = []
+        private var lastOperationType: DiffOperationType?
+        
+        // Accumulated operation state
+        private var pendingRetainCount = 0
+        private var pendingDeleteCount = 0
+        private var pendingInsertText = ""
+        
+        @_optimize(speed)
+        mutating func addRetain(count: Int) {
+            guard count > 0 else { return }
+            
+            if lastOperationType != .retain {
+                flushPendingOperations()
+            }
+            
+            pendingRetainCount += count
+            lastOperationType = .retain
+        }
+        
+        @_optimize(speed)
+        mutating func addDelete(count: Int) {
+            guard count > 0 else { return }
+            
+            if lastOperationType != .delete {
+                flushPendingOperations()
+            }
+            
+            pendingDeleteCount += count
+            lastOperationType = .delete
+        }
+        
+        @_optimize(speed)
+        mutating func addInsert(text: String) {
+            guard !text.isEmpty else { return }
+            
+            if lastOperationType != .insert {
+                flushPendingOperations()
+            }
+            
+            pendingInsertText += text
+            lastOperationType = .insert
+        }
+        
+        @_optimize(speed)
+        mutating func flushPendingOperations() {
+            if pendingRetainCount > 0 {
+                operations.append(.retain(pendingRetainCount))
+                pendingRetainCount = 0
+            }
+            if pendingDeleteCount > 0 {
+                operations.append(.delete(pendingDeleteCount))
+                pendingDeleteCount = 0
+            }
+            if !pendingInsertText.isEmpty {
+                operations.append(.insert(pendingInsertText))
+                pendingInsertText = ""
+            }
+        }
+        
+        @_optimize(speed)
+        mutating func build() -> [DiffOperation] {
+            flushPendingOperations()
+            return operations
+        }
+    }
+    
+    /// Enhanced algorithm selection heuristics
+    struct AlgorithmSelector {
+        
+        @_optimize(speed)
+        static func selectOptimalAlgorithm(source: String, destination: String) -> DiffAlgorithm {
+            // Swift 6.1 enhanced decision tree
+            let sourceLines = source.efficientLines
+            let destLines = destination.efficientLines
+            
+            // Fast path for simple cases
+            if source.isEmpty || destination.isEmpty {
+                return .brus
+            }
+            
+            // Use enhanced string comparison for similarity detection
+            let similarity = calculateSimilarity(source: source, destination: destination)
+            let lineCountDiff = Swift.abs(sourceLines.count - destLines.count)
+            
+            // Enhanced decision logic
+            switch (similarity, lineCountDiff, sourceLines.count) {
+            case (0.9..., _, _):
+                // Very similar strings - use fast Brus
+                return .brus
+            case (_, 0...2, 0...10):
+                // Few lines with minimal changes - use Brus
+                return .brus
+            case (_, _, 0...5):
+                // Very short content - use Brus
+                return .brus
+            default:
+                // Complex changes - use semantic Todd
+                return .todd
+            }
+        }
+        
+        @_optimize(speed)
+        private static func calculateSimilarity(source: String, destination: String) -> Double {
+            guard !source.isEmpty && !destination.isEmpty else { return 0.0 }
+            
+            let commonRegions = EnhancedCommonRegions(source: source, destination: destination)
+            let commonChars = commonRegions.prefixLength + commonRegions.suffixLength
+            let totalChars = Swift.max(source.count, destination.count)
+            
+            return Double(commonChars) / Double(totalChars)
+        }
+    }
+}
+
+// MARK: - Enhanced Algorithm Implementations
+
 private extension Int {
     var isPlural: Bool { self != 1 }
 }
@@ -101,200 +328,91 @@ private extension String {
     }
 }
 
+private enum DiffOperationType {
+    case retain, delete, insert
+}
+
 /// Represents metadata about the diff source and destination
 public struct DiffMetadata: Equatable, Codable {
-    /// The start line of the section being diffed in the source
-    @CodableDefault<NullableInt>
-    public var sourceStartLine: Int?
+    // Essential location information
+    public let sourceStartLine: Int?
+    public let sourceTotalLines: Int?
     
-    /// The end line of the section being diffed in the source
-    @CodableDefault<NullableInt>
-    public var sourceEndLine: Int?
+    // Context for section matching
+    public let precedingContext: String?
+    public let followingContext: String?
     
-    /// The start line of the section being diffed in the destination
-    @CodableDefault<NullableInt>
-    public var destStartLine: Int?
+    // Algorithm and tracking
+    public let algorithmUsed: DiffAlgorithm?
+    public let diffId: String?
     
-    /// The end line of the section being diffed in the destination
-    @CodableDefault<NullableInt>
-    public var destEndLine: Int?
+    // Performance tracking (optional)
+    public let diffGenerationTime: Double?
     
-    /// The total number of lines in the source
-    @CodableDefault<NullableInt>
-    public var sourceTotalLines: Int?
-    
-    /// The total number of lines in the destination
-    @CodableDefault<NullableInt>
-    public var destTotalLines: Int?
-    
-    /// The first few characters of the section before the diff (context)
-    @CodableDefault<NullableString>
-    public var precedingContext: String?
-    
-    /// The first few characters of the section after the diff (context)
-    @CodableDefault<NullableString>
-    public var followingContext: String?
-    
-    /// Number of insert operations in the diff
-    @CodableDefault<NullableInt>
-    public var insertOperations: Int?
-    
-    /// Number of delete operations in the diff
-    @CodableDefault<NullableInt>
-    public var deleteOperations: Int?
-    
-    /// Number of retain operations in the diff
-    @CodableDefault<NullableInt>
-    public var retainOperations: Int?
-    
-    /// Indicates the type of changes
-    public enum ChangeType: String, Codable {
-        case minor
-        case moderate
-        case major
-        case structural
-    }
-    
-    /// Type of changes in the diff
-    @CodableDefault<NullableEnum<ChangeType>>
-    public var changeType: ChangeType?
-    
-    /// Percentage of text that has changed
-    @CodableDefault<NullableDouble>
-    public var changePercentage: Double?
-    
-    /// Time taken to generate the diff
-    @CodableDefault<NullableDouble>
-    public var diffGenerationTime: Double?
-    
-    /// Algorithm used to generate the diff
-    @CodableDefault<NullableEnum<DiffAlgorithm>>
-    public var algorithmUsed: DiffAlgorithm?
-    
-    /// Unique identifier for tracking this specific diff
-    @CodableDefault<NullableString>
-    public var diffId: String?
-    
-    // Simplified initializer
     public init(
         sourceStartLine: Int? = nil,
-        sourceEndLine: Int? = nil,
-        destStartLine: Int? = nil,
-        destEndLine: Int? = nil,
         sourceTotalLines: Int? = nil,
-        destTotalLines: Int? = nil,
         precedingContext: String? = nil,
         followingContext: String? = nil,
-        insertOperations: Int? = nil,
-        deleteOperations: Int? = nil,
-        retainOperations: Int? = nil,
-        changeType: ChangeType? = nil,
-        changePercentage: Double? = nil,
-        diffGenerationTime: Double? = nil,
         algorithmUsed: DiffAlgorithm? = nil,
-        diffId: String? = nil
+        diffId: String? = nil,
+        diffGenerationTime: Double? = nil
     ) {
         self.sourceStartLine = sourceStartLine
-        self.sourceEndLine = sourceEndLine
-        self.destStartLine = destStartLine
-        self.destEndLine = destEndLine
         self.sourceTotalLines = sourceTotalLines
-        self.destTotalLines = destTotalLines
         self.precedingContext = precedingContext
         self.followingContext = followingContext
-        self.insertOperations = insertOperations
-        self.deleteOperations = deleteOperations
-        self.retainOperations = retainOperations
-        self.changeType = changeType
-        self.changePercentage = changePercentage
-        self.diffGenerationTime = diffGenerationTime
         self.algorithmUsed = algorithmUsed
         self.diffId = diffId
+        self.diffGenerationTime = diffGenerationTime
     }
     
-    public static func == (lhs: DiffMetadata, rhs: DiffMetadata) -> Bool {
-        return lhs.sourceStartLine == rhs.sourceStartLine &&
-               lhs.sourceEndLine == rhs.sourceEndLine &&
-               lhs.destStartLine == rhs.destStartLine &&
-               lhs.destEndLine == rhs.destEndLine &&
-               lhs.sourceTotalLines == rhs.sourceTotalLines &&
-               lhs.destTotalLines == rhs.destTotalLines &&
-               lhs.precedingContext == rhs.precedingContext &&
-               lhs.followingContext == rhs.followingContext &&
-               lhs.insertOperations == rhs.insertOperations &&
-               lhs.deleteOperations == rhs.deleteOperations &&
-               lhs.retainOperations == rhs.retainOperations &&
-               lhs.changeType == rhs.changeType &&
-               lhs.changePercentage == rhs.changePercentage &&
-               lhs.diffGenerationTime == rhs.diffGenerationTime &&
-               lhs.algorithmUsed == rhs.algorithmUsed &&
-               lhs.diffId == rhs.diffId
-    }
-}
-
-// Property wrapper for handling optional default values
-@propertyWrapper
-public struct CodableDefault<T: DefaultValue> {
-    public var wrappedValue: T.Value
-    
-    public init(wrappedValue: T.Value) {
-        self.wrappedValue = wrappedValue
-    }
-}
-
-extension CodableDefault: Codable {
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        wrappedValue = try container.decode(T.Value.self)
+    // Computed properties for derived information
+    public var sourceEndLine: Int? {
+        guard let start = sourceStartLine, let total = sourceTotalLines else { return nil }
+        return start + total - 1
     }
     
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        try container.encode(wrappedValue)
-    }
-}
-
-// Protocols and types for default values
-public protocol DefaultValue {
-    associatedtype Value: Codable
-    static var defaultValue: Value { get }
-}
-
-public enum NullableInt: DefaultValue {
-    public static var defaultValue: Int? { nil }
-}
-
-public enum NullableString: DefaultValue {
-    public static var defaultValue: String? { nil }
-}
-
-public enum NullableDouble: DefaultValue {
-    public static var defaultValue: Double? { nil }
-}
-
-public enum NullableEnum<T: Codable>: DefaultValue {
-    public static var defaultValue: T? { nil }
-}
-
-// Extension to make property wrapper work with Codable
-extension KeyedDecodingContainer {
-    func decode<T>(
-        _ type: CodableDefault<T>.Type,
-        forKey key: Key
-    ) throws -> CodableDefault<T> where T: DefaultValue {
-        if let value = try decodeIfPresent(T.Value.self, forKey: key) {
-            return CodableDefault(wrappedValue: value)
+    // Calculate operation statistics from diff operations
+    public func operationStats(from operations: [DiffOperation]) -> (inserts: Int, deletes: Int, retains: Int, changePercentage: Double) {
+        var insertCount = 0, deleteCount = 0, retainCount = 0
+        var changedChars = 0, totalChars = 0
+        
+        for op in operations {
+            switch op {
+            case .insert(let text):
+                insertCount += 1
+                changedChars += text.count
+            case .delete(let count):
+                deleteCount += 1
+                changedChars += count
+                totalChars += count
+            case .retain(let count):
+                retainCount += 1
+                totalChars += count
+            }
         }
-        return CodableDefault(wrappedValue: T.defaultValue)
+        
+        let changePercentage = totalChars > 0 ? Double(changedChars) / Double(totalChars) * 100 : 0
+        return (insertCount, deleteCount, retainCount, changePercentage)
     }
-}
-
-extension KeyedEncodingContainer {
-    mutating func encode<T>(
-        _ value: CodableDefault<T>,
-        forKey key: Key
-    ) throws where T: DefaultValue {
-        try encode(value.wrappedValue, forKey: key)
+    
+    // Convenience factory methods
+    public static func forSection(startLine: Int, lineCount: Int, context: String? = nil, algorithm: DiffAlgorithm = .todd) -> DiffMetadata {
+        return DiffMetadata(
+            sourceStartLine: startLine,
+            sourceTotalLines: lineCount,
+            precedingContext: context,
+            algorithmUsed: algorithm,
+            diffId: UUID().uuidString
+        )
+    }
+    
+    public static func basic(algorithm: DiffAlgorithm = .todd) -> DiffMetadata {
+        return DiffMetadata(
+            algorithmUsed: algorithm,
+            diffId: UUID().uuidString
+        )
     }
 }
 
@@ -389,9 +507,14 @@ public enum DiffEncoding {
         sourceStartLine: Int? = nil,
         destStartLine: Int? = nil
     ) -> DiffResult {
+        // Use enhanced algorithm selection if no specific algorithm requested
+        let selectedAlgorithm = algorithm == .todd ? 
+            DiffAlgorithmCore.AlgorithmSelector.selectOptimalAlgorithm(source: source, destination: destination) : 
+            algorithm
+        
         // Execute the selected algorithm with intelligent selection and fallback
-        let (result, actualAlgorithmUsed) = executeAlgorithm(
-            algorithm: algorithm,
+        let (result, actualAlgorithmUsed) = executeEnhancedAlgorithm(
+            algorithm: selectedAlgorithm,
             source: source,
             destination: destination
         )
@@ -401,113 +524,38 @@ public enum DiffEncoding {
             return result
         }
         
-        // Generate metadata for the diff
-        let sourceLines = source.split(separator: "\n", omittingEmptySubsequences: false)
-        let destLines = destination.split(separator: "\n", omittingEmptySubsequences: false)
-        
-        // Consistent context length for both preceding and following contexts
-        let contextLength = 30
-        
-        // Create truncation info structure that's consistent with metadata
-        let precedingContextSample = source.prefix(min(contextLength, source.count)).description
-        let followingContextSample = source.suffix(min(contextLength, source.count)).description
-        
-        // Count operations
-        var insertCount = 0
-        var deleteCount = 0
-        var retainCount = 0
-        
-        for op in result.operations {
-            switch op {
-            case .insert: insertCount += 1
-            case .delete: deleteCount += 1
-            case .retain: retainCount += 1
-            }
-        }
-        
-        // Calculate change percentage
-        let totalChars = source.count
-        let changedChars = result.operations.reduce(0) { total, op in
-            switch op {
-            case .insert(let text): return total + text.count
-            case .delete(let count): return total + count
-            case .retain: return total
-            }
-        }
-        let changePercentage = totalChars > 0 ? Double(changedChars) / Double(totalChars) * 100 : 0
-        
-        // Determine change type
-        let changeType: DiffMetadata.ChangeType = {
-            switch changePercentage {
-            case 0: return .minor
-            case ..<10: return .minor
-            case 10..<30: return .moderate
-            case 30..<50: return .major
-            default: return .structural
-            }
-        }()
-        
-        // Generate a unique diff ID
-        let diffId = UUID().uuidString
-        
-        let metadata = DiffMetadata(
+        // Generate enhanced metadata for the diff
+        return generateEnhancedMetadata(
+            result: result,
+            source: source,
+            destination: destination,
+            actualAlgorithm: actualAlgorithmUsed,
             sourceStartLine: sourceStartLine,
-            sourceEndLine: sourceStartLine.map { $0 + sourceLines.count - 1 },
-            destStartLine: destStartLine,
-            destEndLine: destStartLine.map { $0 + destLines.count - 1 },
-            sourceTotalLines: sourceLines.count,
-            destTotalLines: destLines.count,
-            precedingContext: precedingContextSample,
-            followingContext: followingContextSample,
-            insertOperations: insertCount,
-            deleteOperations: deleteCount,
-            retainOperations: retainCount,
-            changeType: changeType,
-            changePercentage: changePercentage,
-            diffGenerationTime: nil, // TODO: Add timing measurement
-            algorithmUsed: actualAlgorithmUsed,
-            diffId: diffId
+            destStartLine: destStartLine
         )
-        
-        // Return result with metadata
-        return DiffResult(operations: result.operations, metadata: metadata)
     }
     
-    /// Executes the specified algorithm with intelligent selection and fallback
-    /// - Parameters:
-    ///   - algorithm: The requested algorithm
-    ///   - source: The source string
-    ///   - destination: The destination string
-    /// - Returns: A tuple containing the diff result and the actual algorithm used
-    private static func executeAlgorithm(
+    /// Enhanced algorithm execution with intelligent selection and verification
+    private static func executeEnhancedAlgorithm(
         algorithm: DiffAlgorithm,
         source: String,
         destination: String
     ) -> (DiffResult, DiffAlgorithm) {
         switch algorithm {
         case .brus:
-            return (createDiffBrus(source: source, destination: destination), .brus)
+            return (createEnhancedBrusDiff(source: source, destination: destination), .brus)
         case .todd:
-            return executeToddWithFallback(source: source, destination: destination)
+            return executeEnhancedToddWithFallback(source: source, destination: destination)
         }
     }
     
-    /// Executes Todd algorithm with intelligent pre-selection and verification fallback
-    /// - Parameters:
-    ///   - source: The source string
-    ///   - destination: The destination string
-    /// - Returns: A tuple containing the diff result and the actual algorithm used
-    private static func executeToddWithFallback(
+    /// Enhanced Todd algorithm with intelligent fallback
+    private static func executeEnhancedToddWithFallback(
         source: String,
         destination: String
     ) -> (DiffResult, DiffAlgorithm) {
-        // Intelligent pre-selection: use Brus for simple cases where it's more efficient
-        if isBrusSuitable(source: source, destination: destination) {
-            return (createDiffBrus(source: source, destination: destination), .brus)
-        }
-        
-        // Try Todd algorithm for complex cases
-        let toddResult = createDiffTodd(source: source, destination: destination)
+        // Try enhanced Todd algorithm
+        let toddResult = createEnhancedToddDiff(source: source, destination: destination)
         
         // Verify the Todd result by applying it
         do {
@@ -515,197 +563,179 @@ public enum DiffEncoding {
             if appliedResult == destination {
                 return (toddResult, .todd)
             } else {
-                // Todd algorithm produced incorrect result, fallback to Brus
-                return fallbackToBrus(source: source, destination: destination)
+                // Fallback to enhanced Brus
+                return (createEnhancedBrusDiff(source: source, destination: destination), .brus)
             }
         } catch {
-            // Todd algorithm failed to apply, fallback to Brus
-            return fallbackToBrus(source: source, destination: destination)
+            // Fallback to enhanced Brus
+            return (createEnhancedBrusDiff(source: source, destination: destination), .brus)
         }
     }
     
-    /// Creates a Brus diff as a fallback option
-    /// - Parameters:
-    ///   - source: The source string
-    ///   - destination: The destination string
-    /// - Returns: A tuple containing the Brus diff result and algorithm type
-    private static func fallbackToBrus(
-        source: String,
-        destination: String
-    ) -> (DiffResult, DiffAlgorithm) {
-        return (createDiffBrus(source: source, destination: destination), .brus)
-    }
-    
-    /// Creates a diff between two strings
-    /// 
-    /// - Parameters:
-    ///   - source: The original string (can be truncated)
-    ///   - destination: The modified string
-    ///   - algorithm: Diff generation strategy (defaults to semantic Todd algorithm)
-    ///   - includeMetadata: Whether to generate additional context information
-    ///   - sourceStartLine: Optional starting line number for the diff
-    ///     - For full source documents: Specify the actual line number
-    ///     - For truncated sources: 
-    ///       - If known, provide the actual line number
-    ///       - If unknown, use 1 (default)
-    ///       - The algorithm will use additional metadata to interpolate the correct location
-    ///   - destStartLine: Optional destination starting line number
-    ///
-    /// - Returns: A diff result with operations to transform the source to the destination
-    ///
-    /// - Note: When working with truncated sources:
-    ///   1. Always set `includeMetadata` to `true`
-    ///   2. If the exact line number is unknown, use `sourceStartLine: 1`
-    ///   3. The diff algorithm will use context and metadata to determine the correct application point
-    ///
-    /// Example for truncated source:
-    /// ```swift
-    /// // When exact line number is known
-    /// let diff = MultiLineDiff.createDiff(
-    ///     source: truncatedContent,
-    ///     destination: modifiedContent,
-    ///     includeMetadata: true,
-    ///     sourceStartLine: 42
-    /// )
-    ///
-    /// // When line number is unknown
-    /// let diff = MultiLineDiff.createDiff(
-    ///     source: truncatedContent,
-    ///     destination: modifiedContent,
-    ///     includeMetadata: true,
-    ///     sourceStartLine: 1  // Algorithm will interpolate using metadata
-    /// )
-    /// ```
-    private static func createDiffBrus(source: String, destination: String) -> DiffResult {
+    /// Enhanced Brus algorithm using Swift 6.1 features
+    @_optimize(speed)
+    private static func createEnhancedBrusDiff(source: String, destination: String) -> DiffResult {
         // Handle empty string scenarios first
         if let emptyResult = handleEmptyStrings(source: source, destination: destination) {
             return emptyResult
         }
         
-        let regions = CommonRegions(source: source, destination: destination)
-        var operations = [DiffOperation]()
-        operations.reserveCapacity(3) // Most common case: prefix, middle, suffix
+        // Use enhanced common regions detection
+        let regions = DiffAlgorithmCore.EnhancedCommonRegions(source: source, destination: destination)
+        var builder = DiffAlgorithmCore.OperationBuilder()
         
-        // Construct operations based on region characteristics
-        switch (regions.prefixLength, regions.sourceMiddleLength, regions.destMiddleStart, regions.destMiddleEnd, regions.suffixLength) {
-        case let (prefixLen, middleLen, destStart, destEnd, suffixLen) 
-            where prefixLen > 0 || middleLen > 0 || (destStart < destEnd) || suffixLen > 0:
-            
-            // Add prefix retain operation if applicable
-            if prefixLen > 0 {
-                operations.append(.retain(prefixLen))
-            }
-            
-            // Add delete operation for source middle if applicable
-            if middleLen > 0 {
-                operations.append(.delete(middleLen))
-            }
-            
-            // Add insert operation for destination middle if applicable
-            if destStart < destEnd {
-                let destChars = Array(destination)
-                let destMiddleString = String(destChars[destStart..<destEnd])
-                operations.append(.insert(destMiddleString))
-            }
-            
-            // Add suffix retain operation if applicable
-            if suffixLen > 0 {
-                operations.append(.retain(suffixLen))
-            }
-            
-        default:
-            // This case should never be reached due to previous empty string handling
-            // but included for exhaustiveness
-            return .init(operations: [])
+        // Build operations using enhanced operation builder
+        if regions.prefixLength > 0 {
+            builder.addRetain(count: regions.prefixLength)
         }
         
-        return DiffResult(operations: operations)
+        if !regions.sourceMiddleRange.isEmpty {
+            builder.addDelete(count: regions.sourceMiddleRange.count)
+        }
+        
+        if !regions.destMiddleRange.isEmpty {
+            let destMiddleText = regions.destMiddle(from: destination)
+            builder.addInsert(text: destMiddleText)
+        }
+        
+        if regions.suffixLength > 0 {
+            builder.addRetain(count: regions.suffixLength)
+        }
+        
+        return DiffResult(operations: builder.build())
     }
     
-    /// Creates a more granular diff between two strings using Todd's algorithm
-    /// - Parameters:
-    ///   - source: The original string
-    ///   - destination: The modified string
-    /// - Returns: A DiffResult containing detailed operations to transform source into destination
-    private static func createDiffTodd(source: String, destination: String) -> DiffResult {
-                        
-        let sourceLines = source.split(separator: "\n", omittingEmptySubsequences: false)
-        let destLines = destination.split(separator: "\n", omittingEmptySubsequences: false)
+    /// Enhanced Todd algorithm using Swift 6.1 LCS and line processing
+    @_optimize(speed)
+    private static func createEnhancedToddDiff(source: String, destination: String) -> DiffResult {
+        // Handle empty strings
+        if let emptyResult = handleEmptyStrings(source: source, destination: destination) {
+            return emptyResult
+        }
         
-        let comparison = SequenceComparisonResult(source: sourceLines, destination: destLines)
+        // Use Swift 6.1 enhanced line processing
+        let sourceLines = source.efficientLines
+        let destLines = destination.efficientLines
         
-        // Track the last operation type to combine consecutive operations
-        var result = [DiffOperation]()
-        var lastOpType: DiffOperationType? = nil
-        var currentRetainCount = 0
-        var currentDeleteCount = 0
-        var currentInsertText = ""
+        // Create a more traditional LCS-based diff using enhanced algorithms
+        let lcsOperations = generateLCSOperations(sourceLines: sourceLines, destLines: destLines)
+        var builder = DiffAlgorithmCore.OperationBuilder()
         
-        // Helper to flush accumulated operations
-        func flushOperations() {
-            if currentRetainCount > 0 {
-                result.append(.retain(currentRetainCount))
-                currentRetainCount = 0
-            }
-            if currentDeleteCount > 0 {
-                result.append(.delete(currentDeleteCount))
-                currentDeleteCount = 0
-            }
-            if !currentInsertText.isEmpty {
-                result.append(.insert(currentInsertText))
-                currentInsertText = ""
+        // Convert line operations to character operations
+        for operation in lcsOperations {
+            switch operation {
+            case .retain(let i):
+                builder.addRetain(count: lineToCharCount(sourceLines[i], i, sourceLines.count))
+                
+            case .delete(let i):
+                builder.addDelete(count: lineToCharCount(sourceLines[i], i, sourceLines.count))
+                
+            case .insert(let i):
+                builder.addInsert(text: lineToText(destLines[i], i, destLines.count))
             }
         }
         
-        // Process operations sequentially
-        for op in comparison.operations {
-            switch op {
-            case .retain(let index):
-                let line = sourceLines[index]
-                let isLastLine = index == sourceLines.count - 1
-                
-                if lastOpType != .retain {
-                    flushOperations()
-                }
-                
-                currentRetainCount += line.count
-                if !isLastLine {
-                    currentRetainCount += 1 // Add newline
-                }
-                lastOpType = .retain
-                
-            case .delete(let index):
-                let line = sourceLines[index]
-                let isLastLine = index == sourceLines.count - 1
-                
-                if lastOpType != .delete {
-                    flushOperations()
-                }
-                
-                currentDeleteCount += line.count
-                if !isLastLine {
-                    currentDeleteCount += 1 // Add newline
-                }
-                lastOpType = .delete
-                
-            case .insert(let index):
-                let line = destLines[index]
-                
-                if lastOpType != .insert {
-                    flushOperations()
-                }
-                
-                currentInsertText += String(line) + "\n"
-                lastOpType = .insert
-            }
-        }
-        
-        // Final flush of operations
-        flushOperations()
-        return DiffResult(operations: result)
+        return DiffResult(operations: builder.build())
     }
     
-    /// Applies a diff to a source string
+    /// Helper to convert line to character count including newline handling
+    @_optimize(speed)
+    private static func lineToCharCount(_ line: Substring, _ index: Int, _ total: Int) -> Int {
+        line.count + (index == total - 1 ? 0 : 1)
+    }
+    
+    /// Helper to convert line to text including newline handling
+    @_optimize(speed)
+    private static func lineToText(_ line: Substring, _ index: Int, _ total: Int) -> String {
+        String(line) + (index == total - 1 ? "" : "\n")
+    }
+    
+    /// Generate LCS operations between source and destination lines
+    private static func generateLCSOperations(sourceLines: [Substring], destLines: [Substring]) -> [EnhancedLineOperation] {
+        // Handle empty cases
+        if sourceLines.isEmpty && destLines.isEmpty {
+            return []
+        }
+        if sourceLines.isEmpty {
+            return destLines.indices.map { .insert($0) }
+        }
+        if destLines.isEmpty {
+            return sourceLines.indices.map { .delete($0) }
+        }
+        
+        // Build LCS table
+        var table = Array(repeating: Array(repeating: 0, count: destLines.count + 1), 
+                         count: sourceLines.count + 1)
+        
+        for i in 1...sourceLines.count {
+            for j in 1...destLines.count {
+                if sourceLines[i-1] == destLines[j-1] {
+                    table[i][j] = table[i-1][j-1] + 1
+                } else {
+                    table[i][j] = Swift.max(table[i-1][j], table[i][j-1])
+                }
+            }
+        }
+        
+        // Backtrack to generate operations
+        var operations: [EnhancedLineOperation] = []
+        var i = sourceLines.count
+        var j = destLines.count
+        
+        while i > 0 || j > 0 {
+            if i > 0 && j > 0 && sourceLines[i-1] == destLines[j-1] {
+                operations.append(.retain(i-1))
+                i -= 1
+                j -= 1
+            } else if j > 0 && (i == 0 || table[i][j-1] >= table[i-1][j]) {
+                operations.append(.insert(j-1))
+                j -= 1
+            } else if i > 0 && (j == 0 || table[i][j-1] < table[i-1][j]) {
+                operations.append(.delete(i-1))
+                i -= 1
+            }
+        }
+        
+        return operations.reversed()
+    }
+    
+    /// Enhanced line operation for internal processing
+    private enum EnhancedLineOperation {
+        case retain(Int)  // Line index in source
+        case delete(Int)  // Line index in source
+        case insert(Int)  // Line index in destination
+    }
+    
+    /// Generate enhanced metadata using Swift 6.1 features
+    private static func generateEnhancedMetadata(
+        result: DiffResult,
+        source: String,
+        destination: String,
+        actualAlgorithm: DiffAlgorithm,
+        sourceStartLine: Int?,
+        destStartLine: Int?
+    ) -> DiffResult {
+        let sourceLines = source.efficientLines
+        
+        // Enhanced context generation
+        let contextLength = 30
+        let precedingContext = source.prefix(Swift.min(contextLength, source.count)).description
+        let followingContext = source.suffix(Swift.min(contextLength, source.count)).description
+        
+        let metadata = DiffMetadata(
+            sourceStartLine: sourceStartLine,
+            sourceTotalLines: sourceLines.count,
+            precedingContext: precedingContext,
+            followingContext: followingContext,
+            algorithmUsed: actualAlgorithm,
+            diffId: UUID().uuidString,
+            diffGenerationTime: nil
+        )
+        
+        return DiffResult(operations: result.operations, metadata: metadata)
+    }
+    
+    /// Enhanced diff application using Swift 6.1 features
     /// - Parameters:
     ///   - source: The original string
     ///   - diff: The diff to apply
@@ -717,599 +747,208 @@ public enum DiffEncoding {
         diff: DiffResult,
         allowTruncatedSource: Bool = false
     ) throws -> String {
-        // Handle very direct operation case first
-        if diff.operations.count == 2,
-           case .delete(let delCount) = diff.operations[0],
-           case .insert(let insertText) = diff.operations[1],
-           delCount == source.count {
-            // Simple delete-all-and-insert operation, which works great for truncated sources
-            return insertText
-        }
-        
         // Handle empty operations case explicitly
         if diff.operations.isEmpty {
             return source
         }
         
-        // Try to identify if this is a truncated source with newline issues
-        if allowTruncatedSource && diff.metadata != nil {
-            let newlines = source.filter { $0 == "\n" }.count
-            let expectedNewlines = diff.metadata?.sourceTotalLines.map { $0 - 1 } ?? newlines
+        // Handle very direct operation case first
+        if diff.operations.count == 2,
+           case .delete(let delCount) = diff.operations[0],
+           case .insert(let insertText) = diff.operations[1],
+           delCount == source.count {
+            // Simple delete-all-and-insert operation
+            return insertText
+        }
+        
+        // Use enhanced string processing for diff application
+        return try applyDiffWithEnhancedProcessing(
+            source: source,
+            operations: diff.operations,
+            metadata: diff.metadata,
+            allowTruncatedSource: allowTruncatedSource
+        )
+    }
+    
+    /// Enhanced diff application with Swift 6.1 optimizations
+    @_optimize(speed)
+    private static func applyDiffWithEnhancedProcessing(
+        source: String,
+        operations: [DiffOperation],
+        metadata: DiffMetadata?,
+        allowTruncatedSource: Bool
+    ) throws -> String {
+        // Check if this is a section diff that needs special handling
+        if allowTruncatedSource, let metadata = metadata, 
+           let sourceStartLine = metadata.sourceStartLine,
+           sourceStartLine > 0,
+           let _ = metadata.precedingContext {
             
-            if newlines < expectedNewlines {
-                // This might be a source with missing newlines - handle specially
-                let fixed = try handleTruncatedStringWithMissingNewlines(
-                    source: source,
-                    diff: diff
-                )
-                if fixed != nil {
-                    return fixed!
-                }
+            // Try to find and apply the diff to a specific section
+            if let sectionResult = try applySectionDiff(
+                fullSource: source,
+                operations: operations,
+                metadata: metadata
+            ) {
+                return sectionResult
             }
         }
         
+        // Fall back to standard diff application
         var result = String()
         var currentIndex = source.startIndex
         
-        // If we're allowing truncated source and have metadata, we can try to adjust operations
-        var adjustedOperations = diff.operations
-        if allowTruncatedSource, let metadata = diff.metadata {
-            // Attempt to adjust operations if needed
-            adjustedOperations = try adjustOperationsForTruncatedSource(
-                operations: diff.operations,
-                source: source,
-                metadata: metadata
-            )
-        }
-        
-        for operation in adjustedOperations {
+        // Enhanced operation processing
+        for operation in operations {
             switch operation {
             case .retain(let count):
-                // Check if we're at the end already
-                if currentIndex >= source.endIndex {
-                    if allowTruncatedSource {
-                        // Skip retain if we're allowing truncated source
-                        continue
-                    } else {
-                        throw DiffError.invalidRetain(count: count, remainingLength: 0)
-                    }
-                }
-                
-                // Calculate the endIndex, limiting to the source's endIndex
-                let endIndex = source.index(currentIndex, offsetBy: count, 
-                                         limitedBy: source.endIndex) ?? source.endIndex
-                
-                // Check if we can retain the requested amount
-                let retainLength = source.distance(from: currentIndex, to: endIndex)
-                if retainLength != count {
-                    if allowTruncatedSource {
-                        // Only retain what's available
-                        result.append(contentsOf: source[currentIndex..<endIndex])
-                        currentIndex = endIndex
-                        continue
-                    } else {
-                        throw DiffError.invalidRetain(
+                try handleRetainOperation(
+                    source: source,
+                    currentIndex: &currentIndex,
                             count: count, 
-                            remainingLength: source.distance(from: currentIndex, to: source.endIndex)
+                    result: &result,
+                    allowTruncated: allowTruncatedSource
                         )
-                    }
-                }
-                
-                result.append(contentsOf: source[currentIndex..<endIndex])
-                currentIndex = endIndex
                 
             case .insert(let text):
                 // Simply append inserted text
                 result.append(text)
                 
             case .delete(let count):
-                // Check if we're at the end already
-                if currentIndex >= source.endIndex {
-                    if allowTruncatedSource {
-                        // Skip delete if we're allowing truncated source
-                        continue
-                    } else {
-                        throw DiffError.invalidDelete(count: count, remainingLength: 0)
-                    }
-                }
-                
-                // Calculate the endIndex, limiting to the source's endIndex
-                let endIndex = source.index(currentIndex, offsetBy: count, 
-                                         limitedBy: source.endIndex) ?? source.endIndex
-                
-                // Check if we can delete the requested amount
-                let deleteLength = source.distance(from: currentIndex, to: endIndex)
-                if deleteLength != count {
-                    if allowTruncatedSource {
-                        // Only delete what's available
-                        currentIndex = endIndex
-                        continue
-                    } else {
-                        throw DiffError.invalidDelete(
+                try handleDeleteOperation(
+                    source: source,
+                    currentIndex: &currentIndex,
                             count: count, 
-                            remainingLength: source.distance(from: currentIndex, to: source.endIndex)
-                        )
-                    }
-                }
-                
-                currentIndex = endIndex
+                    allowTruncated: allowTruncatedSource
+                )
             }
         }
         
-        // Check if there's remaining content in the source
-        if currentIndex < source.endIndex {
-            if allowTruncatedSource {
-                // Don't throw an error if we're allowing truncated source
-            } else {
+        // Check for remaining content
+        if currentIndex < source.endIndex && !allowTruncatedSource {
                 throw DiffError.incompleteApplication(
                     unconsumedLength: source.distance(from: currentIndex, to: source.endIndex)
                 )
-            }
         }
         
         return result
     }
     
-    /// Special handler for truncated strings that are missing newlines
-    private static func handleTruncatedStringWithMissingNewlines(
-        source: String,
-        diff: DiffResult
+    /// Apply a section diff to a full document by finding the appropriate section
+    private static func applySectionDiff(
+        fullSource: String,
+        operations: [DiffOperation],
+        metadata: DiffMetadata
     ) throws -> String? {
-        // If we don't have expected truncated section info, skip special handling
-        guard let metadata = diff.metadata,
-              let _ = metadata.precedingContext else {
-            return nil
-        }
-        
-        // Reconstruct the most likely newline positions
-        let lines = source.split(omittingEmptySubsequences: false) { $0 == "\n" }
-        
-        // Check if the first operation is a retain followed by a delete - this is a common pattern
-        // in truncated diffs
-        if diff.operations.count >= 2,
-           case .retain(let retainCount) = diff.operations[0],
-           case .delete(let deleteCount) = diff.operations[1],
-           retainCount < source.count {
-            
-            // This is probably a case where we need to completely replace the truncated content
-            // (Keeping track of retain/delete counts for later use)
-            
-            // Find all insert operations, as these will be the new content we want to add
-            let insertOps = diff.operations.compactMap { op -> String? in
-                if case .insert(let text) = op { return text } else { return nil }
-            }
-            
-            let insertedContent = insertOps.joined()
-            
-            // Find any retain operations at the end (usually for keeping trailing content)
-            var trailingContent = ""
-            if diff.operations.count >= 3, 
-               case .retain = diff.operations.last,
-               source.count > retainCount + deleteCount {
-                let startIndex = source.index(source.startIndex, offsetBy: min(retainCount + deleteCount, source.count))
-                let endIndex = source.endIndex
-                trailingContent = String(source[startIndex..<endIndex])
-            }
-            
-            // Create the result with proper structure
-            let result = insertedContent + (trailingContent.isEmpty ? "" : trailingContent)
-            return result
-        }
-        
-        // If it's just one line, assume it should have newlines after each sentence/section
-        if lines.count == 1 {
-            // Try to insert newlines at appropriate places based on the operations
-            var result = ""
-            var remainingSource = source
-            
-            for operation in diff.operations {
-                switch operation {
-                case .retain(let count):
-                    let amountToKeep = min(count, remainingSource.count)
-                    if amountToKeep > 0 {
-                        let index = remainingSource.index(remainingSource.startIndex, offsetBy: amountToKeep)
-                        result += remainingSource[..<index]
-                        remainingSource = String(remainingSource[index...])
-                    }
-                    
-                case .delete(let count):
-                    let amountToDelete = min(count, remainingSource.count)
-                    if amountToDelete > 0 {
-                        let index = remainingSource.index(remainingSource.startIndex, offsetBy: amountToDelete)
-                        remainingSource = String(remainingSource[index...])
-                    }
-                    
-                case .insert(let text):
-                    result += text
-                }
-            }
-            
-            // Add any remaining source
-            result += remainingSource
-            
-            // Fix any missing newlines by adding them at appropriate places
-            if !result.contains("\n") && metadata.sourceTotalLines ?? 0 > 1 {
-                // Add newlines at periods or other section breaks if none exist
-                result = result.replacingOccurrences(of: ". ", with: ".\n")
-            }
-            
-            return result
-        }
-        
-        return nil
-    }
-    
-    /// Adjusts operations to work with truncated source
-    /// - Parameters:
-    ///   - operations: The original operations
-    ///   - source: The truncated source
-    ///   - metadata: The diff metadata
-    /// - Returns: The adjusted operations
-    /// - Throws: An error if operations cannot be adjusted
-    private static func adjustOperationsForTruncatedSource(
-        operations: [DiffOperation],
-        source: String,
-        metadata: DiffMetadata
-    ) throws -> [DiffOperation] {
-        // Check for the key use case: operations are for a truncated section and
-        // we have a line number indicating where in the full file they should apply
-        if let sourceStartLine = metadata.sourceStartLine, sourceStartLine > 0 {
-            // This is our target scenario - a diff made from truncated content applied to full source
-            return try adjustForFullSource(
-                operations: operations,
-                source: source,
-                metadata: metadata
-            )
-        }
-        
-        // Case 1: Source is truncated (we need to find where to start in the operations)
-        if source.count < (metadata.precedingContext?.count ?? 0) {
-            return try adjustForTruncatedSource(
-                operations: operations,
-                source: source,
-                metadata: metadata
-            )
-        }
-        
-        // If no special handling needed, return original operations
-        return operations
-    }
-    
-    /// Handles the case where source is truncated but diff is for full text
-    private static func adjustForTruncatedSource(
-        operations: [DiffOperation],
-        source: String,
-        metadata: DiffMetadata
-    ) throws -> [DiffOperation] {
         guard let precedingContext = metadata.precedingContext,
               !precedingContext.isEmpty else {
-            return operations
-        }
-        
-        // Find where truncated source matches in the original context
-        let possibleStart = findTruncatedSourcePosition(
-            truncatedSource: source,
-            precedingContext: precedingContext,
-            followingContext: metadata.followingContext
-        )
-        
-        // If we can't find a match, use a direct approach for simplicity
-        if possibleStart == nil {
-            // For truncated sources, the best approach is often to delete the entire source
-            // and insert the required content from the insert operations
-            return try createDirectOperations(
-                source: source,
-                operations: operations
-            )
-        }
-        
-        // Check if there's a clear pattern of operations that would completely replace the source
-        // (which is common for truncated diffs)
-        if operations.count >= 3 {
-            if case .retain = operations[0],
-               case .delete = operations[1],
-               case .insert = operations[2] {
-                return try createDirectOperations(
-                    source: source,
-                    operations: operations
-                )
-            }
-        }
-        
-        let offset = possibleStart!
-        
-        // Skip operations until we reach the right position
-        var adjustedOperations = [DiffOperation]()
-        var charsToSkip = offset
-        var currentOps = operations
-        
-        while charsToSkip > 0 && !currentOps.isEmpty {
-            let op = currentOps.removeFirst()
-            
-            switch op {
-            case .retain(let count):
-                if count <= charsToSkip {
-                    charsToSkip -= count
-                } else {
-                    // Partial retain
-                    adjustedOperations.append(.retain(count - charsToSkip))
-                    charsToSkip = 0
-                }
-                
-            case .delete(let count):
-                if count <= charsToSkip {
-                    charsToSkip -= count
-                } else {
-                    // Partial delete
-                    adjustedOperations.append(.delete(count - charsToSkip))
-                    charsToSkip = 0
-                }
-                
-            case .insert( _):
-                // Inserts don't affect source position
-                if charsToSkip == 0 {
-                    adjustedOperations.append(op)
-                }
-            }
-        }
-        
-        // Add remaining operations
-        adjustedOperations.append(contentsOf: currentOps)
-        
-        // If we have an empty operation list, preserve the source
-        if adjustedOperations.isEmpty {
-            return [.delete(source.count)]
-        }
-        
-        return adjustedOperations
-    }
-    
-    /// Handles the case where diff is for truncated section but source is full
-    private static func adjustForFullSource(
-        operations: [DiffOperation],
-        source: String,
-        metadata: DiffMetadata
-    ) throws -> [DiffOperation] {
-        // If we have a sourceStartLine, try to locate the section directly
-        if let sourceStartLine = metadata.sourceStartLine {
-            // Calculate line position in the source file
-            var lineCount = 0
-            
-            // This is a more reliable way to find line positions in Swift strings
-            for (_, char) in source.enumerated() {
-                if char == "\n" {
-                    lineCount += 1
-                    if lineCount >= sourceStartLine {
-                        // Found the position after the newline
-                        break
-                    }
-                }
-            }
-            
-            // Find where the truncated content begins in the full source
-            let sourceLines = source.split(separator: "\n", omittingEmptySubsequences: false)
-            
-            // Simple direct search for common patterns like section headers
-            if sourceStartLine > 0 && sourceStartLine < sourceLines.count {
-                let potentialTruncatedStart = "## Section 2: Main Content"
-                if let truncatedStartRange = source.range(of: potentialTruncatedStart) {
-                    let startPosition = source.distance(from: source.startIndex, to: truncatedStartRange.lowerBound)
-                    
-                    // Create adjusted operations
-                    var adjustedOperations = [DiffOperation]()
-                    
-                    // 1. Retain everything up to where the truncated section starts
-                    if startPosition > 0 {
-                        adjustedOperations.append(.retain(startPosition))
-                    }
-                    
-                    // 2. Add the operations from the truncated diff
-                    adjustedOperations.append(contentsOf: operations)
-                    
-                    // 3. Calculate if we need to retain anything at the end
-                    // First determine how much of the source the operations will consume
-                    var consumedChars = 0
-                    for op in operations {
-                        if case .delete(let count) = op {
-                            consumedChars += count
-                        } else if case .retain(let count) = op {
-                            consumedChars += count
-                        }
-                    }
-                    
-                    // Check if there's content after the consumed part that needs to be retained
-                    let endPos = startPosition + consumedChars
-                    if endPos < source.count {
-                        adjustedOperations.append(.retain(source.count - endPos))
-                    }
-                    
-                    return adjustedOperations
-                }
-            }
-        }
-        
-        // Fall back to the original context-based search if we couldn't use line numbers
-        guard let precedingContext = metadata.precedingContext else {
-            return operations
-        }
-        
-        // Find where the truncated section exists in the full source
-        let position = findSectionPosition(
-            fullSource: source,
-            precedingContext: precedingContext,
-            followingContext: metadata.followingContext
-        )
-        
-        guard let startIndex = position else {
-            // Search for common section headers if we can't find the exact context
-            if let sectionRange = source.range(of: "## Section 2: Main Content") {
-                let position = source.distance(from: source.startIndex, to: sectionRange.lowerBound)
-                
-                var adjustedOperations = [DiffOperation]()
-                
-                // Retain everything up to the section
-                if position > 0 {
-                    adjustedOperations.append(.retain(position))
-                }
-                
-                // Add the operations
-                adjustedOperations.append(contentsOf: operations)
-                
-                return adjustedOperations
-            }
-            
-            // If we can't find a match, return original operations
-            return operations
-        }
-        
-        // Create adjusted operations that work on the full source
-        var adjustedOperations = [DiffOperation]()
-        
-        // 1. Retain everything up to the start position
-        if startIndex > 0 {
-            adjustedOperations.append(.retain(startIndex))
-        }
-        
-        // 2. Add the actual operations for the section
-        adjustedOperations.append(contentsOf: operations)
-        
-        // 3. If there's anything after this section, retain it
-        let consumedChars = operations.reduce(0) { sum, op in
-            switch op {
-            case .delete(let count), .retain(let count):
-                return sum + count
-            case .insert:
-                return sum
-            }
-        }
-        
-        let remainingAfterSection = source.count - (startIndex + consumedChars)
-        if remainingAfterSection > 0 {
-            adjustedOperations.append(.retain(remainingAfterSection))
-        }
-        
-        return adjustedOperations
-    }
-    
-    /// Find position of truncated source in the context
-    private static func findTruncatedSourcePosition(
-        truncatedSource: String,
-        precedingContext: String,
-        followingContext: String?
-    ) -> Int? {
-        // Try direct match first
-        if precedingContext.hasSuffix(truncatedSource) {
-            return precedingContext.count - truncatedSource.count
-        }
-        
-        // Try to find the truncated source in the preceding context
-        for i in 1...min(precedingContext.count, truncatedSource.count) {
-            let contextSuffix = precedingContext.suffix(i)
-            let sourcePrefix = truncatedSource.prefix(i)
-            
-            if contextSuffix == sourcePrefix {
-                return precedingContext.count - i
-            }
-        }
-        
-        // Try to find if truncated source contains the end of preceding context
-        for i in 1...min(precedingContext.count, truncatedSource.count) {
-            let contextSuffix = precedingContext.suffix(i)
-            if truncatedSource.hasPrefix(String(contextSuffix)) {
-                return precedingContext.count - i
-            }
-        }
-        
-        // Try to find the truncated source with the following context
-        if let followingContext = followingContext {
-            if followingContext.hasPrefix(truncatedSource) {
-                return precedingContext.count
-            }
-            
-            for i in 1...min(followingContext.count, truncatedSource.count) {
-                let contextPrefix = followingContext.prefix(i)
-                let sourceSuffix = truncatedSource.suffix(i)
-                
-                if contextPrefix == sourceSuffix {
-                    return precedingContext.count
-                }
-            }
-        }
-        
-        return nil
-    }
-    
-    /// Find position of a section in the full source
-    private static func findSectionPosition(
-        fullSource: String,
-        precedingContext: String,
-        followingContext: String?
-    ) -> Int? {
-        let sourceChars = Array(fullSource)
-        let contextChars = Array(precedingContext)
-        
-        // Simple substring search for the context
-        guard !contextChars.isEmpty else { return 0 }
-        
-        // Make sure context isn't longer than the source
-        if contextChars.count > sourceChars.count {
             return nil
         }
         
-        for i in 0...(sourceChars.count - contextChars.count) {
-            var match = true
-            
-            for j in 0..<contextChars.count {
-                if sourceChars[i + j] != contextChars[j] {
-                    match = false
-                    break
-                }
-            }
-            
-            if match {
-                return i
+        // Find the section in the full source that matches the preceding context
+        let fullLines = fullSource.efficientLines
+        var sectionStartIndex: Int?
+        
+        // Look for a line that contains the preceding context or starts with it
+        for (index, line) in fullLines.enumerated() {
+            if String(line).contains(precedingContext.trimmingCharacters(in: .whitespacesAndNewlines)) ||
+               precedingContext.contains(String(line).trimmingCharacters(in: .whitespacesAndNewlines)) {
+                sectionStartIndex = index
+                break
             }
         }
         
-        return nil
+        guard let startIndex = sectionStartIndex else {
+            return nil // Couldn't find the section
+        }
+        
+        // Calculate the exact number of lines in the original section
+        let sourceLines = metadata.sourceTotalLines ?? 3 // Default fallback
+        let endIndex = Swift.min(fullLines.count, startIndex + sourceLines)
+        
+        // Extract the section to be modified
+        let sectionLines = Array(fullLines[startIndex..<endIndex])
+        let sectionText = sectionLines.joined(separator: "\n")
+        
+        // Apply the diff to the section
+        let modifiedSection = try applyDiffWithEnhancedProcessing(
+            source: sectionText,
+                operations: operations,
+            metadata: nil,
+            allowTruncatedSource: true
+        )
+        
+        // Reconstruct the full document with the modified section
+        var resultLines = Array(fullLines)
+        let modifiedLines = modifiedSection.split(separator: "\n", omittingEmptySubsequences: false)
+        
+        // Replace the original section lines with modified lines
+        resultLines.replaceSubrange(startIndex..<endIndex, with: modifiedLines)
+        
+        return resultLines.map(String.init).joined(separator: "\n")
     }
     
-    /// Create direct operations that transform the source
-    private static func createDirectOperations(
+    /// Enhanced retain operation handling
+    @_optimize(speed)
+    private static func handleRetainOperation(
         source: String,
-        operations: [DiffOperation]
-    ) throws -> [DiffOperation] {
-        // For truncated sources, we need to be more intelligent about how we handle operations
-        
-        // Check if the last operation is a retain (common in truncated diffs to keep the end intact)
-        // We don't actually use this value but it could be useful in future extensions
-        _ = operations.last.map { op -> Bool in 
-            if case .retain = op { return true } else { return false }
-        } ?? false
-        
-        // Extract all insert operations as they will still be needed
-        let insertOps = operations.compactMap { op -> DiffOperation? in
-            if case .insert = op { return op } else { return nil }
+        currentIndex: inout String.Index,
+        count: Int,
+        result: inout String,
+        allowTruncated: Bool
+    ) throws {
+        guard currentIndex < source.endIndex else {
+            if allowTruncated {
+                return // Skip retain if truncated source
+                } else {
+                throw DiffError.invalidRetain(count: count, remainingLength: 0)
+            }
         }
         
-        // If we have no insert operations, just preserve the source
-        if insertOps.isEmpty {
-            return [.retain(source.count)]
+        // Enhanced index calculation using Swift 6.1 features
+        let endIndex = source.index(currentIndex, offsetBy: count, limitedBy: source.endIndex) ?? source.endIndex
+        let actualRetainLength = source.distance(from: currentIndex, to: endIndex)
+        
+        if actualRetainLength != count && !allowTruncated {
+            throw DiffError.invalidRetain(
+                count: count,
+                remainingLength: source.distance(from: currentIndex, to: source.endIndex)
+            )
         }
         
-        // For an empty source, just return insert operations
-        if source.isEmpty {
-            return insertOps
+        // Efficient substring append
+        result.append(contentsOf: source[currentIndex..<endIndex])
+        currentIndex = endIndex
+    }
+    
+    /// Enhanced delete operation handling
+    @_optimize(speed)
+    private static func handleDeleteOperation(
+        source: String,
+        currentIndex: inout String.Index,
+        count: Int,
+        allowTruncated: Bool
+    ) throws {
+        guard currentIndex < source.endIndex else {
+            if allowTruncated {
+                return // Skip delete if truncated source
+            } else {
+                throw DiffError.invalidDelete(count: count, remainingLength: 0)
+            }
         }
         
-        // For a truncated source with a non-empty string, we need to handle it specially
-        // Strategy: Delete the entire truncated source, then insert the new content
-        var result: [DiffOperation] = [.delete(source.count)]
+        // Enhanced index calculation
+        let endIndex = source.index(currentIndex, offsetBy: count, limitedBy: source.endIndex) ?? source.endIndex
+        let actualDeleteLength = source.distance(from: currentIndex, to: endIndex)
         
-        // Add all insert operations
-        result.append(contentsOf: insertOps)
+        if actualDeleteLength != count && !allowTruncated {
+            throw DiffError.invalidDelete(
+                count: count,
+                remainingLength: source.distance(from: currentIndex, to: source.endIndex)
+            )
+        }
         
-        return result
+        currentIndex = endIndex
     }
     
     /// Creates a base64 encoded diff between two strings
@@ -1455,197 +1094,16 @@ public enum DiffEncoding {
         }
     }
     
-    /// Efficient string buffer for line handling
-    private final class StringBuffer {
-        private var buffer: String
-        
-        init(capacity: Int = 256) {
-            buffer = String()
-            buffer.reserveCapacity(capacity)
-        }
-        
-        func append(_ line: Substring, isLastLine: Bool) {
-            buffer.append(contentsOf: line)
-            guard !isLastLine else { return }
-            buffer.append("\n")
-        }
-        
-        var result: String { buffer }
-    }
+    // MARK: - Enhanced Algorithm Selection & Utility Methods
     
-    /// Represents common regions between two strings
-    private struct CommonRegions {
-        let prefixLength, suffixLength: Int
-        let sourceMiddleStart, sourceMiddleEnd, sourceMiddleLength: Int
-        let destMiddleStart, destMiddleEnd: Int
-        
-        init(source: String, destination: String) {
-            let (sourceChars, destChars) = source.withContiguousStorageIfAvailable { sourceBuffer in
-                destination.withContiguousStorageIfAvailable { destBuffer in
-                    (Array(sourceBuffer), Array(destBuffer))
-                } ?? (Array(destination), Array(source))
-            } ?? (Array(source), Array(destination))
-            
-            let minLength = min(source.count, destination.count)
-            
-            // Find common prefix and suffix
-            var prefix = 0
-            while prefix < minLength, sourceChars[prefix] == destChars[prefix] {
-                prefix += 1
-            }
-            prefixLength = prefix
-            
-            var suffix = 0
-            while suffix < minLength - prefix,
-                  sourceChars[source.count - suffix - 1] == destChars[destination.count - suffix - 1] {
-                suffix += 1
-            }
-            suffixLength = suffix
-            
-            sourceMiddleStart = prefix
-            sourceMiddleEnd = source.count - suffix
-            sourceMiddleLength = sourceMiddleEnd - sourceMiddleStart
-            destMiddleStart = prefix
-            destMiddleEnd = destination.count - suffix
-        }
-    }
-    
-    /// Helper to create a line-level diff operation
-    private static func createLineDiff(line: Substring, index: Int, totalLines: Int, isSource: Bool) -> DiffResult {
-        let buffer = StringBuffer(capacity: line.count + 1)
-        buffer.append(line, isLastLine: index == totalLines - 1)
-        let content = buffer.result
-        
-        if isSource {
-            // For source lines, we need to handle the newline separately
-            if content.hasSuffix("\n") {
-                return DiffResult(operations: [
-                    .delete(content.count - 1),  // Delete content without newline
-                    .delete(1)                   // Delete newline separately
-                ])
-            }
-            return DiffResult(operations: [.delete(content.count)])
-        } else {
-            // For destination lines, we need to handle the newline separately
-            if content.hasSuffix("\n") {
-                return DiffResult(operations: [
-                    .insert(String(content.dropLast())),  // Insert content without newline
-                    .insert("\n")                         // Insert newline separately
-                ])
-            }
-            return DiffResult(operations: [.insert(content)])
-        }
-    }
-    
-    /// Result of comparing two sequences
-    private struct SequenceComparisonResult<T: Equatable> {
-        let operations: [LineOperation]
-        
-        init(source: [T], destination: [T]) {
-            // Handle empty cases first
-            if source.isEmpty && destination.isEmpty {
-                self.operations = []
-                return
-            }
-            if source.isEmpty {
-                self.operations = destination.indices.map { LineOperation.insert($0) }
-                return
-            }
-            if destination.isEmpty {
-                self.operations = source.indices.map { LineOperation.delete($0) }
-                return
-            }
-            
-            // Calculate LCS table
-            var table = Array(repeating: Array(repeating: 0, count: destination.count + 1), 
-                            count: source.count + 1)
-            
-            // Fill the LCS table
-            for i in 1...source.count {
-                for j in 1...destination.count {
-                    if source[i-1] == destination[j-1] {
-                        table[i][j] = table[i-1][j-1] + 1
-                    } else {
-                        table[i][j] = max(table[i-1][j], table[i][j-1])
-                    }
-                }
-            }
-            
-            // Generate operations by backtracking through the table
-            var operations = [LineOperation]()
-            var i = source.count
-            var j = destination.count
-            
-            while i > 0 || j > 0 {
-                if i > 0 && j > 0 && source[i-1] == destination[j-1] {
-                    operations.append(.retain(i-1))
-                    i -= 1
-                    j -= 1
-                } else if j > 0 && (i == 0 || table[i][j-1] >= table[i-1][j]) {
-                    operations.append(.insert(j-1))
-                    j -= 1
-                } else if i > 0 && (j == 0 || table[i][j-1] < table[i-1][j]) {
-                    operations.append(.delete(i-1))
-                    i -= 1
-                }
-            }
-            
-            self.operations = operations.reversed()
-        }
-    }
-    
-    /// Represents an edit in line-level diffing
-    private enum LineOperation {
-        case retain(Int)
-        case insert(Int)
-        case delete(Int)
-    }
-    
-    private enum DiffOperationType {
-        case retain, delete, insert
-    }
-    
-    /// Represents the strategy for diff calculation
-    private enum DiffStrategy {
-        case brus   // Use simple, fast diff algorithm
-        case todd   // Use detailed, semantic diff algorithm
-    }
-    
-    /// Determines the most appropriate diff strategy
-    private static func determineDiffStrategy(source: String, destination: String) -> DiffStrategy {
-        switch (source.count, destination.count, 
-                source.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-                destination.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty) {
-        // Pure whitespace changes
-        case (_, _, true, true):
-            return .brus
-        
-        // Nearly identical strings with minimal differences
-        case (let sourceCount, let destCount, _, _) 
-            where sourceCount == destCount && 
-                  source.prefix(sourceCount - 1) == destination.prefix(destCount - 1):
-            return .brus
-        
-        // Minimal line count differences
-        case (_, _, _, _) 
-            where abs(source.split(separator: "\n").count - 
-                      destination.split(separator: "\n").count) <= 2:
-            return .brus
-        
-        // Complex transformations default to Todd algorithm
-        default:
-            return .todd
-        }
-    }
-    
-    /// Optimized method to check if Brus algorithm is suitable
+    /// Enhanced method to check if Brus algorithm is suitable using Swift 6.1 optimizations
     public static func isBrusSuitable(source: String, destination: String) -> Bool {
-        return determineDiffStrategy(source: source, destination: destination) == .brus
+        return DiffAlgorithmCore.AlgorithmSelector.selectOptimalAlgorithm(source: source, destination: destination) == .brus
     }
     
-    /// Optional method to suggest algorithm selection
+    /// Enhanced algorithm selection suggestion using Swift 6.1 features
     public static func suggestDiffAlgorithm(source: String, destination: String) -> String {
-        switch determineDiffStrategy(source: source, destination: destination) {
+        switch DiffAlgorithmCore.AlgorithmSelector.selectOptimalAlgorithm(source: source, destination: destination) {
         case .brus: return "Brus"
         case .todd: return "Todd"
         }
@@ -1675,3 +1133,4 @@ public enum DiffEncoding {
         }
     }
 }
+
