@@ -351,7 +351,7 @@ Speed:          🟢🟢🟢
 | **Space Complexity** | O(n) | Linear space usage | 🟢🟢🟡 Moderate |
 | **Best Case** | Ω(n) | Minimal structural changes | 🟢🟢🟡 Effective |
 | **Worst Case** | O(n²) | Highly complex text transformations | 🟢🟠🟡 High |
-| **Average Case** | Θ(n log n) | Semantic analysis overhead | 🟢🟠🟡 Moderate |
+| **Average Case** | Θ(n log n) | Semantic analysis overhead | 🟢🟢🟡 Moderate |
 
 #### Performance Gradient
 ```
@@ -364,7 +364,7 @@ Speed:          🟢🟠🟡
 
 ```
 Brus Algorithm:  🟢🟢🟢
-Todd Algorithm:  🟢🟢🟢
+Todd Algorithm:  🟢🟢🟡
 ```
 
 ## 📦 Usage Examples
