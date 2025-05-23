@@ -653,6 +653,26 @@ func demonstrateAlgorithmComparison() -> Bool {
        let brusStat = analyzeOperations(brusMeasurement.diff)
        let toddStat = analyzeOperations(toddMeasurement.diff)
        
+       // Print detailed operations for visualization
+       func printDetailedOperations(_ diff: DiffResult, algorithmName: String) {
+           print("\n=== \(algorithmName) Algorithm - Detailed Operations ===")
+           for (index, op) in diff.operations.enumerated() {
+               switch op {
+               case .retain(let count):
+                   print("Operation \(index + 1): RETAIN \(count) chars")
+               case .insert(let text):
+                   let truncatedText = text.count > 50 ? String(text.prefix(50)) + "..." : text
+                   print("Operation \(index + 1): INSERT \(text.count) chars: \"\(truncatedText)\"")
+               case .delete(let count):
+                   print("Operation \(index + 1): DELETE \(count) chars")
+               }
+           }
+       }
+       
+       // Print detailed operations for both algorithms
+       printDetailedOperations(brusMeasurement.diff, algorithmName: "Brus")
+       printDetailedOperations(toddMeasurement.diff, algorithmName: "Todd")
+       
        // Print detailed comparison
        print("\n=== Diff Algorithm Comparison ===")
        print("Source Code Length: \(sourceCode.count) chars")

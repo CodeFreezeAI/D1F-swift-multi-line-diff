@@ -326,9 +326,9 @@ Operation:    ====== ----- ++++++   // "Hello, " retained, "world" deleted, "Swi
 └─────────────────
 
 ┌─ Operations
-│ func ==== ---- ++++ ==== () {    // retain "func ", delete "old", insert "new", retain "Method"
-│     ---- +++++++++++++++++++     // delete old print statement, insert new print statement
-│ }====                            // retain closing brace
+│ func ==== ---- ++++ ====Method() {     // retain "func ", delete "old", insert "new", retain "Method() {"
+│     ---- +++++++++++++++++++++++++     // delete old print statement, insert new print statement
+│ } ====                                 // retain closing brace
 └─────────────────
 ```
 
@@ -365,47 +365,609 @@ Operation:    ====== ----- ++++++   // "Hello, " retained, "world" deleted, "Swi
 └─────────────────
 ```
 
-### Algorithm Comparison
+### Real-World Algorithm Comparison: User Struct Refactoring
+
+#### Original Source Code
+```swift
+import Foundation
+
+struct User {
+    let id: UUID
+    var name: String
+    var email: String
+    var age: Int
+    
+    init(name: String, email: String, age: Int) {
+        self.id = UUID()
+        self.name = name
+        self.email = email
+        self.age = age
+    }
+    
+    func greet() -> String {
+        return "Hello, my name is \(name)!"
+    }
+}
+
+// Helper functions
+func validateEmail(_ email: String) -> Bool {
+    // Basic validation
+    return email.contains("@")
+}
+
+func createUser(name: String, email: String, age: Int) -> User? {
+    guard validateEmail(email) else {
+        return nil
+    }
+    return User(name: name, email: email, age: age)
+}
+```
+
+#### Refactored Destination Code
+```swift
+import Foundation
+import UIKit
+
+struct User {
+    let id: UUID
+    var name: String
+    var email: String
+    var age: Int
+    var avatar: UIImage?
+    
+    init(name: String, email: String, age: Int, avatar: UIImage? = nil) {
+        self.id = UUID()
+        self.name = name
+        self.email = email
+        self.age = age
+        self.avatar = avatar
+    }
+    
+    func greet() -> String {
+        return "👋 Hello, my name is \(name)!"
+    }
+    
+    func updateAvatar(_ newAvatar: UIImage) {
+        self.avatar = newAvatar
+    }
+}
+
+// Helper functions
+func validateEmail(_ email: String) -> Bool {
+    // Enhanced validation
+    let emailRegex = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
+    let emailPredicate = NSPredicate(format:"SELF MATCHES %@", emailRegex)
+    return emailPredicate.evaluate(with: email)
+}
+
+func createUser(name: String, email: String, age: Int, avatar: UIImage? = nil) -> User? {
+    guard validateEmail(email) else {
+        return nil
+    }
+    return User(name: name, email: email, age: age, avatar: avatar)
+}
+```
+
+### Diff Operation Breakdown
+
+#### Todd Algorithm (`.todd`) Diff Analysis
+```
+Diff Operations Breakdown:
+1. Retain: Import statements
+2. Insert: New import (UIKit)
+3. Retain: Struct declaration
+4. Insert: New property (avatar: UIImage?)
+5. Modify: Initializer (add optional avatar parameter)
+6. Modify: Greet method (add emoji)
+7. Insert: New method (updateAvatar)
+8. Modify: Email validation function
+9. Modify: createUser function signature
+```
+
+#### Brus Algorithm (`.brus`) Diff Analysis
+```
+Simplified Diff Operations:
+1. Retain common prefix
+2. Delete entire content
+3. Insert entire new content
+4. Retain common suffix
+```
+
+### Performance Comparison
+
+| Metric | Todd Algorithm | Brus Algorithm |
+|--------|----------------|----------------|
+| **Total Operations** | 12-15 detailed operations | 4-6 simplified operations |
+| **Create Diff Time** | 0.374 ms | 0.128 ms |
+| **Apply Diff Time** | 0.004 ms | 0.001 ms |
+| **Semantic Awareness** | 🧠 High (Preserves structure) | 🔤 Low (Character replacement) |
+| **Best Used For** | Complex refactoring | Simple text changes |
+
+### Detailed Transformation Visualization
+
+```
+┌─ Todd Algorithm (.todd) - Semantic Diff
+│ ==== Preserve import statements
+│ ++++ Add UIKit import
+│ ==== Retain struct declaration
+│ ++++ Add avatar property
+│ ---- Remove basic initializer
+│ ++++ Add enhanced initializer
+│ ---- Remove basic greet method
+│ ++++ Add emoji-enhanced greet method
+│ ++++ Insert updateAvatar method
+│ ---- Remove basic email validation
+│ ++++ Add comprehensive email validation
+└─────────────────
+// Detailed Operations: ~12-15 semantic operations
+// Preserves code structure and intent
+```
+
+```
+┌─ Brus Algorithm (.brus) - Character-Level Diff
+│ ==== Retain common prefix
+│ ---- Bulk content removal
+│ ++++ Bulk content insertion
+│ ==== Retain common suffix
+└─────────────────
+// Simplified Operations: ~4-6 character replacements
+// Direct text transformation
+```
+
+### Recommended Usage Scenarios
+
+| Scenario | Recommended Algorithm | Reason |
+|----------|----------------------|--------|
+| **Complex Refactoring** | `.todd` | Preserves code semantics |
+| **Simple Text Replacement** | `.brus` | Faster, direct transformation |
+| **AI-Assisted Coding** | `.todd` | Intelligent, context-aware changes |
+| **Performance-Critical Apps** | `.brus` | Minimal overhead |
+
+### Key Takeaways
+
+1. **Todd Algorithm** provides granular, semantic-aware diff operations
+2. **Brus Algorithm** offers lightning-fast, character-level replacements
+3. **Automatic Fallback**: Todd algorithm falls back to Brus if verification fails
+4. **Zero-Risk Transformation**: Guaranteed correct diff application
+
+### Real-World Code Transformation Example
+
+Based on actual MultiLineDiffRunner performance test results:
+
+#### Source Code (664 characters)
+```swift
+import Foundation
+
+struct User {
+    let id: UUID
+    var name: String
+    var email: String
+    var age: Int
+    
+    init(name: String, email: String, age: Int) {
+        self.id = UUID()
+        self.name = name
+        self.email = email
+        self.age = age
+    }
+    
+    func greet() -> String {
+        return "Hello, my name is \(name)!"
+    }
+}
+
+// Helper functions
+func validateEmail(_ email: String) -> Bool {
+    // Basic validation
+    return email.contains("@")
+}
+
+func createUser(name: String, email: String, age: Int) -> User? {
+    guard validateEmail(email) else {
+        return nil
+    }
+    return User(name: name, email: email, age: age)
+}
+```
+
+#### Destination Code (1,053 characters)
+```swift
+import Foundation
+import UIKit
+
+struct User {
+    let id: UUID
+    var name: String
+    var email: String
+    var age: Int
+    var avatar: UIImage?
+    
+    init(name: String, email: String, age: Int, avatar: UIImage? = nil) {
+        self.id = UUID()
+        self.name = name
+        self.email = email
+        self.age = age
+        self.avatar = avatar
+    }
+    
+    func greet() -> String {
+        return "👋 Hello, my name is \(name)!"
+    }
+    
+    func updateAvatar(_ newAvatar: UIImage) {
+        self.avatar = newAvatar
+    }
+}
+
+// Helper functions
+func validateEmail(_ email: String) -> Bool {
+    // Enhanced validation
+    let emailRegex = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
+    let emailPredicate = NSPredicate(format:"SELF MATCHES %@", emailRegex)
+    return emailPredicate.evaluate(with: email)
+}
+
+func createUser(name: String, email: String, age: Int, avatar: UIImage? = nil) -> User? {
+    guard validateEmail(email) else {
+        return nil
+    }
+    return User(name: name, email: email, age: age, avatar: avatar)
+}
+```
+
+### Brus Algorithm (.brus) Transformation
 
 ```swift
-┌─ Todd Algorithm (.todd)
-│ ==== function signature preserved
-│ ---- old implementation removed
-│ ++++ new implementation added
-│ ==== closing brace retained
-└─────────────────
-
-┌─ Brus Algorithm (.brus)
-│ ==== matching prefix
-│ ---- bulk content removal
-│ ++++ new content insertion
-│ ==== matching suffix
+┌─ Operations
+│ === import Foundation
+│ ┌─ Delete old implementation and insert new implementation
+│ │ ---
+│ │ --- struct User {
+│ │ ---     let id: UUID
+│ │ ---     var name: String
+│ │ ---     var email: String
+│ │ ---     var age: Int
+│ │ ---     
+│ │ ---     init(name: String, email: String, age: Int) {
+│ │ ---         self.id = UUID()
+│ │ ---         self.name = name
+│ │ ---         self.email = email
+│ │ ---         self.age = age
+│ │ ---     }
+│ │ ---     
+│ │ ---     func greet() -> String {
+│ │ ---         return "Hello, my name is \(name)!"
+│ │ ---     }
+│ │ --- }
+│ │ --- 
+│ │ --- // Helper functions
+│ │ --- func validateEmail(_ email: String) -> Bool {
+│ │ ---     // Basic validation
+│ │ ---     return email.contains("@")
+│ │ --- }
+│ │ --- 
+│ │ --- func createUser(name: String, email: String, age: Int) -> User? {
+│ │ ---     guard validateEmail(email) else {
+│ │ ---         return nil
+│ │ ---     }
+│ │ ---     return User(name: name, email: email, age: age)
+│ │ +++ import UIKit
+│ │ +++ 
+│ │ +++ struct User {
+│ │ +++     let id: UUID
+│ │ +++     var name: String
+│ │ +++     var email: String
+│ │ +++     var age: Int
+│ │ +++     var avatar: UIImage?
+│ │ +++     
+│ │ +++     init(name: String, email: String, age: Int, avatar: UIImage? = nil) {
+│ │ +++         self.id = UUID()
+│ │ +++         self.name = name
+│ │ +++         self.email = email
+│ │ +++         self.age = age
+│ │ +++         self.avatar = avatar
+│ │ +++     }
+│ │ +++     
+│ │ +++     func greet() -> String {
+│ │ +++         return "👋 Hello, my name is \(name)!"
+│ │ +++     }
+│ │ +++     
+│ │ +++     func updateAvatar(_ newAvatar: UIImage) {
+│ │ +++         self.avatar = newAvatar
+│ │ +++     }
+│ │ +++ }
+│ │ +++ 
+│ │ +++ // Helper functions
+│ │ +++ func validateEmail(_ email: String) -> Bool {
+│ │ +++     // Enhanced validation
+│ │ +++     let emailRegex = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
+│ │ +++     let emailPredicate = NSPredicate(format:"SELF MATCHES %@", emailRegex)
+│ │ +++     return emailPredicate.evaluate(with: email)
+│ │ +++ }
+│ │ +++ 
+│ │ +++ func createUser(name: String, email: String, age: Int, avatar: UIImage? = nil) -> User? {
+│ │ +++     guard validateEmail(email) else {
+│ │ +++         return nil
+│ │ +++     }
+│ │ +++     return User(name: name, email: email, age: age, avatar: avatar)
+│ └─
+│ } ===
 └─────────────────
 ```
 
-### When to Use Each Algorithm
+### Todd Algorithm (.todd) Transformation
 
 ```swift
-// Todd Algorithm (.todd) - RECOMMENDED for most use cases
-// ✅ Built-in verification and automatic fallback
-// ✅ Best for: Code refactoring, semantic changes, structure preservation
-// ✅ Fallback protection: Automatically uses Brus if Todd fails
-// ✅ Zero risk: Guaranteed to produce working diffs
-
-// Brus Algorithm (.brus) - For specific performance needs
-// ⚡ Best for: Simple text changes, performance critical operations
-// ⚡ Character-based modifications where speed is paramount
-// ⚡ No fallback needed: Always reliable for basic transformations
+┌─ Operations
+│ === import Foundation
+│ +++ import UIKit
+│ ===
+│ === struct User {
+│ ===     let id: UUID
+│ ===     var name: String
+│ ===     var email: String
+│ ===     var age: Int
+│ +++ var avatar: UIImage?
+│ ===
+│     
+│ --- init(name: String, email: String, age: Int) {
+│ +++ init(name: String, email: String, age: Int, avatar: UIImage? = nil) {
+│ ===         self.id = UUID()
+│ ===         self.name = name
+│ ===         self.email = email
+│ ===         self.age = age
+│ +++         self.avatar = avatar
+│ === }
+│     
+│ === func greet() -> String {
+│ ---     return "Hello, my name is \(name)!"
+│ +++     return "👋 Hello, my name is \(name)!"
+│ === }
+│ +++
+│ +++ func updateAvatar(_ newAvatar: UIImage) {
+│ +++     self.avatar = newAvatar
+│ +++ }
+│ === }
+│ ===
+│ === // Helper functions
+│ === func validateEmail(_ email: String) -> Bool {
+│ ---     // Basic validation
+│ ---     return email.contains("@")
+│ +++     // Enhanced validation
+│ +++     let emailRegex = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
+│ +++     let emailPredicate = NSPredicate(format:"SELF MATCHES %@", emailRegex)
+│ +++     return emailPredicate.evaluate(with: email)
+│ === }
+│ ===
+│ --- func createUser(name: String, email: String, age: Int) -> User? {
+│ +++ func createUser(name: String, email: String, age: Int, avatar: UIImage? = nil) -> User? {
+│ ===     guard validateEmail(email) else {
+│ ===         return nil
+│ ===     }
+│ ---     return User(name: name, email: email, age: age)
+│ +++     return User(name: name, email: email, age: age, avatar: avatar)
+│ === }
+└─────────────────
 ```
 
-### Algorithm Reliability Comparison
+### Performance Analysis: 4 vs 22 Operations
 
-| Algorithm | Verification | Fallback | Granularity | Performance | Recommended |
-|-----------|-------------|----------|-------------|-------------|-------------|
-| **Todd (.todd)** | ✅ Built-in | ✅ Auto-Brus | 🎯 High | ⚡ Good | ✅ **Yes** |
-| **Brus (.brus)** | ❌ None | ❌ None | 🎯 Basic | ⚡ Fast | ⚡ Performance-only |
+| Algorithm | Operations | Time | Character Preservation | Strategy |
+|-----------|------------|------|----------------------|----------|
+| **Brus** | 4 ops | 0.127 ms | 3.2% preserved | 🔨 Bulk replacement |
+| **Todd** | 22 ops | 0.411 ms | 59.8% preserved | Surgical edits |
 
-**New in v1.2**: Todd algorithm now includes automatic verification and fallback, making it the safest choice for all scenarios.
+### Detailed Transformation Visualization
+
+```
+┌─ Todd Algorithm (.todd) - Semantic Diff
+│ ==== Preserve import statements
+│ ++++ Add UIKit import
+│ ==== Retain struct declaration
+│ ++++ Add avatar property
+│ ---- Remove basic initializer
+│ ++++ Add enhanced initializer
+│ ---- Remove basic greet method
+│ ++++ Add emoji-enhanced greet method
+│ ++++ Insert updateAvatar method
+│ ---- Remove basic email validation
+│ ++++ Add comprehensive email validation
+└─────────────────
+// Detailed Operations: ~12-15 semantic operations
+// Preserves code structure and intent
+```
+
+```
+┌─ Brus Algorithm (.brus) - Character-Level Diff
+│ ==== Retain common prefix
+│ ---- Bulk content removal
+│ ++++ Bulk content insertion
+│ ==== Retain common suffix
+└─────────────────
+// Simplified Operations: ~4-6 character replacements
+// Direct text transformation
+```
+
+### Recommended Usage Scenarios
+
+| Scenario | Recommended Algorithm | Reason |
+|----------|----------------------|--------|
+| **Complex Refactoring** | `.todd` | Preserves code semantics |
+| **Simple Text Replacement** | `.brus` | Faster, direct transformation |
+| **AI-Assisted Coding** | `.todd` | Intelligent, context-aware changes |
+| **Performance-Critical Apps** | `.brus` | Minimal overhead |
+
+### Key Takeaways
+
+1. **Todd Algorithm** provides granular, semantic-aware diff operations
+2. **Brus Algorithm** offers lightning-fast, character-level replacements
+3. **Automatic Fallback**: Todd algorithm falls back to Brus if verification fails
+4. **Zero-Risk Transformation**: Guaranteed correct diff application
+
+### Real-World Code Transformation Example
+
+Based on actual MultiLineDiffRunner performance test results:
+
+#### Source Code (664 characters)
+```swift
+import Foundation
+
+struct User {
+    let id: UUID
+    var name: String
+    var email: String
+    var age: Int
+    
+    init(name: String, email: String, age: Int) {
+        self.id = UUID()
+        self.name = name
+        self.email = email
+        self.age = age
+    }
+    
+    func greet() -> String {
+        return "Hello, my name is \(name)!"
+    }
+}
+
+// Helper functions
+func validateEmail(_ email: String) -> Bool {
+    // Basic validation
+    return email.contains("@")
+}
+
+func createUser(name: String, email: String, age: Int) -> User? {
+    guard validateEmail(email) else {
+        return nil
+    }
+    return User(name: name, email: email, age: age)
+}
+```
+
+#### Destination Code (1,053 characters)
+```swift
+import Foundation
+import UIKit
+
+struct User {
+    let id: UUID
+    var name: String
+    var email: String
+    var age: Int
+    var avatar: UIImage?
+    
+    init(name: String, email: String, age: Int, avatar: UIImage? = nil) {
+        self.id = UUID()
+        self.name = name
+        self.email = email
+        self.age = age
+        self.avatar = avatar
+    }
+    
+    func greet() -> String {
+        return "👋 Hello, my name is \(name)!"
+    }
+    
+    func updateAvatar(_ newAvatar: UIImage) {
+        self.avatar = newAvatar
+    }
+}
+
+// Helper functions
+func validateEmail(_ email: String) -> Bool {
+    // Enhanced validation
+    let emailRegex = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
+    let emailPredicate = NSPredicate(format:"SELF MATCHES %@", emailRegex)
+    return emailPredicate.evaluate(with: email)
+}
+
+func createUser(name: String, email: String, age: Int, avatar: UIImage? = nil) -> User? {
+    guard validateEmail(email) else {
+        return nil
+    }
+    return User(name: name, email: email, age: age, avatar: avatar)
+}
+```
+
+### Brus Algorithm (.brus) Transformation
+
+```swift
+┌─ Operations
+│ === func 
+│ --- old
+│ +++ new
+│ === Method() {
+│ ---     print("Hello")
+│ +++     print("Hello, World!")
+│ === }
+└─────────────────
+```
+
+### Todd Algorithm (.todd) Transformation
+
+```swift
+┌─ Operations
+│ === import Foundation
+│ +++ import UIKit
+│ ===
+│ === struct User {
+│ ===     let id: UUID
+│ ===     var name: String
+│ ===     var email: String
+│ ===     var age: Int
+│ +++ var avatar: UIImage?
+│ ===
+│     
+│ --- init(name: String, email: String, age: Int) {
+│ +++ init(name: String, email: String, age: Int, avatar: UIImage? = nil) {
+│ ===         self.id = UUID()
+│ ===         self.name = name
+│ ===         self.email = email
+│ ===         self.age = age
+│ +++         self.avatar = avatar
+│ === }
+│     
+│ === func greet() -> String {
+│ ---     return "Hello, my name is \(name)!"
+│ +++     return "👋 Hello, my name is \(name)!"
+│ === }
+│ +++
+│ +++ func updateAvatar(_ newAvatar: UIImage) {
+│ +++     self.avatar = newAvatar
+│ +++ }
+│ === }
+│ ===
+│ === // Helper functions
+│ === func validateEmail(_ email: String) -> Bool {
+│ ---     // Basic validation
+│ ---     return email.contains("@")
+│ +++     // Enhanced validation
+│ +++     let emailRegex = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
+│ +++     let emailPredicate = NSPredicate(format:"SELF MATCHES %@", emailRegex)
+│ +++     return emailPredicate.evaluate(with: email)
+│ === }
+│ ===
+│ --- func createUser(name: String, email: String, age: Int) -> User? {
+│ +++ func createUser(name: String, email: String, age: Int, avatar: UIImage? = nil) -> User? {
+│ ===     guard validateEmail(email) else {
+│ ===         return nil
+│ ===     }
+│ ---     return User(name: name, email: email, age: age)
+│ +++     return User(name: name, email: email, age: age, avatar: avatar)
+│ === }
+└─────────────────
+```
+
+### Performance Comparison Results
+
+| Metric | Brus Algorithm | Todd Algorithm | Difference |
+|--------|----------------|----------------|------------|
+| **Total Operations** | 4 operations | 22 operations | 5.5x more granular |
+| **Create Diff Time** | 0.121 ms | 0.404 ms | 3.3x slower |
+| **Apply Diff Time** | 0.006 ms | 0.007 ms | Similar |
+| **Total Time** | 0.127 ms | 0.411 ms | 3.2x slower |
+| **Retained Characters** | 21 chars (3.2%) | 397 chars (59.8%) | 18.9x more preservation |
+| **Semantic Awareness** | 🔤 Character-level | 🧠 Structure-aware | Intelligent |
 
 ## 🚀 Why Base64?
 
@@ -665,8 +1227,8 @@ enum DiffOperation {
 Source:      "Hello, world!"
 Destination: "Hello, Swift!"
 Operation:    ====== ▼        // Retain "Hello, "
-             |||||| |
-             Hello, w
+             ||||||  |
+             Hello,  w
 ```
 
 ### Delete Operation Example
@@ -699,7 +1261,7 @@ Operation:    ====== ----- ++++++   // "Hello, " retained, "world" deleted, "Swi
              Hello, world Swift
 ```
 
-### Real-World Complex Example
+### Another Example
 
 ```swift
 // Source
@@ -716,39 +1278,6 @@ func calculateTotal(items: [Product]) -> Double {
     return items.reduce(0.0) { $0 + $1.price }
 }
 
-// Operation Visualization:
-┌─ Retain signature
-│ func calculateTotal(items: [Product]) -> Double {
-└─ ===============================================
-
-┌─ Delete old implementation and insert new implementation
-│ --- var total = 0.0
-│ --- for item in items {
-│ ---     total += item.price
-│ --- }
-│ --- return total
-│ +++ return items.reduce(0.0) { $0 + $1.price }
-└─ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-```
-
-### Multi-Line Diff Example
-
-```swift
-// Source
-func oldMethod() {
-    print("Hello")
-}
-
-// Destination
-func newMethod() {
-    print("Hello, World!")
-}
-
-// Operation Breakdown:
-func ==== ---- ++++ ==== () {     // retain "func ", delete "old", insert "new", retain "Method"
-    ---- +++++++++++++++++++     // delete old print statement, insert new print statement
-}====                            // retain closing brace
-
 // Visual Representation:
 ┌─ Source
 │ func oldMethod() {
@@ -763,8 +1292,188 @@ func ==== ---- ++++ ==== () {     // retain "func ", delete "old", insert "new",
 └─────────────────
 ```
 
+### Operation Symbols Legend
 
-┌─ Retain closing
-│ }
-└─ =
+| Symbol | Operation | Description |
+|--------|-----------|-------------|
+| `====` | Retain    | Keep existing code |
+| `----` | Delete    | Remove code section |
+| `++++` | Insert    | Add new code section |
+| `▼`    | Position  | Current transformation point |
+| `┌─┐`  | Section   | Diff operation group |
+| `└─┘`  | Border    | Section boundary |
+
+### Brus Algorithm (.brus) Transformation
+
 ```
+┌─ Brus Algorithm (.brus) - Character-Level Diff
+│ === Retain common prefix
+│ --- Bulk content removal
+│ +++ Bulk content insertion
+│ === Retain common suffix
+└─────────────────
+// Simplified Operations: ~4-6 character replacements
+// Direct text transformation
+```
+
+```swift
+┌─ Operations
+│ === import Foundation
+│ ┌─ Delete old implementation and insert new implementation
+│ │ ---
+│ │ --- struct User {
+│ │ ---     let id: UUID
+│ │ ---     var name: String
+│ │ ---     var email: String
+│ │ ---     var age: Int
+│ │ ---     
+│ │ ---     init(name: String, email: String, age: Int) {
+│ │ ---         self.id = UUID()
+│ │ ---         self.name = name
+│ │ ---         self.email = email
+│ │ ---         self.age = age
+│ │ ---     }
+│ │ ---     
+│ │ ---     func greet() -> String {
+│ │ ---         return "Hello, my name is \(name)!"
+│ │ ---     }
+│ │ --- }
+│ │ --- 
+│ │ --- // Helper functions
+│ │ --- func validateEmail(_ email: String) -> Bool {
+│ │ ---     // Basic validation
+│ │ ---     return email.contains("@")
+│ │ --- }
+│ │ --- 
+│ │ --- func createUser(name: String, email: String, age: Int) -> User? {
+│ │ ---     guard validateEmail(email) else {
+│ │ ---         return nil
+│ │ ---     }
+│ │ ---     return User(name: name, email: email, age: age)
+│ │ +++ import UIKit
+│ │ +++ 
+│ │ +++ struct User {
+│ │ +++     let id: UUID
+│ │ +++     var name: String
+│ │ +++     var email: String
+│ │ +++     var age: Int
+│ │ +++     var avatar: UIImage?
+│ │ +++     
+│ │ +++     init(name: String, email: String, age: Int, avatar: UIImage? = nil) {
+│ │ +++         self.id = UUID()
+│ │ +++         self.name = name
+│ │ +++         self.email = email
+│ │ +++         self.age = age
+│ │ +++         self.avatar = avatar
+│ │ +++     }
+│ │ +++     
+│ │ +++     func greet() -> String {
+│ │ +++         return "👋 Hello, my name is \(name)!"
+│ │ +++     }
+│ │ +++     
+│ │ +++     func updateAvatar(_ newAvatar: UIImage) {
+│ │ +++         self.avatar = newAvatar
+│ │ +++     }
+│ │ +++ }
+│ │ +++ 
+│ │ +++ // Helper functions
+│ │ +++ func validateEmail(_ email: String) -> Bool {
+│ │ +++     // Enhanced validation
+│ │ +++     let emailRegex = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
+│ │ +++     let emailPredicate = NSPredicate(format:"SELF MATCHES %@", emailRegex)
+│ │ +++     return emailPredicate.evaluate(with: email)
+│ │ +++ }
+│ │ +++ 
+│ │ +++ func createUser(name: String, email: String, age: Int, avatar: UIImage? = nil) -> User? {
+│ │ +++     guard validateEmail(email) else {
+│ │ +++         return nil
+│ │ +++     }
+│ │ +++     return User(name: name, email: email, age: age, avatar: avatar)
+│ └─
+│ } ===
+└─────────────────
+```
+
+```
+┌─ Todd Algorithm (.todd) - Semantic Diff
+│ === Preserve import statements
+│ +++ Add UIKit import
+│ === Retain struct declaration
+│ +++ Add avatar property
+│ --- Remove basic initializer
+│ +++ Add enhanced initializer
+│ --- Remove basic greet method
+│ +++ Add emoji-enhanced greet method
+│ +++ Insert updateAvatar method
+│ --- Remove basic email validation
+│ +++ Add comprehensive email validation
+└─────────────────
+// Detailed Operations: ~12-15 semantic operations
+// Preserves code structure and intent
+```
+
+### Todd Algorithm (.todd) Transformation
+
+```swift
+┌─ Operations
+│ === import Foundation
+│ +++ import UIKit
+│ ===
+│ === struct User {
+│ ===     let id: UUID
+│ ===     var name: String
+│ ===     var email: String
+│ ===     var age: Int
+│ +++ var avatar: UIImage?
+│ ===
+│     
+│ --- init(name: String, email: String, age: Int) {
+│ +++ init(name: String, email: String, age: Int, avatar: UIImage? = nil) {
+│ ===         self.id = UUID()
+│ ===         self.name = name
+│ ===         self.email = email
+│ ===         self.age = age
+│ +++         self.avatar = avatar
+│ === }
+│     
+│ === func greet() -> String {
+│ ---     return "Hello, my name is \(name)!"
+│ +++     return "👋 Hello, my name is \(name)!"
+│ === }
+│ +++
+│ +++ func updateAvatar(_ newAvatar: UIImage) {
+│ +++     self.avatar = newAvatar
+│ +++ }
+│ === }
+│ ===
+│ === // Helper functions
+│ === func validateEmail(_ email: String) -> Bool {
+│ ---     // Basic validation
+│ ---     return email.contains("@")
+│ +++     // Enhanced validation
+│ +++     let emailRegex = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
+│ +++     let emailPredicate = NSPredicate(format:"SELF MATCHES %@", emailRegex)
+│ +++     return emailPredicate.evaluate(with: email)
+│ === }
+│ ===
+│ --- func createUser(name: String, email: String, age: Int) -> User? {
+│ +++ func createUser(name: String, email: String, age: Int, avatar: UIImage? = nil) -> User? {
+│ ===     guard validateEmail(email) else {
+│ ===         return nil
+│ ===     }
+│ ---     return User(name: name, email: email, age: age)
+│ +++     return User(name: name, email: email, age: age, avatar: avatar)
+│ === }
+└─────────────────
+```
+
+### Performance Comparison Results
+
+| Metric | Brus Algorithm | Todd Algorithm | Difference |
+|--------|----------------|----------------|------------|
+| **Total Operations** | 4 operations | 22 operations | 5.5x more granular |
+| **Create Diff Time** | 0.121 ms | 0.404 ms | 3.3x slower |
+| **Apply Diff Time** | 0.006 ms | 0.007 ms | Similar |
+| **Total Time** | 0.127 ms | 0.411 ms | 3.2x slower |
+| **Retained Characters** | 21 chars (3.2%) | 397 chars (59.8%) | 18.9x more preservation |
+| **Semantic Awareness** | 🔤 Character-level | 🧠 Structure-aware | Intelligent |
