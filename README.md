@@ -417,7 +417,7 @@ Operation:    ====== ----- ++++++   // "Hello, " retained, "world" deleted, "Swi
 
 ### Brus - Simple - Algorithm Big O Notation
 
-| Metric | Complexity | Explanation | Real Performance | Visual Representation |
+| Metric | Complexity | Explanation | Real Performance | Visual |
 |--------|------------|-------------|------------------|----------------------|
 | **Time Complexity** | O(n) | Linear time complexity | **0.128ms create** | 🟢🟢🟢  |
 | **Space Complexity** | O(1) | Constant space usage | **Minimal memory** | 🟢🟢🟢  |
@@ -436,7 +436,7 @@ Operation Count: 🟢🟢🟢 (4 ops)
 
 ### Todd - Smart - Algorithm Big O Notation
 
-| Metric | Complexity | Explanation | Real Performance | Visual Representation |
+| Metric | Complexity | Explanation | Real Performance | Visual |
 |--------|------------|-------------|------------------|----------------------|
 | **Time Complexity** | O(n log n) | LCS-based semantic analysis | **0.374ms create** | 🟢🟡🔴  |
 | **Space Complexity** | O(n) | Linear space for LCS table | **Higher memory** | 🟢🟡🔴  |
