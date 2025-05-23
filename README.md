@@ -726,6 +726,40 @@ func calculateTotal(items: [Product]) -> Double {
 │ --- return total
 │ +++ return items.reduce(0.0) { $0 + $1.price }
 └─ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```
+
+### Multi-Line Diff Example
+
+```swift
+// Source
+func oldMethod() {
+    print("Hello")
+}
+
+// Destination
+func newMethod() {
+    print("Hello, World!")
+}
+
+// Operation Breakdown:
+func ==== ---- ++++ ==== () {     // retain "func ", delete "old", insert "new", retain "Method"
+    ---- +++++++++++++++++++     // delete old print statement, insert new print statement
+}====                            // retain closing brace
+
+// Visual Representation:
+┌─ Source
+│ func oldMethod() {
+│     print("Hello")
+│ }
+└─────────────────
+   ↓ Transform ↓
+┌─ Destination
+│ func newMethod() {
+│     print("Hello, World!")
+│ }
+└─────────────────
+```
+
 
 ┌─ Retain closing
 │ }
