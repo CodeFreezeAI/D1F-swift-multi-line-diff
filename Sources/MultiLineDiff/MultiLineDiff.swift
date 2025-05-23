@@ -273,7 +273,7 @@ private enum DiffAlgorithmCore {
         
         @_optimize(speed)
         static func selectOptimalAlgorithm(source: String, destination: String) -> DiffAlgorithm {
-            // Swift 6.1 enhanced decision tree
+            // Swift 6.1 enhanced decision tree - balance performance with semantic value
             let sourceLines = source.efficientLines
             let destLines = destination.efficientLines
             
@@ -282,23 +282,25 @@ private enum DiffAlgorithmCore {
                 return .brus
             }
             
+            // Only use Brus for very tiny content (Todd overhead not worth it)
+            if sourceLines.count <= 2 && destLines.count <= 2 {
+                return .brus
+            }
+            
             // Use enhanced string comparison for similarity detection
             let similarity = calculateSimilarity(source: source, destination: destination)
             let lineCountDiff = Swift.abs(sourceLines.count - destLines.count)
             
-            // Enhanced decision logic
-            switch (similarity, lineCountDiff, sourceLines.count) {
-            case (0.9..., _, _):
-                // Very similar strings - use fast Brus
+            // Balanced selection - preserve Todd's semantic value
+            switch (similarity, lineCountDiff, Swift.max(sourceLines.count, destLines.count)) {
+            case (0.95..., _, 0...5):
+                // Nearly identical small content - use fast Brus
                 return .brus
-            case (_, 0...2, 0...10):
-                // Few lines with minimal changes - use Brus
-                return .brus
-            case (_, _, 0...5):
-                // Very short content - use Brus
+            case (0.0..<0.1, _, _):
+                // Completely different content - Brus for complete rewrites
                 return .brus
             default:
-                // Complex changes - use semantic Todd
+                // Most cases benefit from semantic Todd
                 return .todd
             }
         }
@@ -507,14 +509,9 @@ public enum DiffEncoding {
         sourceStartLine: Int? = nil,
         destStartLine: Int? = nil
     ) -> DiffResult {
-        // Use enhanced algorithm selection if no specific algorithm requested
-        let selectedAlgorithm = algorithm == .todd ? 
-            DiffAlgorithmCore.AlgorithmSelector.selectOptimalAlgorithm(source: source, destination: destination) : 
-            algorithm
-        
-        // Execute the selected algorithm with intelligent selection and fallback
+        // Execute the requested algorithm directly - no override
         let (result, actualAlgorithmUsed) = executeEnhancedAlgorithm(
-            algorithm: selectedAlgorithm,
+            algorithm: algorithm,
             source: source,
             destination: destination
         )
@@ -605,7 +602,7 @@ public enum DiffEncoding {
         return DiffResult(operations: builder.build())
     }
     
-    /// Enhanced Todd algorithm using Swift 6.1 LCS and line processing
+    /// Enhanced Todd algorithm using Swift 6.1 LCS and line processing with performance optimizations
     @_optimize(speed)
     private static func createEnhancedToddDiff(source: String, destination: String) -> DiffResult {
         // Handle empty strings
@@ -617,8 +614,13 @@ public enum DiffEncoding {
         let sourceLines = source.efficientLines
         let destLines = destination.efficientLines
         
-        // Create a more traditional LCS-based diff using enhanced algorithms
-        let lcsOperations = generateLCSOperations(sourceLines: sourceLines, destLines: destLines)
+        // Only use simple diff for very tiny content (1-2 lines each)
+        if sourceLines.count <= 1 && destLines.count <= 1 {
+            return createSimpleLineDiff(sourceLines: sourceLines, destLines: destLines)
+        }
+        
+        // Use optimized LCS for semantic line-by-line processing
+        let lcsOperations = generateOptimizedLCSOperations(sourceLines: sourceLines, destLines: destLines)
         var builder = DiffAlgorithmCore.OperationBuilder()
         
         // Convert line operations to character operations
@@ -638,20 +640,34 @@ public enum DiffEncoding {
         return DiffResult(operations: builder.build())
     }
     
-    /// Helper to convert line to character count including newline handling
+    /// Fast path for small line diffs
     @_optimize(speed)
-    private static func lineToCharCount(_ line: Substring, _ index: Int, _ total: Int) -> Int {
-        line.count + (index == total - 1 ? 0 : 1)
+    private static func createSimpleLineDiff(sourceLines: [Substring], destLines: [Substring]) -> DiffResult {
+        var builder = DiffAlgorithmCore.OperationBuilder()
+        var srcIdx = 0, dstIdx = 0
+        
+        while srcIdx < sourceLines.count || dstIdx < destLines.count {
+            if srcIdx < sourceLines.count && dstIdx < destLines.count && sourceLines[srcIdx] == destLines[dstIdx] {
+                // Lines match - retain
+                builder.addRetain(count: lineToCharCount(sourceLines[srcIdx], srcIdx, sourceLines.count))
+                srcIdx += 1
+                dstIdx += 1
+            } else if srcIdx < sourceLines.count && (dstIdx >= destLines.count || sourceLines[srcIdx] != destLines[dstIdx]) {
+                // Delete source line
+                builder.addDelete(count: lineToCharCount(sourceLines[srcIdx], srcIdx, sourceLines.count))
+                srcIdx += 1
+            } else if dstIdx < destLines.count {
+                // Insert destination line
+                builder.addInsert(text: lineToText(destLines[dstIdx], dstIdx, destLines.count))
+                dstIdx += 1
+            }
+        }
+        
+        return DiffResult(operations: builder.build())
     }
     
-    /// Helper to convert line to text including newline handling
-    @_optimize(speed)
-    private static func lineToText(_ line: Substring, _ index: Int, _ total: Int) -> String {
-        String(line) + (index == total - 1 ? "" : "\n")
-    }
-    
-    /// Generate LCS operations between source and destination lines
-    private static func generateLCSOperations(sourceLines: [Substring], destLines: [Substring]) -> [EnhancedLineOperation] {
+    /// Optimized LCS operations for semantic line-by-line processing
+    private static func generateOptimizedLCSOperations(sourceLines: [Substring], destLines: [Substring]) -> [EnhancedLineOperation] {
         // Handle empty cases
         if sourceLines.isEmpty && destLines.isEmpty {
             return []
@@ -663,40 +679,75 @@ public enum DiffEncoding {
             return sourceLines.indices.map { .delete($0) }
         }
         
-        // Build LCS table
-        var table = Array(repeating: Array(repeating: 0, count: destLines.count + 1), 
-                         count: sourceLines.count + 1)
+        // Use traditional LCS table but with optimizations
+        return generateFastLCS(sourceLines: sourceLines, destLines: destLines)
+    }
+    
+    /// Fast LCS implementation optimized for Swift 6.1
+    @_optimize(speed)
+    private static func generateFastLCS(sourceLines: [Substring], destLines: [Substring]) -> [EnhancedLineOperation] {
+        let srcCount = sourceLines.count
+        let dstCount = destLines.count
         
-        for i in 1...sourceLines.count {
-            for j in 1...destLines.count {
-                if sourceLines[i-1] == destLines[j-1] {
-                    table[i][j] = table[i-1][j-1] + 1
+        // Use flat array for better cache locality
+        let tableSize = (srcCount + 1) * (dstCount + 1)
+        var table = Array(repeating: 0, count: tableSize)
+        
+        // Helper to convert 2D index to 1D
+        func tableIndex(i: Int, j: Int) -> Int {
+            return i * (dstCount + 1) + j
+        }
+        
+        // Build LCS table with optimized memory access
+        for i in 1...srcCount {
+            let sourceLine = sourceLines[i-1]
+            let currentRowStart = i * (dstCount + 1)
+            let prevRowStart = (i-1) * (dstCount + 1)
+            
+            for j in 1...dstCount {
+                let currentIdx = currentRowStart + j
+                if sourceLine == destLines[j-1] {
+                    table[currentIdx] = table[prevRowStart + j - 1] + 1
                 } else {
-                    table[i][j] = Swift.max(table[i-1][j], table[i][j-1])
+                    table[currentIdx] = Swift.max(table[prevRowStart + j], table[currentRowStart + j - 1])
                 }
             }
         }
         
-        // Backtrack to generate operations
+        // Fast backtracking
         var operations: [EnhancedLineOperation] = []
-        var i = sourceLines.count
-        var j = destLines.count
+        operations.reserveCapacity(srcCount + dstCount)
+        
+        var i = srcCount
+        var j = dstCount
         
         while i > 0 || j > 0 {
             if i > 0 && j > 0 && sourceLines[i-1] == destLines[j-1] {
                 operations.append(.retain(i-1))
                 i -= 1
                 j -= 1
-            } else if j > 0 && (i == 0 || table[i][j-1] >= table[i-1][j]) {
+            } else if j > 0 && (i == 0 || table[tableIndex(i: i, j: j-1)] >= table[tableIndex(i: i-1, j: j)]) {
                 operations.append(.insert(j-1))
                 j -= 1
-            } else if i > 0 && (j == 0 || table[i][j-1] < table[i-1][j]) {
+            } else {
                 operations.append(.delete(i-1))
                 i -= 1
             }
         }
         
         return operations.reversed()
+    }
+    
+    /// Helper to convert line to character count including newline handling
+    @_optimize(speed)
+    private static func lineToCharCount(_ line: Substring, _ index: Int, _ total: Int) -> Int {
+        line.count + (index == total - 1 ? 0 : 1)
+    }
+    
+    /// Helper to convert line to text including newline handling
+    @_optimize(speed)
+    private static func lineToText(_ line: Substring, _ index: Int, _ total: Int) -> String {
+        String(line) + (index == total - 1 ? "" : "\n")
     }
     
     /// Enhanced line operation for internal processing
