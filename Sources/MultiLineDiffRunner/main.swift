@@ -838,8 +838,9 @@ func demonstrateTruncatedDiff() -> Bool {
         let truncatedDiff = MultiLineDiff.createDiff(
             source: truncatedContent,
             destination: truncatedModifiedContent,
+            algorithm: .todd,
             includeMetadata: true,
-            sourceStartLine: 11
+            sourceStartLine: 11,
         )
         
                // Apply the truncated diff to the full original file
