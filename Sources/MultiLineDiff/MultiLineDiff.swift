@@ -476,10 +476,45 @@ public enum DiffEncoding {
     }
     
     /// Creates a diff between two strings
+    /// 
     /// - Parameters:
-    ///   - source: The original string
+    ///   - source: The original string (can be truncated)
     ///   - destination: The modified string
-    /// - Returns: A DiffResult containing the operations to transform source into destination
+    ///   - algorithm: Diff generation strategy (defaults to semantic Todd algorithm)
+    ///   - includeMetadata: Whether to generate additional context information
+    ///   - sourceStartLine: Optional starting line number for the diff
+    ///     - For full source documents: Specify the actual line number
+    ///     - For truncated sources: 
+    ///       - If known, provide the actual line number
+    ///       - If unknown, use 1 (default)
+    ///       - The algorithm will use additional metadata to interpolate the correct location
+    ///   - destStartLine: Optional destination starting line number
+    ///
+    /// - Returns: A diff result with operations to transform the source to the destination
+    ///
+    /// - Note: When working with truncated sources:
+    ///   1. Always set `includeMetadata` to `true`
+    ///   2. If the exact line number is unknown, use `sourceStartLine: 1`
+    ///   3. The diff algorithm will use context and metadata to determine the correct application point
+    ///
+    /// Example for truncated source:
+    /// ```swift
+    /// // When exact line number is known
+    /// let diff = MultiLineDiff.createDiff(
+    ///     source: truncatedContent,
+    ///     destination: modifiedContent,
+    ///     includeMetadata: true,
+    ///     sourceStartLine: 42
+    /// )
+    ///
+    /// // When line number is unknown
+    /// let diff = MultiLineDiff.createDiff(
+    ///     source: truncatedContent,
+    ///     destination: modifiedContent,
+    ///     includeMetadata: true,
+    ///     sourceStartLine: 1  // Algorithm will interpolate using metadata
+    /// )
+    /// ```
     private static func createDiffBrus(source: String, destination: String) -> DiffResult {
         // Handle empty string scenarios first
         if let emptyResult = handleEmptyStrings(source: source, destination: destination) {

@@ -2,7 +2,7 @@
 
 [![Swift 6.1](https://img.shields.io/badge/Swift-6.1-orange.svg)](https://swift.org)
 [![Website](https://img.shields.io/badge/website-xcf.ai-blue.svg)](https://xcf.ai)
-[![Version](https://img.shields.io/badge/version-1.1.1-green.svg)](https://github.com/toddbruss/swift-multi-line-diff)
+[![Version](https://img.shields.io/badge/version-1.1.2-green.svg)](https://github.com/toddbruss/swift-multi-line-diff)
 
 A Swift library for creating and applying diffs to multi-line text content. Supports Unicode/UTF-8 strings and handles multi-line content properly. Designed specifically for Vibe AI Coding integrity and safe code transformations.
 
@@ -24,28 +24,113 @@ A Swift library for creating and applying diffs to multi-line text content. Supp
 
 ## 🚀 Truncated Diff Support
 
-MultiLineDiff now supports applying diffs to truncated sources, making it incredibly flexible for partial document transformations.
+MultiLineDiff supports applying diffs to truncated sources, making it incredibly flexible for partial document transformations.
 
 ### Key Truncated Diff Capabilities
 
 - Apply diffs to partial documents
 - Preserve context and metadata
 - Intelligent section replacement
-- Base64 encoding for compact representation
+- Automatic line number interpolation
 
+#### Truncated Diff Usage: Line Number Handling
+
+When working with truncated sources, follow these guidelines for `sourceStartLine`:
+
+1. **If You Know the Exact Line Number**:
 ```swift
-// Applying a diff to a truncated source
-let truncatedSource = "Section to be modified"
 let diff = MultiLineDiff.createDiff(
-    source: truncatedSource, 
-    destination: "Updated section", 
-    allowTruncatedSource: true
-)
-let result = try MultiLineDiff.applyDiff(
-    to: truncatedSource, 
-    diff: diff
+    source: truncatedContent,
+    destination: modifiedContent,
+    includeMetadata: true,
+    sourceStartLine: 42  // Recommended: Use the actual line number if known
 )
 ```
+
+2. **If Line Number is Unknown**:
+```swift
+let diff = MultiLineDiff.createDiff(
+    source: truncatedContent,
+    destination: modifiedContent,
+    includeMetadata: true,
+    sourceStartLine: 1  // Default: Algorithm will interpolate using metadata
+)
+```
+
+**Recommended Practices**:
+- **Best Practice**: Always specify the exact line number if known
+- **Fallback**: Use `sourceStartLine: 1` when the exact line is uncertain
+- The library uses metadata and context to intelligently locate the correct section
+- Always set `includeMetadata: true` for truncated diffs
+
+### Line Number Interpolation
+
+When `sourceStartLine: 1` is used, the library:
+- Analyzes preceding and following context
+- Uses metadata to determine the most likely section
+- Intelligently applies the diff to the correct location
+
+### Example: Line Number Scenarios
+
+```swift
+// Scenario 1: Known Exact Line
+let knownLineDiff = MultiLineDiff.createDiff(
+    source: truncatedChapter2,
+    destination: updatedChapter2,
+    includeMetadata: true,
+    sourceStartLine: 15  // Exact line number in full document
+)
+
+// Scenario 2: Unknown Line Number
+let defaultLineDiff = MultiLineDiff.createDiff(
+    source: truncatedChapter2,
+    destination: updatedChapter2,
+    includeMetadata: true,
+    sourceStartLine: 1  // Default: Intelligent interpolation
+)
+```
+
+### Full Document Diff Application
+
+```swift
+let originalDocument = """
+Chapter 1: Introduction
+...
+Chapter 2: Core Concepts
+This section explains the fundamental principles.
+More detailed explanation here.
+...
+"""
+
+let truncatedSection = """
+Chapter 2: Core Concepts
+This section explains the fundamental principles.
+More detailed explanation here.
+"""
+
+let updatedSection = """
+Chapter 2: Core Concepts
+This section provides a comprehensive explanation of fundamental principles.
+Enhanced and more detailed insights.
+"""
+
+// Intelligent diff application
+let diff = MultiLineDiff.createDiff(
+    source: truncatedSection,
+    destination: updatedSection,
+    includeMetadata: true,
+    sourceStartLine: 1  // Default intelligent interpolation
+)
+
+// Apply diff to full document
+let updatedDocument = try MultiLineDiff.applyDiff(
+    to: originalDocument, 
+    diff: diff,
+    allowTruncatedSource: true
+)
+```
+
+The library handles the complexity of locating and applying the diff, even with partial or truncated sources.
 
 ## Base64 Diff Encoding
 
