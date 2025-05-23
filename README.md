@@ -419,12 +419,12 @@ Operation:    ====== ----- ++++++   // "Hello, " retained, "world" deleted, "Swi
 
 | Metric | Complexity | Explanation | Real Performance | Visual Representation |
 |--------|------------|-------------|------------------|----------------------|
-| **Time Complexity** | O(n) | Linear time complexity | **0.128ms create** | 🟢🟢🟢 Ultra-Fast |
-| **Space Complexity** | O(1) | Constant space usage | **Minimal memory** | 🟢🟢🟢 Excellent |
-| **Apply Performance** | O(n) | Direct character operations | **0.001ms apply** | 🟢🟢🟢 Lightning |
-| **Total Operations** | Low | Simple retain/insert/delete | **~4 operations** | 🟢🟢🟢 Efficient |
-| **Best Case** | Ω(1) | Identical strings | **<0.01ms** | 🟢🟢🟢 Instant |
-| **Worst Case** | O(n) | Complete string replacement | **~0.5ms** | 🟢🟢🟢 Fast |
+| **Time Complexity** | O(n) | Linear time complexity | **0.128ms create** | 🟢🟢🟢  |
+| **Space Complexity** | O(1) | Constant space usage | **Minimal memory** | 🟢🟢🟢  |
+| **Apply Performance** | O(n) | Direct character operations | **0.001ms apply** | 🟢🟢🟢  |
+| **Total Operations** | Low | Simple retain/insert/delete | **~4 operations** | 🟢🟢🟢  |
+| **Best Case** | Ω(1) | Identical strings | **<0.01ms** | 🟢🟢🟢  |
+| **Worst Case** | O(n) | Complete string replacement | **~0.5ms** | 🟢🟢🟢  |
 
 #### Performance Profile
 ```
@@ -438,12 +438,12 @@ Operation Count: 🟢🟢🟢 (4 ops)
 
 | Metric | Complexity | Explanation | Real Performance | Visual Representation |
 |--------|------------|-------------|------------------|----------------------|
-| **Time Complexity** | O(n log n) | LCS-based semantic analysis | **0.374ms create** | 🟢🟡🔴 Moderate |
-| **Space Complexity** | O(n) | Linear space for LCS table | **Higher memory** | 🟢🟡🔴 Moderate |
-| **Apply Performance** | O(n) | Sequential operation application | **0.004ms apply** | 🟢🟢🟡 Good |
-| **Total Operations** | High | Granular semantic operations | **~22 operations** | 🟢🟡🔴 Detailed |
-| **Best Case** | Ω(n) | Simple structural changes | **~0.2ms** | 🟢🟡🔴 Moderate |
-| **Worst Case** | O(n²) | Complex text transformations | **~1.0ms** | 🟡🔴🔴 Slower |
+| **Time Complexity** | O(n log n) | LCS-based semantic analysis | **0.374ms create** | 🟢🟡🔴  |
+| **Space Complexity** | O(n) | Linear space for LCS table | **Higher memory** | 🟢🟡🔴  |
+| **Apply Performance** | O(n) | Sequential operation application | **0.004ms apply** | 🟢🟢🟡  |
+| **Total Operations** | High | Granular semantic operations | **~22 operations** | 🟢🟡🔴  |
+| **Best Case** | Ω(n) | Simple structural changes | **~0.2ms** | 🟢🟡🔴  |
+| **Worst Case** | O(n²) | Complex text transformations | **~1.0ms** | 🟡🔴🔴  |
 
 #### Performance Profile
 ```
@@ -466,8 +466,8 @@ Operation Count: 🟢🟡🔴 (22 ops - 5.5x more detailed)
 
 ```
 Speed Comparison (Total Time):
-Brus: ████████████████████████████████████████████████████ 0.129ms
-Todd: ████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████ 0.378ms
+Brus: ███████████████ 0.129ms
+Todd: ██████████████████████████████████████████████████ 0.378ms
 
 Operation Granularity:
 Brus: ████ (4 operations - simple)
