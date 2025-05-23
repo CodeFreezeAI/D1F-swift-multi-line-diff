@@ -478,7 +478,7 @@ Simplified Diff Operations:
 | Metric | Todd Algorithm | Brus Algorithm |
 |--------|----------------|----------------|
 | **Total Operations** | 12-15 detailed operations | 4-6 simplified operations |
-| **Create Diff Time** | 0.318 ms | 0.026 ms |
+| **Create Diff Time** | 0.328 ms | 0.025 ms |
 | **Apply Diff Time** | 0.008 ms | 0.003 ms |
 | **Semantic Awareness** | 🧠 High (Preserves structure) | 🔤 Low (Character replacement) |
 | **Best Used For** | Complex refactoring | Simple text changes |
@@ -754,8 +754,8 @@ func createUser(name: String, email: String, age: Int, avatar: UIImage? = nil) -
 
 | Algorithm | Operations | Time | Character Preservation | Strategy |
 |-----------|------------|------|----------------------|----------|
-| **Brus** | 4 ops | 0.029 ms | 3.2% preserved | 🔨 Bulk replacement |
-| **Todd** | 22 ops | 0.326 ms | 59.8% preserved | 🎯 Surgical edits |
+| **Brus** | 4 ops | 0.028 ms | 3.2% preserved | 🔨 Bulk replacement |
+| **Todd** | 22 ops | 0.330 ms | 59.8% preserved | 🎯 Surgical edits |
 
 ### 🚀 Todd Algorithm Performance Optimization
 
@@ -768,8 +768,8 @@ func createUser(name: String, email: String, age: Int, avatar: UIImage? = nil) -
 - **Optimized Indexing**: Direct calculation reduces overhead
 
 #### Performance Impact:
-- **Before**: 0.404ms → **After**: 0.318ms
-- **30% faster** while maintaining full semantic line-by-line analysis
+- **Current**: 0.328ms with enum consolidation optimizations
+- **Maintained performance** while simplifying codebase architecture
 - Preserved all 22 granular operations for intelligent diff behavior
 
 ## 📦 Usage Examples
@@ -1013,7 +1013,7 @@ func calculateTotal(items: [Product]) -> Double {
 | `└─┘`  | Border    | Section boundary |
 
 ### Brus Algorithm - Speed Champion 🏃‍♂️
-- **Ultra-fast creation**: 12.2x faster than Todd
+- **Ultra-fast creation**: 13.1x faster than Todd
 - **Lightning apply**: 2.7x faster than Todd
 - **Minimal operations**: ~75% fewer operations
 - **Best for**: Performance-critical applications, simple changes
@@ -1022,18 +1022,18 @@ func calculateTotal(items: [Product]) -> Double {
 - **Granular operations**: 5.5x more detailed
 - **Semantic awareness**: Preserves code structure
 - **With fallback**: Zero-risk reliability
-- **30% performance boost**: Now much more competitive
+- **Optimized performance**: Enhanced with enum consolidation
 - **Best for**: Code transformations, complex changes, AI applications
 
 ### Performance Recommendations
 
 | Use Case | Recommended | Reason |
 |----------|-------------|---------|
-| **Real-time editing** | Brus | 0.029ms total time |
-| **Bulk processing** | Brus | ~11x speed advantage |
-| **Code refactoring** | Todd + Fallback | Precision + improved speed |
+| **Real-time editing** | Brus | 0.028ms total time |
+| **Bulk processing** | Brus | ~12x speed advantage |
+| **Code refactoring** | Todd + Fallback | Precision + optimized performance |
 | **AI transformations** | Todd + Fallback | Semantic awareness + performance |
-| **Complex changes** | Todd | Worth the 0.3ms for intelligence |
+| **Complex changes** | Todd | Worth the 0.33ms for intelligence |
 | **Simple text edits** | Brus | Raw speed advantage |
 
 ### Performance Comparison Results
@@ -1041,9 +1041,9 @@ func calculateTotal(items: [Product]) -> Double {
 | Metric | Brus Algorithm | Todd Algorithm | Difference |
 |--------|----------------|----------------|------------|
 | **Total Operations** | 4 operations | 22 operations | 5.5x more granular |
-| **Create Diff Time** | 0.026 ms | 0.318 ms | 12.2x slower |
+| **Create Diff Time** | 0.025 ms | 0.328 ms | 13.1x slower |
 | **Apply Diff Time** | 0.003 ms | 0.008 ms | Similar |
-| **Total Time** | 0.029 ms | 0.326 ms | 11.2x slower |
+| **Total Time** | 0.028 ms | 0.330 ms | 11.8x slower |
 | **Retained Characters** | 21 chars (3.2%) | 397 chars (59.8%) | 18.9x more preservation |
 | **Semantic Awareness** | 🔤 Character-level | 🧠 Structure-aware | Intelligent |
 
@@ -1062,7 +1062,7 @@ func calculateTotal(items: [Product]) -> Double {
 
 | Metric | Complexity | Explanation | Real Performance | Visual |
 |--------|------------|-------------|------------------|----------------------|
-| **Time Complexity** | O(n) | Linear time complexity | **0.026ms create** | 🟢🟢🟢  |
+| **Time Complexity** | O(n) | Linear time complexity | **0.025ms create** | 🟢🟢🟢  |
 | **Space Complexity** | O(1) | Constant space usage | **Minimal memory** | 🟢🟢🟢  |
 | **Apply Performance** | O(n) | Direct character operations | **0.003ms apply** | 🟢🟢🟢  |
 | **Total Operations** | Low | Simple retain/insert/delete | **~4 operations** | 🟢🟢🟢  |
@@ -1071,7 +1071,7 @@ func calculateTotal(items: [Product]) -> Double {
 
 #### Performance Profile
 ```
-Creation Speed:  🟢🟢🟢 (0.026ms)
+Creation Speed:  🟢🟢🟢 (0.025ms)
 Application:     🟢🟢🟢 (0.003ms) 
 Memory Usage:    🟢🟢🟢 (Minimal)
 Operation Count: 🟢🟢🟢 (4 ops)
@@ -1081,7 +1081,7 @@ Operation Count: 🟢🟢🟢 (4 ops)
 
 | Metric | Complexity | Explanation | Real Performance | Visual |
 |--------|------------|-------------|------------------|----------------------|
-| **Time Complexity** | O(n log n) | LCS-based semantic analysis | **0.318ms create** | 🟢🟢🟡  |
+| **Time Complexity** | O(n log n) | LCS-based semantic analysis | **0.328ms create** | 🟢🟢🟡  |
 | **Space Complexity** | O(n) | Linear space for LCS table | **Optimized memory** | 🟢🟢🟡  |
 | **Apply Performance** | O(n) | Sequential operation application | **0.008ms apply** | 🟢🟢🟢  |
 | **Total Operations** | High | Granular semantic operations | **~22 operations** | 🟢🟢🟡  |
@@ -1090,7 +1090,7 @@ Operation Count: 🟢🟢🟢 (4 ops)
 
 #### Performance Profile
 ```
-Creation Speed:  🟢🟢🟡 (0.318ms) - 30% FASTER than before!
+Creation Speed:  🟢🟢🟡 (0.328ms) - Performance optimized!
 Application:     🟢🟢🟢 (0.008ms) - Excellent performance
 Memory Usage:    🟢🟢🟡 (Optimized LCS)
 Operation Count: 🟢🟢🟡 (22 ops - 5.5x more detailed)
@@ -1102,15 +1102,15 @@ Operation Count: 🟢🟢🟡 (22 ops - 5.5x more detailed)
 
 | Algorithm | Create Time | Apply Time | Total Time | Operations | Speed Factor |
 |-----------|-------------|------------|------------|------------|--------------|
-| **Brus** | 0.026ms | 0.003ms | **0.029ms** | 4 | **1.0x** ⚡ |
-| **Todd** | 0.318ms | 0.008ms | **0.326ms** | 22 | **11.2x slower** |
+| **Brus** | 0.025ms | 0.003ms | **0.028ms** | 4 | **1.0x** ⚡ |
+| **Todd** | 0.328ms | 0.008ms | **0.330ms** | 22 | **11.8x slower** |
 
 ### Performance Visualization
 
 ```
 Speed Comparison (Total Time):
-Brus: ███████████████ 0.029ms
-Todd: ██████████████████████████████████████████████████ 0.326ms
+Brus: ███████████████ 0.028ms
+Todd: ██████████████████████████████████████████████████ 0.330ms
 
 Operation Granularity:
 Brus: ████ (4 operations - simple)

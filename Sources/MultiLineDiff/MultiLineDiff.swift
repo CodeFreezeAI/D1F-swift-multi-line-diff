@@ -202,7 +202,6 @@ private enum DiffAlgorithmCore {
     /// Optimized operation builder using Swift 6.1 features
     struct OperationBuilder {
         private var operations: [DiffOperation] = []
-        private var lastOperationType: DiffOperationType?
         
         // Accumulated operation state
         private var pendingRetainCount = 0
@@ -213,36 +212,36 @@ private enum DiffAlgorithmCore {
         mutating func addRetain(count: Int) {
             guard count > 0 else { return }
             
-            if lastOperationType != .retain {
+            // Flush non-retain operations before adding retain
+            if pendingDeleteCount > 0 || !pendingInsertText.isEmpty {
                 flushPendingOperations()
             }
             
             pendingRetainCount += count
-            lastOperationType = .retain
         }
         
         @_optimize(speed)
         mutating func addDelete(count: Int) {
             guard count > 0 else { return }
             
-            if lastOperationType != .delete {
+            // Flush non-delete operations before adding delete
+            if pendingRetainCount > 0 || !pendingInsertText.isEmpty {
                 flushPendingOperations()
             }
             
             pendingDeleteCount += count
-            lastOperationType = .delete
         }
         
         @_optimize(speed)
         mutating func addInsert(text: String) {
             guard !text.isEmpty else { return }
             
-            if lastOperationType != .insert {
+            // Flush non-insert operations before adding insert
+            if pendingRetainCount > 0 || pendingDeleteCount > 0 {
                 flushPendingOperations()
             }
             
             pendingInsertText += text
-            lastOperationType = .insert
         }
         
         @_optimize(speed)
@@ -328,10 +327,6 @@ private extension String {
     func truncated(to length: Int) -> String {
         count > length ? prefix(length) + "..." : self
     }
-}
-
-private enum DiffOperationType {
-    case retain, delete, insert
 }
 
 /// Represents metadata about the diff source and destination
