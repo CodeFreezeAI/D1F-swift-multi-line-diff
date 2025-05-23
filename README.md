@@ -760,8 +760,6 @@ func ==== ---- ++++ ==== () {     // retain "func ", delete "old", insert "new",
 │     print("Hello, World!")
 │ }
 └─────────────────
-```
-
 
 ┌─ Retain closing
 │ }
