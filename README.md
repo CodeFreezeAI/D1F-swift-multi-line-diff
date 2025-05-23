@@ -2,7 +2,7 @@
 
 [![Swift 6.1](https://img.shields.io/badge/Swift-6.1-orange.svg)](https://swift.org)
 [![Website](https://img.shields.io/badge/website-xcf.ai-blue.svg)](https://xcf.ai)
-[![Version](https://img.shields.io/badge/version-1.1.2-green.svg)](https://github.com/toddbruss/swift-multi-line-diff)
+[![Version](https://img.shields.io/badge/version-1.1.3-green.svg)](https://github.com/toddbruss/swift-multi-line-diff)
 
 A Swift library for creating and applying diffs to multi-line text content. Supports Unicode/UTF-8 strings and handles multi-line content properly. Designed specifically for Vibe AI Coding integrity and safe code transformations.
 
