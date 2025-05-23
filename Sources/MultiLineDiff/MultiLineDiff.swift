@@ -389,14 +389,12 @@ public enum DiffEncoding {
         sourceStartLine: Int? = nil,
         destStartLine: Int? = nil
     ) -> DiffResult {
-        // Calculate diff using the selected algorithm
-        let result: DiffResult
-        switch algorithm {
-        case .brus:
-            result = createDiffBrus(source: source, destination: destination)
-        case .todd:
-            result = createDiffTodd(source: source, destination: destination)
-        }
+        // Execute the selected algorithm with intelligent selection and fallback
+        let (result, actualAlgorithmUsed) = executeAlgorithm(
+            algorithm: algorithm,
+            source: source,
+            destination: destination
+        )
         
         // If metadata isn't needed, return the result as is
         guard includeMetadata else {
@@ -467,12 +465,75 @@ public enum DiffEncoding {
             changeType: changeType,
             changePercentage: changePercentage,
             diffGenerationTime: nil, // TODO: Add timing measurement
-            algorithmUsed: algorithm,
+            algorithmUsed: actualAlgorithmUsed,
             diffId: diffId
         )
         
         // Return result with metadata
         return DiffResult(operations: result.operations, metadata: metadata)
+    }
+    
+    /// Executes the specified algorithm with intelligent selection and fallback
+    /// - Parameters:
+    ///   - algorithm: The requested algorithm
+    ///   - source: The source string
+    ///   - destination: The destination string
+    /// - Returns: A tuple containing the diff result and the actual algorithm used
+    private static func executeAlgorithm(
+        algorithm: DiffAlgorithm,
+        source: String,
+        destination: String
+    ) -> (DiffResult, DiffAlgorithm) {
+        switch algorithm {
+        case .brus:
+            return (createDiffBrus(source: source, destination: destination), .brus)
+        case .todd:
+            return executeToddWithFallback(source: source, destination: destination)
+        }
+    }
+    
+    /// Executes Todd algorithm with intelligent pre-selection and verification fallback
+    /// - Parameters:
+    ///   - source: The source string
+    ///   - destination: The destination string
+    /// - Returns: A tuple containing the diff result and the actual algorithm used
+    private static func executeToddWithFallback(
+        source: String,
+        destination: String
+    ) -> (DiffResult, DiffAlgorithm) {
+        // Intelligent pre-selection: use Brus for simple cases where it's more efficient
+        if isBrusSuitable(source: source, destination: destination) {
+            return (createDiffBrus(source: source, destination: destination), .brus)
+        }
+        
+        // Try Todd algorithm for complex cases
+        let toddResult = createDiffTodd(source: source, destination: destination)
+        
+        // Verify the Todd result by applying it
+        do {
+            let appliedResult = try applyDiff(to: source, diff: toddResult, allowTruncatedSource: false)
+            if appliedResult == destination {
+                return (toddResult, .todd)
+            } else {
+                // Todd algorithm produced incorrect result, fallback to Brus
+                return fallbackToBrus(source: source, destination: destination)
+            }
+        } catch {
+            // Todd algorithm failed to apply, fallback to Brus
+            return fallbackToBrus(source: source, destination: destination)
+        }
+    }
+    
+    /// Creates a Brus diff as a fallback option
+    /// - Parameters:
+    ///   - source: The source string
+    ///   - destination: The destination string
+    /// - Returns: A tuple containing the Brus diff result and algorithm type
+    private static func fallbackToBrus(
+        source: String,
+        destination: String
+    ) -> (DiffResult, DiffAlgorithm) {
+        return (createDiffBrus(source: source, destination: destination), .brus)
     }
     
     /// Creates a diff between two strings

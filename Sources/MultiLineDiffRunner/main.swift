@@ -76,10 +76,10 @@ runTest("Multi-Line Changes") {
    Line 1
    Modified Line 2
    Line 3
-   Line 4
+   Line 42
    """
    
-   let result = MultiLineDiff.createDiff(source: source, destination: destination)
+    let result = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .todd, sourceStartLine: 0)
    let applied = try MultiLineDiff.applyDiff(to: source, diff: result)
    
    return applied == destination
@@ -842,10 +842,7 @@ func demonstrateTruncatedDiff() -> Bool {
             sourceStartLine: 11
         )
         
-        print(truncatedDiff)
-       
-        print("*****")
-        // Apply the truncated diff to the full original file
+               // Apply the truncated diff to the full original file
         let resultFromTruncated = try MultiLineDiff.applyDiff(
             to: originalContent,
             diff: truncatedDiff,
