@@ -628,21 +628,7 @@ public enum DiffEncoding {
     ///   - destination: The modified string
     /// - Returns: A DiffResult containing detailed operations to transform source into destination
     private static func createDiffTodd(source: String, destination: String) -> DiffResult {
-        // Early handling of empty or simple cases using pattern matching
-        switch (source.isEmpty, destination.isEmpty) {
-        case (true, true):
-            return .init(operations: [])
-        case (true, false):
-            return .init(operations: [.insert(destination)])
-        case (false, true):
-            return .init(operations: [.delete(source.count)])
-        case (false, false):
-            break  // Continue with diff calculation
-        }
-        
-        // This method is only called when we explicitly want the Todd algorithm,
-        // so we should not check determineDiffStrategy here
-        
+                        
         let sourceLines = source.split(separator: "\n", omittingEmptySubsequences: false)
         let destLines = destination.split(separator: "\n", omittingEmptySubsequences: false)
         
@@ -704,33 +690,18 @@ public enum DiffEncoding {
                 
             case .insert(let index):
                 let line = destLines[index]
-                let isLastLine = index == destLines.count - 1
                 
                 if lastOpType != .insert {
                     flushOperations()
                 }
                 
-                currentInsertText += String(line)
-                if !isLastLine {
-                    currentInsertText += "\n"
-                }
+                currentInsertText += String(line) + "\n"
                 lastOpType = .insert
             }
         }
         
         // Final flush of operations
         flushOperations()
-        
-        // Handle trailing newlines
-        switch (source.hasSuffix("\n"), destination.hasSuffix("\n")) {
-        case (false, true):
-            result.append(.insert("\n"))
-        case (true, false):
-            result.append(.delete(1))
-        default:
-            break
-        }
-        
         return DiffResult(operations: result)
     }
     
