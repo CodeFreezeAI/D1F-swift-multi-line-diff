@@ -2,6 +2,11 @@
 // https://docs.swift.org/swift-book
 
 import Foundation
+import CommonCrypto
+
+#if canImport(CryptoKit)
+import CryptoKit
+#endif
 
 // MultiLineDiff - A library for creating and applying diffs to multi-line text
 // Supports Unicode/UTF-8 strings and handles multi-line content properly
@@ -341,9 +346,16 @@ public struct DiffMetadata: Equatable, Codable {
     public let precedingContext: String?
     public let followingContext: String?
     
+    // Content for verification and undo operations
+    public let sourceContent: String?
+    public let destinationContent: String?
+    
     // Algorithm and tracking
     public let algorithmUsed: DiffAlgorithm?
-    public let diffId: String?
+    public let diffHash: String?
+    
+    // Application type for automatic handling
+    public let applicationType: DiffApplicationType?
     
     // Performance tracking (optional)
     public let diffGenerationTime: Double?
@@ -353,16 +365,22 @@ public struct DiffMetadata: Equatable, Codable {
         sourceTotalLines: Int? = nil,
         precedingContext: String? = nil,
         followingContext: String? = nil,
+        sourceContent: String? = nil,
+        destinationContent: String? = nil,
         algorithmUsed: DiffAlgorithm? = nil,
-        diffId: String? = nil,
+        diffHash: String? = nil,
+        applicationType: DiffApplicationType? = nil,
         diffGenerationTime: Double? = nil
     ) {
         self.sourceStartLine = sourceStartLine
         self.sourceTotalLines = sourceTotalLines
         self.precedingContext = precedingContext
         self.followingContext = followingContext
+        self.sourceContent = sourceContent
+        self.destinationContent = destinationContent
         self.algorithmUsed = algorithmUsed
-        self.diffId = diffId
+        self.diffHash = diffHash
+        self.applicationType = applicationType
         self.diffGenerationTime = diffGenerationTime
     }
     
@@ -397,21 +415,130 @@ public struct DiffMetadata: Equatable, Codable {
     }
     
     // Convenience factory methods
-    public static func forSection(startLine: Int, lineCount: Int, context: String? = nil, algorithm: DiffAlgorithm = .todd) -> DiffMetadata {
+    public static func forSection(startLine: Int, lineCount: Int, context: String? = nil, sourceContent: String? = nil, destinationContent: String? = nil, algorithm: DiffAlgorithm = .todd) -> DiffMetadata {
         return DiffMetadata(
             sourceStartLine: startLine,
             sourceTotalLines: lineCount,
             precedingContext: context,
+            sourceContent: sourceContent,
+            destinationContent: destinationContent,
             algorithmUsed: algorithm,
-            diffId: UUID().uuidString
+            diffHash: nil, // Will be generated after diff creation
+            applicationType: .requiresTruncatedSource // Explicit for section diffs
         )
     }
     
-    public static func basic(algorithm: DiffAlgorithm = .todd) -> DiffMetadata {
+    public static func basic(sourceContent: String? = nil, destinationContent: String? = nil, algorithm: DiffAlgorithm = .todd) -> DiffMetadata {
         return DiffMetadata(
+            sourceContent: sourceContent,
+            destinationContent: destinationContent,
             algorithmUsed: algorithm,
-            diffId: UUID().uuidString
+            diffHash: nil, // Will be generated after diff creation
+            applicationType: .requiresFullSource // Default for basic diffs
         )
+    }
+    
+    /// Auto-detects the application type based on metadata characteristics
+    public static func autoDetectApplicationType(
+        sourceStartLine: Int?,
+        precedingContext: String?,
+        followingContext: String?,
+        sourceContent: String?
+    ) -> DiffApplicationType {
+        // If we have context or a non-zero start line, it's likely truncated
+        if let startLine = sourceStartLine, startLine > 0 {
+            return .requiresTruncatedSource
+        }
+        
+        if precedingContext != nil || followingContext != nil {
+            return .requiresTruncatedSource
+        }
+        
+        // If we stored the source content, we can verify during application
+        if sourceContent != nil {
+            return .requiresTruncatedSource // Will be verified by string comparison
+        }
+        
+        // Default to full source for simple cases
+        return .requiresFullSource
+    }
+    
+    /// Determines if the provided source requires truncated diff handling
+    /// Returns true if the diff should be applied with allowTruncatedSource=true
+    public static func requiresTruncatedHandling(
+        providedSource: String,
+        storedSource: String?
+    ) -> Bool {
+        guard let stored = storedSource else {
+            // No stored source to compare against
+            return false
+        }
+        
+        // If provided source contains the stored source, we need truncated handling
+        // (applying truncated diff to full document)
+        if providedSource.contains(stored) && providedSource != stored {
+            return true
+        }
+        
+        // If they're exactly the same, no truncated handling needed
+        if stored == providedSource {
+            return false
+        }
+        
+        // If stored source contains provided source, it's the opposite case
+        // (applying to exactly the truncated section) - no special handling needed
+        if stored.contains(providedSource) && stored != providedSource {
+            return false
+        }
+        
+        // If they're different but don't contain each other, likely need truncated handling
+        if stored != providedSource {
+            return true
+        }
+        
+        // Exact match - no truncated handling needed
+        return false
+    }
+    
+    /// Verifies that applying the diff to the stored source produces the expected destination
+    /// Returns true if the checksum matches, false otherwise
+    public static func verifyDiffChecksum(
+        diff: DiffResult,
+        storedSource: String?,
+        storedDestination: String?
+    ) -> Bool {
+        guard let source = storedSource,
+              let expectedDestination = storedDestination else {
+            return false // Cannot verify without stored content
+        }
+        
+        do {
+            let actualResult = try MultiLineDiff.applyDiff(to: source, diff: diff)
+            return actualResult == expectedDestination
+        } catch {
+            return false // Diff application failed
+        }
+    }
+    
+    /// Creates an undo diff that reverses the original transformation
+    /// Returns a new DiffResult that transforms destination back to source
+    public static func createUndoDiff(from originalDiff: DiffResult) -> DiffResult? {
+        guard let metadata = originalDiff.metadata,
+              let source = metadata.sourceContent,
+              let destination = metadata.destinationContent else {
+            return nil // Cannot create undo without stored content
+        }
+        
+        // Create reverse diff (destination -> source)
+        let undoResult = MultiLineDiff.createDiff(
+            source: destination,
+            destination: source,
+            algorithm: metadata.algorithmUsed ?? .todd,
+            includeMetadata: true
+        )
+        
+        // The undo diff will get its hash generated automatically during creation
+        return undoResult
     }
 }
 
@@ -434,6 +561,14 @@ public struct DiffMetadata: Equatable, Codable {
     case brus
     /// Detailed, semantic diff algorithm with O(n log n) time complexity
     case todd
+}
+
+/// Represents how a diff should be applied - to full source or truncated source
+@frozen public enum DiffApplicationType: String, Sendable, Codable {
+    /// Diff designed for complete documents - apply to full source
+    case requiresFullSource
+    /// Diff designed for partial/truncated content - needs section matching
+    case requiresTruncatedSource
 }
 
 /// Represents different encoding types for diff serialization
@@ -467,26 +602,23 @@ public enum DiffEncoding {
     ///
     /// # Features
     /// - Unicode/UTF-8 support
-    /// - Metadata generation
+    /// - Metadata generation with source verification
     /// - Flexible line number tracking
+    /// - Automatic truncated source detection
     ///
     /// # Example
     /// ```swift
     /// let source = "Hello, world!"
     /// let destination = "Hello, Swift!"
     ///
-    /// // Default Todd algorithm
+    /// // Default Todd algorithm with source verification
     /// let diff = MultiLineDiff.createDiff(
     ///     source: source,
     ///     destination: destination
     /// )
     ///
-    /// // Explicitly choose Brus algorithm
-    /// let brusDiff = MultiLineDiff.createDiff(
-    ///     source: source,
-    ///     destination: destination,
-    ///     algorithm: .brus
-    /// )
+    /// // Intelligently apply diff (auto-detects full vs truncated source)
+    /// let result = try MultiLineDiff.applyDiffIntelligently(to: someSource, diff: diff)
     /// ```
     ///
     /// - Parameters:
@@ -497,7 +629,7 @@ public enum DiffEncoding {
     ///   - sourceStartLine: Optional starting line number for precise tracking
     ///   - destStartLine: Optional destination starting line number
     ///
-    /// - Returns: A `DiffResult` containing transformation operations
+    /// - Returns: A `DiffResult` containing transformation operations with source verification metadata
     public static func createDiff(
         source: String,
         destination: String,
@@ -518,7 +650,7 @@ public enum DiffEncoding {
             return result
         }
         
-        // Generate enhanced metadata for the diff
+        // Generate enhanced metadata for the diff (includes source content for verification)
         return generateEnhancedMetadata(
             result: result,
             source: source,
@@ -526,6 +658,48 @@ public enum DiffEncoding {
             actualAlgorithm: actualAlgorithmUsed,
             sourceStartLine: sourceStartLine,
             destStartLine: destStartLine
+        )
+    }
+    
+    /// Creates a diff with explicit source content storage for intelligent application
+    ///
+    /// This method is specifically designed for scenarios where you want to ensure
+    /// the diff contains the original source for verification during application.
+    ///
+    /// # Example
+    /// ```swift
+    /// let truncatedSection = "Section content..."
+    /// let modifiedSection = "Modified section content..."
+    ///
+    /// // Create diff with source stored for verification
+    /// let diff = MultiLineDiff.createVerifiableDiff(
+    ///     source: truncatedSection,
+    ///     destination: modifiedSection
+    /// )
+    ///
+    /// // Later, intelligently apply to either full document or truncated section
+    /// let result = try MultiLineDiff.applyDiffIntelligently(to: fullDocument, diff: diff)
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - source: The original text to transform from
+    ///   - destination: The target text to transform to
+    ///   - algorithm: Diff generation strategy (defaults to semantic Todd algorithm)
+    ///   - sourceStartLine: Optional starting line number for precise tracking
+    ///
+    /// - Returns: A `DiffResult` with source content stored for automatic verification
+    public static func createVerifiableDiff(
+        source: String,
+        destination: String,
+        algorithm: DiffAlgorithm = .todd,
+        sourceStartLine: Int? = nil
+    ) -> DiffResult {
+        return createDiff(
+            source: source,
+            destination: destination,
+            algorithm: algorithm,
+            includeMetadata: true,
+            sourceStartLine: sourceStartLine
         )
     }
     
@@ -771,17 +945,112 @@ public enum DiffEncoding {
         let precedingContext = source.prefix(Swift.min(contextLength, source.count)).description
         let followingContext = source.suffix(Swift.min(contextLength, source.count)).description
         
-        let metadata = DiffMetadata(
+        // Store both source and destination content for verification and undo operations
+        let sourceContent = source
+        let destinationContent = destination
+        
+        // Auto-detect application type based on metadata characteristics
+        let applicationType = DiffMetadata.autoDetectApplicationType(
+            sourceStartLine: sourceStartLine,
+            precedingContext: precedingContext,
+            followingContext: followingContext,
+            sourceContent: sourceContent
+        )
+        
+        // Create temporary metadata without hash
+        let tempMetadata = DiffMetadata(
             sourceStartLine: sourceStartLine,
             sourceTotalLines: sourceLines.count,
             precedingContext: precedingContext,
             followingContext: followingContext,
+            sourceContent: sourceContent,
+            destinationContent: destinationContent,
             algorithmUsed: actualAlgorithm,
-            diffId: UUID().uuidString,
+            diffHash: nil,
+            applicationType: applicationType,
             diffGenerationTime: nil
         )
         
-        return DiffResult(operations: result.operations, metadata: metadata)
+        let tempResult = DiffResult(operations: result.operations, metadata: tempMetadata)
+        
+        // Generate SHA256 hash of the base64 diff
+        let diffHash = generateDiffHash(for: tempResult)
+        
+        // Create final metadata with hash
+        let finalMetadata = DiffMetadata(
+            sourceStartLine: sourceStartLine,
+            sourceTotalLines: sourceLines.count,
+            precedingContext: precedingContext,
+            followingContext: followingContext,
+            sourceContent: sourceContent,
+            destinationContent: destinationContent,
+            algorithmUsed: actualAlgorithm,
+            diffHash: diffHash,
+            applicationType: applicationType,
+            diffGenerationTime: nil
+        )
+        
+        return DiffResult(operations: result.operations, metadata: finalMetadata)
+    }
+    
+    /// Generate SHA256 hash of the base64 encoded diff for integrity verification
+    @_optimize(speed)
+    private static func generateDiffHash(for diff: DiffResult) -> String {
+        do {
+            // Get base64 representation of the diff
+            let base64Diff = try diffToBase64(diff)
+            
+            // Calculate SHA256 hash of the base64 string
+            let data = Data(base64Diff.utf8)
+            
+            // Use CryptoKit if available (macOS 10.15+), otherwise use CommonCrypto
+            #if canImport(CryptoKit)
+            if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
+                let hash = SHA256.hash(data: data)
+                return hash.compactMap { String(format: "%02x", $0) }.joined()
+            } else {
+                return sha256HashUsingCommonCrypto(data: data)
+            }
+            #else
+            return sha256HashUsingCommonCrypto(data: data)
+            #endif
+        } catch {
+            // Fallback to deterministic hash based on content if base64 fails
+            return generateFallbackHash(for: diff)
+        }
+    }
+    
+    /// Cross-platform SHA256 implementation using CommonCrypto
+    @_optimize(speed)
+    private static func sha256HashUsingCommonCrypto(data: Data) -> String {
+        var hash = [UInt8](repeating: 0, count: Int(CC_SHA256_DIGEST_LENGTH))
+        data.withUnsafeBytes { bytes in
+            _ = CC_SHA256(bytes.baseAddress, CC_LONG(data.count), &hash)
+        }
+        return hash.map { String(format: "%02x", $0) }.joined()
+    }
+    
+    /// Generate a fallback hash based on diff operations for extreme edge cases
+    @_optimize(speed)
+    private static func generateFallbackHash(for diff: DiffResult) -> String {
+        var hashComponents: [String] = []
+        
+        // Include operation signatures
+        for operation in diff.operations {
+            switch operation {
+            case .retain(let count):
+                hashComponents.append("r\(count)")
+            case .insert(let text):
+                hashComponents.append("i\(text.count):\(text.hashValue)")
+            case .delete(let count):
+                hashComponents.append("d\(count)")
+            }
+        }
+        
+        // Create deterministic hash from operation signatures
+        let signature = hashComponents.joined(separator: "|")
+        let data = Data(signature.utf8)
+        return sha256HashUsingCommonCrypto(data: data)
     }
     
     /// Enhanced diff application using Swift 6.1 features
@@ -819,6 +1088,37 @@ public enum DiffEncoding {
         )
     }
     
+    /// Intelligent diff application that automatically determines handling based on metadata and source verification
+    /// - Parameters:
+    ///   - source: The original string (could be full or truncated)
+    ///   - diff: The diff to apply
+    /// - Returns: The resulting string after applying the diff
+    /// - Throws: An error if the diff cannot be applied correctly
+    public static func applyDiffIntelligently(
+        to source: String,
+        diff: DiffResult
+    ) throws -> String {
+        // Auto-determine whether to allow truncated source based on metadata and string comparison
+        let allowTruncated: Bool
+        
+        // First, check if we can verify with stored source content
+        if let storedSource = diff.metadata?.sourceContent {
+            allowTruncated = DiffMetadata.requiresTruncatedHandling(
+                providedSource: source,
+                storedSource: storedSource
+            )
+        } else if let applicationType = diff.metadata?.applicationType {
+            // Fall back to explicit application type
+            allowTruncated = (applicationType == .requiresTruncatedSource)
+        } else {
+            // Fall back to legacy heuristics if no explicit type or stored source
+            allowTruncated = (diff.metadata?.sourceStartLine ?? 0) > 0 || 
+                           diff.metadata?.precedingContext != nil
+        }
+        
+        return try applyDiff(to: source, diff: diff, allowTruncatedSource: allowTruncated)
+    }
+    
     /// Enhanced diff application with Swift 6.1 optimizations
     @_optimize(speed)
     private static func applyDiffWithEnhancedProcessing(
@@ -827,11 +1127,10 @@ public enum DiffEncoding {
         metadata: DiffMetadata?,
         allowTruncatedSource: Bool
     ) throws -> String {
-        // Check if this is a section diff that needs special handling
-        if allowTruncatedSource, let metadata = metadata, 
-           let sourceStartLine = metadata.sourceStartLine,
-           sourceStartLine > 0,
-           let _ = metadata.precedingContext {
+        // Check if this is a section diff that needs special handling using explicit metadata
+        if allowTruncatedSource, 
+           let metadata = metadata,
+           metadata.applicationType == .requiresTruncatedSource {
             
             // Try to find and apply the diff to a specific section
             if let sectionResult = try applySectionDiff(
@@ -1184,6 +1483,20 @@ public enum DiffEncoding {
         return try applyDiff(to: source, diff: diff, allowTruncatedSource: allowTruncatedSource)
     }
     
+    /// Intelligently applies a base64 encoded diff to a source string with automatic detection
+    /// - Parameters:
+    ///   - source: The original string (could be full or truncated)
+    ///   - base64Diff: The base64 encoded diff to apply
+    /// - Returns: The resulting string after applying the diff
+    /// - Throws: An error if decoding or applying the diff fails
+    public static func applyBase64DiffIntelligently(
+        to source: String,
+        base64Diff: String
+    ) throws -> String {
+        let diff = try diffFromBase64(base64Diff)
+        return try applyDiffIntelligently(to: source, diff: diff)
+    }
+    
     /// Creates a diff in the specified encoding
     /// - Parameters:
     ///   - source: The original text
@@ -1265,6 +1578,43 @@ public enum DiffEncoding {
         return try applyDiff(to: source, diff: diff, allowTruncatedSource: allowTruncatedSource)
     }
     
+    /// Intelligently applies an encoded diff to a source string with automatic detection
+    /// - Parameters:
+    ///   - source: The original string (could be full or truncated)
+    ///   - encodedDiff: The encoded diff to apply
+    ///   - encoding: The encoding type of the diff
+    /// - Returns: The resulting string after applying the diff
+    /// - Throws: An error if decoding or applying the diff fails
+    public static func applyEncodedDiffIntelligently(
+        to source: String,
+        encodedDiff: Any,
+        encoding: DiffEncoding
+    ) throws -> String {
+        // Decode based on the specified format
+        let diff: DiffResult
+        switch encoding {
+        case .base64:
+            guard let base64String = encodedDiff as? String else {
+                throw DiffError.decodingFailed
+            }
+            diff = try diffFromBase64(base64String)
+        case .jsonString:
+            guard let jsonString = encodedDiff as? String else {
+                throw DiffError.decodingFailed
+            }
+            diff = try decodeDiffFromJSONString(jsonString)
+        case .jsonData:
+            guard let jsonData = encodedDiff as? Data,
+                  let jsonString = String(data: jsonData, encoding: .utf8) else {
+                throw DiffError.decodingFailed
+            }
+            diff = try decodeDiffFromJSONString(jsonString)
+        }
+        
+        // Apply the decoded diff intelligently
+        return try applyDiffIntelligently(to: source, diff: diff)
+    }
+    
     // MARK: - Private Implementation
     
     /// Handle empty string cases for both diff algorithms
@@ -1297,6 +1647,85 @@ public enum DiffEncoding {
         case .todd: return "Todd"
         }
     }
+    
+    /// Verifies a diff by applying it and checking against stored destination content
+    /// Returns true if the diff produces the expected result
+    public static func verifyDiff(_ diff: DiffResult) -> Bool {
+        guard let metadata = diff.metadata else {
+            return false // Cannot verify without metadata
+        }
+        
+        return DiffMetadata.verifyDiffChecksum(
+            diff: diff,
+            storedSource: metadata.sourceContent,
+            storedDestination: metadata.destinationContent
+        )
+    }
+    
+    /// Creates an undo diff that reverses the original transformation
+    /// Returns nil if the diff doesn't contain the necessary metadata for undo
+    public static func createUndoDiff(from diff: DiffResult) -> DiffResult? {
+        return DiffMetadata.createUndoDiff(from: diff)
+    }
+    
+    /// Applies a diff and verifies the result matches the expected destination
+    /// Throws an error if verification fails
+    public static func applyDiffWithVerification(
+        to source: String,
+        diff: DiffResult,
+        allowTruncatedSource: Bool = false
+    ) throws -> String {
+        let result = try applyDiff(to: source, diff: diff, allowTruncatedSource: allowTruncatedSource)
+        
+        // Smart verification: only verify if we're applying to the same type of source
+        if let metadata = diff.metadata,
+           let expectedDestination = metadata.destinationContent,
+           let storedSource = metadata.sourceContent {
+            
+            // Only verify if we're applying to the same source that created the diff
+            // or if we're applying to a truncated source that matches the stored source
+            let shouldVerify = (source == storedSource) || 
+                              (storedSource.contains(source) && storedSource != source)
+            
+            if shouldVerify && result != expectedDestination {
+                throw DiffError.verificationFailed(
+                    expected: expectedDestination,
+                    actual: result
+                )
+            }
+        }
+        
+        return result
+    }
+    
+    /// Intelligently applies a diff with automatic verification
+    /// Combines intelligent application with checksum verification
+    public static func applyDiffIntelligentlyWithVerification(
+        to source: String,
+        diff: DiffResult
+    ) throws -> String {
+        let result = try applyDiffIntelligently(to: source, diff: diff)
+        
+        // Smart verification: only verify if we're applying to the same type of source
+        if let metadata = diff.metadata,
+           let expectedDestination = metadata.destinationContent,
+           let storedSource = metadata.sourceContent {
+            
+            // Only verify if we're applying to the same source that created the diff
+            // or if we're applying to a truncated source that matches the stored source
+            let shouldVerify = (source == storedSource) || 
+                              (storedSource.contains(source) && storedSource != source)
+            
+            if shouldVerify && result != expectedDestination {
+                throw DiffError.verificationFailed(
+                    expected: expectedDestination,
+                    actual: result
+                )
+            }
+        }
+        
+        return result
+    }
 }
 
 /// Errors that can occur during diff operations
@@ -1306,6 +1735,7 @@ public enum DiffEncoding {
     case incompleteApplication(unconsumedLength: Int)
     case encodingFailed
     case decodingFailed
+    case verificationFailed(expected: String, actual: String)
     
     public var description: String {
         switch self {
@@ -1319,6 +1749,8 @@ public enum DiffEncoding {
             "Failed to encode diff to JSON"
         case .decodingFailed:
             "Failed to decode diff from JSON"
+        case .verificationFailed(let expected, let actual):
+            "Diff verification failed: expected \(expected.count) characters, got \(actual.count) characters"
         }
     }
 }
