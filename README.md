@@ -559,10 +559,10 @@ Operation Count: 🟢🟢🟢 (4 ops)
 
 | Metric | Complexity | Explanation | Real Performance | Visual |
 |--------|------------|-------------|------------------|----------------------|
-| **Time Complexity** | O(n log n) | LCS-based semantic analysis | **0.3460 ms create** | 🟢🟢🟡  |
-| **Space Complexity** | O(n) | Linear space for LCS table | **Optimized memory** | 🟢🟢🟢  |
-| **Apply Performance** | O(n) | Sequential operation application | **0.0180 ms apply** | 🟢🟢🟢  |
-| **Total Operations** | High | Granular semantic operations | **22 operations** | 🟢🟢🟡  |
+| **Time Complexity** | O(n log n) | LCS-based semantic analysis | **0.3460 ms** | 🟢🟢🟡  |
+| **Space Complexity** | O(n) | Linear space for LCS table | **Optimized** | 🟢🟢🟢  |
+| **Apply Performance** | O(n) | Sequential operation application | **0.0180 ms** | 🟢🟢🟢  |
+| **Total Operations** | High | Granular semantic operations | **22 ops** | 🟢🟢🟡  |
 | **Best Case** | Ω(n) | Simple structural changes | **~0.2 ms** | 🟢🟢🟢 |
 | **Worst Case** | O(n²) | Complex text transformations | **~1.0 ms** | 🟢🟢🟡  |
 
