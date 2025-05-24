@@ -141,8 +141,8 @@ func demonstrateCodeFileDiff() -> Bool {
        class ViewController: UIViewController {
            
            // UI Components
-           private let tableView = UITableView()
-           private var data: [String] = []
+           public let tableView = UITableView()
+           public var data: [String] = []
            
            override func viewDidLoad() {
                super.viewDidLoad()
@@ -150,7 +150,7 @@ func demonstrateCodeFileDiff() -> Bool {
                loadData()
            }
            
-           private func setupUI() {
+           public func setupUI() {
                view.addSubview(tableView)
                tableView.delegate = self
                tableView.dataSource = self
@@ -165,7 +165,7 @@ func demonstrateCodeFileDiff() -> Bool {
                ])
            }
            
-           private func loadData() {
+           public func loadData() {
                data = ["Item 1", "Item 2", "Item 3"]
                tableView.reloadData()
            }
@@ -192,10 +192,10 @@ func demonstrateCodeFileDiff() -> Bool {
        class ViewController: UIViewController {
            
            // UI Components
-           private let tableView = UITableView()
-           private let searchBar = UISearchBar()
-           private var data: [String] = []
-           private var filteredData: [String] = []
+           public let tableView = UITableView()
+           public let searchBar = UISearchBar()
+           public var data: [String] = []
+           public var filteredData: [String] = []
            
            override func viewDidLoad() {
                super.viewDidLoad()
@@ -203,7 +203,7 @@ func demonstrateCodeFileDiff() -> Bool {
                loadData()
            }
            
-           private func setupUI() {
+           public func setupUI() {
                // Add search bar
                view.addSubview(searchBar)
                searchBar.delegate = self
@@ -231,13 +231,13 @@ func demonstrateCodeFileDiff() -> Bool {
                ])
            }
            
-           private func loadData() {
+           public func loadData() {
                data = ["Item 1", "Item 2", "Item 3", "Example 4", "Test 5"]
                filteredData = data
                tableView.reloadData()
            }
            
-           private func filterContentForSearchText(_ searchText: String) {
+           public func filterContentForSearchText(_ searchText: String) {
                if searchText.isEmpty {
                    filteredData = data
                } else {
@@ -346,7 +346,7 @@ func demonstrateLargeFileDiffWithPatterns() -> Bool {
        }
        
        originalLines.append("    // Helper methods")
-       originalLines.append("    private func helperMethod() {")
+       originalLines.append("    public func helperMethod() {")
        originalLines.append("        // Helper implementation")
        originalLines.append("    }")
        originalLines.append("}")

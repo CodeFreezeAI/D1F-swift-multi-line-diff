@@ -587,7 +587,7 @@ import Foundation
     try fileManager.removeItem(at: tempDirURL)
 }
 
-private func generateDiffStats(_ diff: DiffResult) -> (insertedLines: Int, deletedLines: Int, retainedChars: Int) {
+public func generateDiffStats(_ diff: DiffResult) -> (insertedLines: Int, deletedLines: Int, retainedChars: Int) {
     var insertedLines = 0
     var deletedLines = 0
     var retainedChars = 0
@@ -663,7 +663,7 @@ private func generateDiffStats(_ diff: DiffResult) -> (insertedLines: Int, delet
         func method2() {
         }
         
-        private func doSomething() {
+        public func doSomething() {
             // Implementation
         }
     }
@@ -693,7 +693,7 @@ private func generateDiffStats(_ diff: DiffResult) -> (insertedLines: Int, delet
             // New implementation
         }
         
-        private func doSomethingElse() {
+        public func doSomethingElse() {
             // New implementation
         }
     }

@@ -304,7 +304,7 @@ Real-world documents often contain **repeated content patterns** or similar sect
 
 ```swift
 /// Enhanced section matching using both preceding and following context
-private static func applySectionDiff(
+public static func applySectionDiff(
     fullSource: String,
     operations: [DiffOperation],
     metadata: DiffMetadata

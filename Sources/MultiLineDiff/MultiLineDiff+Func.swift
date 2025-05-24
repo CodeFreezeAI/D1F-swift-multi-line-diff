@@ -1,0 +1,366 @@
+//
+//  EnhancedLineOperation.swift
+//  MultiLineDiff
+//
+//  Created by Todd Bruss on 5/24/25.
+//
+
+import Foundation
+import CommonCrypto
+
+#if canImport(CryptoKit)
+import CryptoKit
+#endif
+
+extension MultiLineDiff {
+    
+    /// Enhanced algorithm execution with intelligent selection and verification
+    internal static func executeEnhancedAlgorithm(
+        algorithm: DiffAlgorithm,
+        source: String,
+        destination: String
+    ) -> (DiffResult, DiffAlgorithm) {
+        switch algorithm {
+        case .brus:
+            return (createEnhancedBrusDiff(source: source, destination: destination), .brus)
+        case .todd:
+            return executeEnhancedToddWithFallback(source: source, destination: destination)
+        }
+    }
+    
+    /// Enhanced Todd algorithm with intelligent fallback
+    internal static func executeEnhancedToddWithFallback(
+        source: String,
+        destination: String
+    ) -> (DiffResult, DiffAlgorithm) {
+        // Try enhanced Todd algorithm
+        let toddResult = createEnhancedToddDiff(source: source, destination: destination)
+        
+        // Verify the Todd result by applying it
+        do {
+            let appliedResult = try applyDiff(to: source, diff: toddResult, allowTruncatedSource: false)
+            if appliedResult == destination {
+                return (toddResult, .todd)
+            } else {
+                // Fallback to enhanced Brus
+                return (createEnhancedBrusDiff(source: source, destination: destination), .brus)
+            }
+        } catch {
+            // Fallback to enhanced Brus
+            return (createEnhancedBrusDiff(source: source, destination: destination), .brus)
+        }
+    }
+    
+    /// Enhanced Brus algorithm using Swift 6.1 features
+    @_optimize(speed)
+    internal static func createEnhancedBrusDiff(source: String, destination: String) -> DiffResult {
+        // Handle empty string scenarios first
+        if let emptyResult = handleEmptyStrings(source: source, destination: destination) {
+            return emptyResult
+        }
+        
+        // Use enhanced common regions detection
+        let regions = DiffAlgorithmCore.EnhancedCommonRegions(source: source, destination: destination)
+        var builder = DiffAlgorithmCore.OperationBuilder()
+        
+        // Build operations using enhanced operation builder
+        if regions.prefixLength > 0 {
+            builder.addRetain(count: regions.prefixLength)
+        }
+        
+        if !regions.sourceMiddleRange.isEmpty {
+            builder.addDelete(count: regions.sourceMiddleRange.count)
+        }
+        
+        if !regions.destMiddleRange.isEmpty {
+            let destMiddleText = regions.destMiddle(from: destination)
+            builder.addInsert(text: destMiddleText)
+        }
+        
+        if regions.suffixLength > 0 {
+            builder.addRetain(count: regions.suffixLength)
+        }
+        
+        return DiffResult(operations: builder.build())
+    }
+    
+    /// Enhanced Todd algorithm using Swift 6.1 LCS and line processing with performance optimizations
+    @_optimize(speed)
+    internal static func createEnhancedToddDiff(source: String, destination: String) -> DiffResult {
+        // Handle empty strings
+        if let emptyResult = handleEmptyStrings(source: source, destination: destination) {
+            return emptyResult
+        }
+        
+        // Use Swift 6.1 enhanced line processing
+        let sourceLines = source.efficientLines
+        let destLines = destination.efficientLines
+        
+        // Only use simple diff for very tiny content (1-2 lines each)
+        if sourceLines.count <= 1 && destLines.count <= 1 {
+            return createSimpleLineDiff(sourceLines: sourceLines, destLines: destLines)
+        }
+        
+        // Use optimized LCS for semantic line-by-line processing
+        let lcsOperations = generateOptimizedLCSOperations(sourceLines: sourceLines, destLines: destLines)
+        var builder = DiffAlgorithmCore.OperationBuilder()
+        
+        // Convert line operations to character operations
+        for operation in lcsOperations {
+            switch operation {
+            case .retain(let i):
+                builder.addRetain(count: lineToCharCount(sourceLines[i], i, sourceLines.count))
+                
+            case .delete(let i):
+                builder.addDelete(count: lineToCharCount(sourceLines[i], i, sourceLines.count))
+                
+            case .insert(let i):
+                builder.addInsert(text: lineToText(destLines[i], i, destLines.count))
+            }
+        }
+        
+        return DiffResult(operations: builder.build())
+    }
+    
+    /// Fast path for small line diffs
+    @_optimize(speed)
+    internal static func createSimpleLineDiff(sourceLines: [Substring], destLines: [Substring]) -> DiffResult {
+        var builder = DiffAlgorithmCore.OperationBuilder()
+        var srcIdx = 0, dstIdx = 0
+        
+        while srcIdx < sourceLines.count || dstIdx < destLines.count {
+            if srcIdx < sourceLines.count && dstIdx < destLines.count && sourceLines[srcIdx] == destLines[dstIdx] {
+                // Lines match - retain
+                builder.addRetain(count: lineToCharCount(sourceLines[srcIdx], srcIdx, sourceLines.count))
+                srcIdx += 1
+                dstIdx += 1
+            } else if srcIdx < sourceLines.count && (dstIdx >= destLines.count || sourceLines[srcIdx] != destLines[dstIdx]) {
+                // Delete source line
+                builder.addDelete(count: lineToCharCount(sourceLines[srcIdx], srcIdx, sourceLines.count))
+                srcIdx += 1
+            } else if dstIdx < destLines.count {
+                // Insert destination line
+                builder.addInsert(text: lineToText(destLines[dstIdx], dstIdx, destLines.count))
+                dstIdx += 1
+            }
+        }
+        
+        return DiffResult(operations: builder.build())
+    }
+    
+    /// Optimized LCS operations for semantic line-by-line processing
+    internal static func generateOptimizedLCSOperations(sourceLines: [Substring], destLines: [Substring]) -> [EnhancedLineOperation] {
+        // Handle empty cases
+        if sourceLines.isEmpty && destLines.isEmpty {
+            return []
+        }
+        if sourceLines.isEmpty {
+            return destLines.indices.map { .insert($0) }
+        }
+        if destLines.isEmpty {
+            return sourceLines.indices.map { .delete($0) }
+        }
+        
+        // Use traditional LCS table but with optimizations
+        return generateFastLCS(sourceLines: sourceLines, destLines: destLines)
+    }
+    
+    /// Fast LCS implementation optimized for Swift 6.1
+    @_optimize(speed)
+    internal static func generateFastLCS(sourceLines: [Substring], destLines: [Substring]) -> [EnhancedLineOperation] {
+        let srcCount = sourceLines.count
+        let dstCount = destLines.count
+        
+        // Use flat array for better cache locality
+        let tableSize = (srcCount + 1) * (dstCount + 1)
+        var table = Array(repeating: 0, count: tableSize)
+        
+        // Helper to convert 2D index to 1D
+        func tableIndex(i: Int, j: Int) -> Int {
+            return i * (dstCount + 1) + j
+        }
+        
+        // Build LCS table with optimized memory access
+        for i in 1...srcCount {
+            let sourceLine = sourceLines[i-1]
+            let currentRowStart = i * (dstCount + 1)
+            let prevRowStart = (i-1) * (dstCount + 1)
+            
+            for j in 1...dstCount {
+                let currentIdx = currentRowStart + j
+                if sourceLine == destLines[j-1] {
+                    table[currentIdx] = table[prevRowStart + j - 1] + 1
+                } else {
+                    table[currentIdx] = Swift.max(table[prevRowStart + j], table[currentRowStart + j - 1])
+                }
+            }
+        }
+        
+        // Fast backtracking
+        var operations: [EnhancedLineOperation] = []
+        operations.reserveCapacity(srcCount + dstCount)
+        
+        var i = srcCount
+        var j = dstCount
+        
+        while i > 0 || j > 0 {
+            if i > 0 && j > 0 && sourceLines[i-1] == destLines[j-1] {
+                operations.append(.retain(i-1))
+                i -= 1
+                j -= 1
+            } else if j > 0 && (i == 0 || table[tableIndex(i: i, j: j-1)] >= table[tableIndex(i: i-1, j: j)]) {
+                operations.append(.insert(j-1))
+                j -= 1
+            } else {
+                operations.append(.delete(i-1))
+                i -= 1
+            }
+        }
+        
+        return operations.reversed()
+    }
+    
+    /// Helper to convert line to character count including newline handling
+    @_optimize(speed)
+    internal static func lineToCharCount(_ line: Substring, _ index: Int, _ total: Int) -> Int {
+        line.count + (index == total - 1 ? 0 : 1)
+    }
+    
+    /// Helper to convert line to text including newline handling
+    @_optimize(speed)
+    internal static func lineToText(_ line: Substring, _ index: Int, _ total: Int) -> String {
+        String(line) + (index == total - 1 ? "" : "\n")
+    }
+    
+    /// Enhanced line operation for internal processing
+    internal enum EnhancedLineOperation {
+        case retain(Int)  // Line index in source
+        case delete(Int)  // Line index in source
+        case insert(Int)  // Line index in destination
+    }
+    
+    /// Generate enhanced metadata using Swift 6.1 features
+    @_optimize(speed)
+    internal static func generateEnhancedMetadata(
+        result: DiffResult,
+        source: String,
+        destination: String,
+        actualAlgorithm: DiffAlgorithm,
+        sourceStartLine: Int?,
+        destStartLine: Int?
+    ) -> DiffResult {
+        let sourceLines = source.efficientLines
+        
+        // Enhanced context generation
+        let contextLength = 30
+        let precedingContext = source.prefix(Swift.min(contextLength, source.count)).description
+        let followingContext = source.suffix(Swift.min(contextLength, source.count)).description
+        
+        // Store both source and destination content for verification and undo operations
+        let sourceContent = source
+        let destinationContent = destination
+        
+        // Auto-detect application type based on metadata characteristics
+        let applicationType = DiffMetadata.autoDetectApplicationType(
+            sourceStartLine: sourceStartLine,
+            precedingContext: precedingContext,
+            followingContext: followingContext,
+            sourceContent: sourceContent
+        )
+        
+        // Create temporary metadata without hash
+        let tempMetadata = DiffMetadata(
+            sourceStartLine: sourceStartLine,
+            sourceTotalLines: sourceLines.count,
+            precedingContext: precedingContext,
+            followingContext: followingContext,
+            sourceContent: sourceContent,
+            destinationContent: destinationContent,
+            algorithmUsed: actualAlgorithm,
+            diffHash: nil,
+            applicationType: applicationType,
+            diffGenerationTime: nil
+        )
+        
+        let tempResult = DiffResult(operations: result.operations, metadata: tempMetadata)
+        
+        // Generate SHA256 hash of the base64 diff
+        let diffHash = generateDiffHash(for: tempResult)
+        
+        // Create final metadata with hash
+        let finalMetadata = DiffMetadata(
+            sourceStartLine: sourceStartLine,
+            sourceTotalLines: sourceLines.count,
+            precedingContext: precedingContext,
+            followingContext: followingContext,
+            sourceContent: sourceContent,
+            destinationContent: destinationContent,
+            algorithmUsed: actualAlgorithm,
+            diffHash: diffHash,
+            applicationType: applicationType,
+            diffGenerationTime: nil
+        )
+        
+        return DiffResult(operations: result.operations, metadata: finalMetadata)
+    }
+    
+    /// Generate SHA256 hash of the base64 encoded diff for integrity verification
+    @_optimize(speed)
+    internal static func generateDiffHash(for diff: DiffResult) -> String {
+        do {
+            // Get base64 representation of the diff
+            let base64Diff = try diffToBase64(diff)
+            
+            // Calculate SHA256 hash of the base64 string
+            let data = Data(base64Diff.utf8)
+            
+            // Use CryptoKit if available (macOS 10.15+), otherwise use CommonCrypto
+#if canImport(CryptoKit)
+            if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
+                let hash = SHA256.hash(data: data)
+                return hash.compactMap { String(format: "%02x", $0) }.joined()
+            } else {
+                return sha256HashUsingCommonCrypto(data: data)
+            }
+#else
+            return sha256HashUsingCommonCrypto(data: data)
+#endif
+        } catch {
+            // Fallback to deterministic hash based on content if base64 fails
+            return generateFallbackHash(for: diff)
+        }
+    }
+    
+    /// Cross-platform SHA256 implementation using CommonCrypto
+    @_optimize(speed)
+    internal static func sha256HashUsingCommonCrypto(data: Data) -> String {
+        var hash = [UInt8](repeating: 0, count: Int(CC_SHA256_DIGEST_LENGTH))
+        data.withUnsafeBytes { bytes in
+            _ = CC_SHA256(bytes.baseAddress, CC_LONG(data.count), &hash)
+        }
+        return hash.map { String(format: "%02x", $0) }.joined()
+    }
+    
+    /// Generate a fallback hash based on diff operations for extreme edge cases
+    @_optimize(speed)
+    internal static func generateFallbackHash(for diff: DiffResult) -> String {
+        var hashComponents: [String] = []
+        
+        // Include operation signatures
+        for operation in diff.operations {
+            switch operation {
+            case .retain(let count):
+                hashComponents.append("r\(count)")
+            case .insert(let text):
+                hashComponents.append("i\(text.count):\(text.hashValue)")
+            case .delete(let count):
+                hashComponents.append("d\(count)")
+            }
+        }
+        
+        // Create deterministic hash from operation signatures
+        let signature = hashComponents.joined(separator: "|")
+        let data = Data(signature.utf8)
+        return sha256HashUsingCommonCrypto(data: data)
+    }
+}
