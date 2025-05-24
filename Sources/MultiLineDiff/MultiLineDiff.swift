@@ -172,16 +172,7 @@ import CryptoKit
         if diff.operations.isEmpty {
             return source
         }
-        
-        // Handle very direct operation case first
-        if diff.operations.count == 2,
-           case .delete(let delCount) = diff.operations[0],
-           case .insert(let insertText) = diff.operations[1],
-           delCount == source.count {
-            // Simple delete-all-and-insert operation
-            return insertText
-        }
-        
+    
         // Use enhanced string processing for diff application
         return try applyDiffWithEnhancedProcessing(
             source: source,
@@ -201,24 +192,7 @@ import CryptoKit
         to source: String,
         diff: DiffResult
     ) throws -> String {
-        // Auto-determine whether to allow truncated source based on metadata and string comparison
-        let allowTruncated: Bool
-        
-        // First, check if we can verify with stored source content
-        if let storedSource = diff.metadata?.sourceContent {
-            allowTruncated = DiffMetadata.requiresTruncatedHandling(
-                providedSource: source,
-                storedSource: storedSource
-            )
-        } else if let applicationType = diff.metadata?.applicationType {
-            // Fall back to explicit application type
-            allowTruncated = (applicationType == .requiresTruncatedSource)
-        } else {
-            // Fall back to legacy heuristics if no explicit type or stored source
-            allowTruncated = (diff.metadata?.sourceStartLine ?? 0) > 0 || 
-                           diff.metadata?.precedingContext != nil
-        }
-        
+        let allowTruncated = shouldAllowTruncatedSource(for: source, diff: diff)
         return try applyDiff(to: source, diff: diff, allowTruncatedSource: allowTruncated)
     }
     
@@ -245,44 +219,12 @@ import CryptoKit
             }
         }
         
-        // Fall back to standard diff application
-        var result = String()
-        var currentIndex = source.startIndex
-        
-        // Enhanced operation processing
-        for operation in operations {
-            switch operation {
-            case .retain(let count):
-                try handleRetainOperation(
-                    source: source,
-                    currentIndex: &currentIndex,
-                            count: count, 
-                    result: &result,
-                    allowTruncated: allowTruncatedSource
-                        )
-                
-            case .insert(let text):
-                // Simply append inserted text
-                result.append(text)
-                
-            case .delete(let count):
-                try handleDeleteOperation(
-                    source: source,
-                    currentIndex: &currentIndex,
-                            count: count, 
-                    allowTruncated: allowTruncatedSource
-                )
-            }
-        }
-        
-        // Check for remaining content
-        if currentIndex < source.endIndex && !allowTruncatedSource {
-                throw DiffError.incompleteApplication(
-                    unconsumedLength: source.distance(from: currentIndex, to: source.endIndex)
-                )
-        }
-        
-        return result
+        // Apply operations to source string
+        return try processOperationsOnSource(
+            source: source,
+            operations: operations,
+            allowTruncatedSource: allowTruncatedSource
+        )
     }
     
     /// Apply a section diff to a full document by finding the appropriate section using both preceding and following context
@@ -297,70 +239,23 @@ import CryptoKit
         }
         
         let fullLines = fullSource.efficientLines
-        let followingContext = metadata.followingContext
         let sourceLineCount = metadata.sourceTotalLines ?? 3
         
-        // Enhanced section matching using both preceding and following context
-        var bestMatchIndex: Int?
-        var bestMatchConfidence = 0.0
-        
-        // Search through the document looking for the best matching section
-        for startIndex in 0..<fullLines.count {
-            let endIndex = Swift.min(fullLines.count, startIndex + sourceLineCount)
-            
-            // Extract potential section
-            let sectionLines = Array(fullLines[startIndex..<endIndex])
-            let sectionText = sectionLines.joined(separator: "\n")
-            
-            // Calculate confidence score based on both contexts
-            let confidence = calculateSectionMatchConfidence(
-                sectionText: sectionText,
-                precedingContext: precedingContext,
-                followingContext: followingContext,
-                fullLines: fullLines,
-                sectionStartIndex: startIndex,
-                sectionEndIndex: endIndex
-            )
-            
-            // Update best match if this section has higher confidence
-            if confidence > bestMatchConfidence {
-                bestMatchConfidence = confidence
-                bestMatchIndex = startIndex
-            }
-            
-            // If we find a very high confidence match, use it immediately
-            if confidence > 0.85 {
-                break
-            }
+        // Find the best matching section
+        guard let sectionRange = findBestMatchingSection(
+            fullLines: fullLines,
+            metadata: metadata,
+            sourceLineCount: sourceLineCount
+        ) else {
+            return nil
         }
         
-        // Require minimum confidence to proceed
-        guard let startIndex = bestMatchIndex, bestMatchConfidence > 0.3 else {
-            return nil // Couldn't find a sufficiently confident match
-        }
-        
-        let endIndex = Swift.min(fullLines.count, startIndex + sourceLineCount)
-        
-        // Extract the section to be modified
-        let sectionLines = Array(fullLines[startIndex..<endIndex])
-        let sectionText = sectionLines.joined(separator: "\n")
-        
-        // Apply the diff to the section
-        let modifiedSection = try applyDiffWithEnhancedProcessing(
-            source: sectionText,
-            operations: operations,
-            metadata: nil,
-            allowTruncatedSource: true
+        // Apply diff to the matched section and reconstruct document
+        return try reconstructDocumentWithModifiedSection(
+            fullLines: fullLines,
+            sectionRange: sectionRange,
+            operations: operations
         )
-        
-        // Reconstruct the full document with the modified section
-        var resultLines = Array(fullLines)
-        let modifiedLines = modifiedSection.split(separator: "\n", omittingEmptySubsequences: false)
-        
-        // Replace the original section lines with modified lines
-        resultLines.replaceSubrange(startIndex..<endIndex, with: modifiedLines)
-        
-        return resultLines.map(String.init).joined(separator: "\n")
     }
     
     /// Calculate confidence score for section matching using both preceding and following context
@@ -540,6 +435,8 @@ import CryptoKit
         currentIndex = endIndex
     }
     
+    // MARK: - Base64 and Encoding Methods
+    
     /// Creates a base64 encoded diff between two strings
     /// - Parameters:
     ///   - source: The original string
@@ -570,34 +467,28 @@ import CryptoKit
         return try diffToBase64(diff)
     }
     
-    /// Applies a base64 encoded diff to a source string
+    /// Creates a base64 encoded SmartDiff between two strings with intelligent metadata storage
     /// - Parameters:
     ///   - source: The original string
-    ///   - base64Diff: The base64 encoded diff to apply
-    ///   - allowTruncatedSource: Whether to allow applying diff to truncated source string
-    /// - Returns: The resulting string after applying the diff
-    /// - Throws: An error if decoding or applying the diff fails
-    public static func applyBase64Diff(
-        to source: String,
-        base64Diff: String,
-        allowTruncatedSource: Bool = false
+    ///   - destination: The modified string
+    ///   - algorithm: The diff algorithm to use (default: Todd with automatic fallback)
+    ///   - sourceStartLine: Optional starting line number for precise tracking
+    /// - Returns: A base64 encoded string representing the SmartDiff operations
+    /// - Throws: An error if encoding fails
+    public static func createBase64SmartDiff(
+        source: String,
+        destination: String,
+        algorithm: DiffAlgorithm = .todd,
+        sourceStartLine: Int? = nil
     ) throws -> String {
-        let diff = try diffFromBase64(base64Diff)
-        return try applyDiff(to: source, diff: diff, allowTruncatedSource: allowTruncatedSource)
-    }
-    
-    /// Intelligently applies a base64 encoded diff to a source string with automatic detection
-    /// - Parameters:
-    ///   - source: The original string (could be full or truncated)
-    ///   - base64Diff: The base64 encoded diff to apply
-    /// - Returns: The resulting string after applying the diff
-    /// - Throws: An error if decoding or applying the diff fails
-    public static func applyBase64SmartDiff(
-        to source: String,
-        base64Diff: String
-    ) throws -> String {
-        let diff = try diffFromBase64(base64Diff)
-        return try applySmartDiff(to: source, diff: diff)
+        // Create SmartDiff with intelligent metadata storage
+        let diff = createSmartDiff(
+            source: source,
+            destination: destination,
+            algorithm: algorithm,
+            sourceStartLine: sourceStartLine
+        )
+        return try diffToBase64(diff)
     }
     
     /// Creates a diff in the specified encoding
@@ -641,6 +532,50 @@ import CryptoKit
             return jsonString.data(using: .utf8) ?? Data()
         }
     }
+    
+    /// Applies a base64 encoded diff to a source string
+    /// - Parameters:
+    ///   - source: The original string
+    ///   - base64Diff: The base64 encoded diff to apply
+    ///   - allowTruncatedSource: Whether to allow applying diff to truncated source string
+    /// - Returns: The resulting string after applying the diff
+    /// - Throws: An error if decoding or applying the diff fails
+    public static func applyBase64Diff(
+        to source: String,
+        base64Diff: String,
+        allowTruncatedSource: Bool = false
+    ) throws -> String {
+        let diff = try diffFromBase64(base64Diff)
+        return try applyDiff(to: source, diff: diff, allowTruncatedSource: allowTruncatedSource)
+    }
+    
+    /// Intelligently applies a base64 encoded diff to a source string with automatic detection
+    /// - Parameters:
+    ///   - source: The original string (could be full or truncated)
+    ///   - base64Diff: The base64 encoded diff to apply
+    /// - Returns: The resulting string after applying the diff
+    /// - Throws: An error if decoding or applying the diff fails
+    public static func applyBase64SmartDiff(
+        to source: String,
+        base64Diff: String
+    ) throws -> String {
+        let diff = try diffFromBase64(base64Diff)
+        return try applySmartDiff(to: source, diff: diff)
+    }
+    
+    /// Intelligently applies a base64 encoded diff with automatic verification
+    /// - Parameters:
+    ///   - source: The original string (could be full or truncated)
+    ///   - base64Diff: The base64 encoded diff to apply
+    /// - Returns: The resulting string after applying the diff with verification
+    /// - Throws: An error if decoding, applying, or verification fails
+    public static func applyBase64SmartDiffWithVerify(
+        to source: String,
+        base64Diff: String
+    ) throws -> String {
+        let diff = try diffFromBase64(base64Diff)
+        return try applySmartDiffWithVerify(to: source, diff: diff)
+    }
 
     /// Applies an encoded diff to a source string
     /// - Parameters:
@@ -656,28 +591,7 @@ import CryptoKit
         encoding: DiffEncoding,
         allowTruncatedSource: Bool = false
     ) throws -> String {
-        // Decode based on the specified format
-        let diff: DiffResult
-        switch encoding {
-        case .base64:
-            guard let base64String = encodedDiff as? String else {
-                throw DiffError.decodingFailed
-            }
-            diff = try diffFromBase64(base64String)
-        case .jsonString:
-            guard let jsonString = encodedDiff as? String else {
-                throw DiffError.decodingFailed
-            }
-            diff = try decodeDiffFromJSONString(jsonString)
-        case .jsonData:
-            guard let jsonData = encodedDiff as? Data,
-                  let jsonString = String(data: jsonData, encoding: .utf8) else {
-                throw DiffError.decodingFailed
-            }
-            diff = try decodeDiffFromJSONString(jsonString)
-        }
-        
-        // Apply the decoded diff
+        let diff = try decodeEncodedDiff(encodedDiff: encodedDiff, encoding: encoding)
         return try applyDiff(to: source, diff: diff, allowTruncatedSource: allowTruncatedSource)
     }
     
@@ -693,28 +607,7 @@ import CryptoKit
         encodedDiff: Any,
         encoding: DiffEncoding
     ) throws -> String {
-        // Decode based on the specified format
-        let diff: DiffResult
-        switch encoding {
-        case .base64:
-            guard let base64String = encodedDiff as? String else {
-                throw DiffError.decodingFailed
-            }
-            diff = try diffFromBase64(base64String)
-        case .jsonString:
-            guard let jsonString = encodedDiff as? String else {
-                throw DiffError.decodingFailed
-            }
-            diff = try decodeDiffFromJSONString(jsonString)
-        case .jsonData:
-            guard let jsonData = encodedDiff as? Data,
-                  let jsonString = String(data: jsonData, encoding: .utf8) else {
-                throw DiffError.decodingFailed
-            }
-            diff = try decodeDiffFromJSONString(jsonString)
-        }
-        
-        // Apply the decoded diff intelligently
+        let diff = try decodeEncodedDiff(encodedDiff: encodedDiff, encoding: encoding)
         return try applySmartDiff(to: source, diff: diff)
     }
     
@@ -779,25 +672,7 @@ import CryptoKit
         allowTruncatedSource: Bool = false
     ) throws -> String {
         let result = try applyDiff(to: source, diff: diff, allowTruncatedSource: allowTruncatedSource)
-        
-        // Smart verification: only verify if we're applying to the same type of source
-        if let metadata = diff.metadata,
-           let expectedDestination = metadata.destinationContent,
-           let storedSource = metadata.sourceContent {
-            
-            // Only verify if we're applying to the same source that created the diff
-            // or if we're applying to a truncated source that matches the stored source
-            let shouldVerify = (source == storedSource) || 
-                              (storedSource.contains(source) && storedSource != source)
-            
-            if shouldVerify && result != expectedDestination {
-                throw DiffError.verificationFailed(
-                    expected: expectedDestination,
-                    actual: result
-                )
-            }
-        }
-        
+        try performSmartVerification(source: source, result: result, diff: diff)
         return result
     }
     
@@ -808,7 +683,142 @@ import CryptoKit
         diff: DiffResult
     ) throws -> String {
         let result = try applySmartDiff(to: source, diff: diff)
+        try performSmartVerification(source: source, result: result, diff: diff)
+        return result
+    }
+    
+    // MARK: - Helper Functions
+    
+    /// Process diff operations on a source string
+    @_optimize(speed)
+    private static func processOperationsOnSource(
+        source: String,
+        operations: [DiffOperation],
+        allowTruncatedSource: Bool
+    ) throws -> String {
+        var result = String()
+        var currentIndex = source.startIndex
         
+        // Enhanced operation processing
+        for operation in operations {
+            switch operation {
+            case .retain(let count):
+                try handleRetainOperation(
+                    source: source,
+                    currentIndex: &currentIndex,
+                    count: count, 
+                    result: &result,
+                    allowTruncated: allowTruncatedSource
+                )
+                
+            case .insert(let text):
+                // Simply append inserted text
+                result.append(text)
+                
+            case .delete(let count):
+                try handleDeleteOperation(
+                    source: source,
+                    currentIndex: &currentIndex,
+                    count: count, 
+                    allowTruncated: allowTruncatedSource
+                )
+            }
+        }
+        
+        // Check for remaining content
+        if currentIndex < source.endIndex && !allowTruncatedSource {
+            throw DiffError.incompleteApplication(
+                unconsumedLength: source.distance(from: currentIndex, to: source.endIndex)
+            )
+        }
+        
+        return result
+    }
+    
+    /// Find the best matching section in a document using context matching
+    private static func findBestMatchingSection(
+        fullLines: [Substring],
+        metadata: DiffMetadata,
+        sourceLineCount: Int
+    ) -> Range<Int>? {
+        guard let precedingContext = metadata.precedingContext else { return nil }
+        let followingContext = metadata.followingContext
+        
+        var bestMatchIndex: Int?
+        var bestMatchConfidence = 0.0
+        
+        // Search through the document looking for the best matching section
+        for startIndex in 0..<fullLines.count {
+            let endIndex = Swift.min(fullLines.count, startIndex + sourceLineCount)
+            
+            // Extract potential section
+            let sectionLines = Array(fullLines[startIndex..<endIndex])
+            let sectionText = sectionLines.joined(separator: "\n")
+            
+            // Calculate confidence score based on both contexts
+            let confidence = calculateSectionMatchConfidence(
+                sectionText: sectionText,
+                precedingContext: precedingContext,
+                followingContext: followingContext,
+                fullLines: fullLines,
+                sectionStartIndex: startIndex,
+                sectionEndIndex: endIndex
+            )
+            
+            // Update best match if this section has higher confidence
+            if confidence > bestMatchConfidence {
+                bestMatchConfidence = confidence
+                bestMatchIndex = startIndex
+            }
+            
+            // If we find a very high confidence match, use it immediately
+            if confidence > 0.85 {
+                break
+            }
+        }
+        
+        // Require minimum confidence to proceed
+        guard let startIndex = bestMatchIndex, bestMatchConfidence > 0.3 else {
+            return nil // Couldn't find a sufficiently confident match
+        }
+        
+        let endIndex = Swift.min(fullLines.count, startIndex + sourceLineCount)
+        return startIndex..<endIndex
+    }
+    
+    /// Reconstruct document with modified section
+    private static func reconstructDocumentWithModifiedSection(
+        fullLines: [Substring],
+        sectionRange: Range<Int>,
+        operations: [DiffOperation]
+    ) throws -> String {
+        // Extract the section to be modified
+        let sectionLines = Array(fullLines[sectionRange])
+        let sectionText = sectionLines.joined(separator: "\n")
+        
+        // Apply the diff to the section
+        let modifiedSection = try processOperationsOnSource(
+            source: sectionText,
+            operations: operations,
+            allowTruncatedSource: true
+        )
+        
+        // Reconstruct the full document with the modified section
+        var resultLines = Array(fullLines)
+        let modifiedLines = modifiedSection.split(separator: "\n", omittingEmptySubsequences: false)
+        
+        // Replace the original section lines with modified lines
+        resultLines.replaceSubrange(sectionRange, with: modifiedLines)
+        
+        return resultLines.map(String.init).joined(separator: "\n")
+    }
+    
+    /// Perform smart verification of diff application result
+    private static func performSmartVerification(
+        source: String,
+        result: String,
+        diff: DiffResult
+    ) throws {
         // Smart verification: only verify if we're applying to the same type of source
         if let metadata = diff.metadata,
            let expectedDestination = metadata.destinationContent,
@@ -826,8 +836,48 @@ import CryptoKit
                 )
             }
         }
-        
-        return result
+    }
+    
+    /// Decode an encoded diff based on the specified encoding format
+    private static func decodeEncodedDiff(
+        encodedDiff: Any,
+        encoding: DiffEncoding
+    ) throws -> DiffResult {
+        switch encoding {
+        case .base64:
+            guard let base64String = encodedDiff as? String else {
+                throw DiffError.decodingFailed
+            }
+            return try diffFromBase64(base64String)
+        case .jsonString:
+            guard let jsonString = encodedDiff as? String else {
+                throw DiffError.decodingFailed
+            }
+            return try decodeDiffFromJSONString(jsonString)
+        case .jsonData:
+            guard let jsonData = encodedDiff as? Data else {
+                throw DiffError.decodingFailed
+            }
+            return try decodeDiffFromJSON(jsonData)
+        }
+    }
+    
+    /// Determine whether to allow truncated source handling based on metadata and source verification
+    private static func shouldAllowTruncatedSource(for source: String, diff: DiffResult) -> Bool {
+        // First, check if we can verify with stored source content
+        if let storedSource = diff.metadata?.sourceContent {
+            return DiffMetadata.requiresTruncatedHandling(
+                providedSource: source,
+                storedSource: storedSource
+            )
+        } else if let applicationType = diff.metadata?.applicationType {
+            // Fall back to explicit application type
+            return (applicationType == .requiresTruncatedSource)
+        } else {
+            // Fall back to legacy heuristics if no explicit type or stored source
+            return (diff.metadata?.sourceStartLine ?? 0) > 0 || 
+                   diff.metadata?.precedingContext != nil
+        }
     }
 }
 

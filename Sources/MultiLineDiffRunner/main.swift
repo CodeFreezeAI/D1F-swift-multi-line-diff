@@ -928,6 +928,23 @@ func main() throws {
         return demonstrateEnhancedTruncatedDiff()
     }
     
+    // Test new SmartDiff Base64 methods
+    runTest("SmartDiff Base64 Methods") {
+        let source = "Hello, world!"
+        let destination = "Hello, Swift world!"
+        
+        // Test new createBase64SmartDiff method
+        let base64SmartDiff = try MultiLineDiff.createBase64SmartDiff(source: source, destination: destination)
+        
+        // Test new applyBase64SmartDiffWithVerify method  
+        let result = try MultiLineDiff.applyBase64SmartDiffWithVerify(to: source, base64Diff: base64SmartDiff)
+        
+        // Also test with applyBase64SmartDiff (existing method)
+        let result2 = try MultiLineDiff.applyBase64SmartDiff(to: source, base64Diff: base64SmartDiff)
+        
+        return result == destination && result2 == destination
+    }
+    
     let endTime = getCurrentTimeMs()
     let totalExecutionTime = Double(endTime - startTime) / 1000.0
     
