@@ -815,44 +815,7 @@ let diff = MultiLineDiff.createDiff(source: source, destination: destination)
 
 // Apply the diff
 let result = try MultiLineDiff.applyDiff(to: source, diff: diff)
-assert(result == destination)
-```
-
-### Multi-Line Code Diff Example
-
-```swift
-let sourceCode = """
-class Example {
-    func oldMethod() {
-        print("Hello")
-        // Some old comment
-    }
-}
-"""
-
-let destinationCode = """
-class Example {
-    // New method implementation
-    func newMethod() {
-        print("Hello, World!")
-        // Improved logging
-    }
-}
-"""
-
-// Create a multi-line diff
-let multiLineDiff = MultiLineDiff.createDiff(
-    source: sourceCode, 
-    destination: destinationCode,
-    algorithm: .todd  // Use Todd algorithm for more semantic diff
-)
-
-// Apply the multi-line diff
-let updatedCode = try MultiLineDiff.applyDiff(
-    to: sourceCode, 
-    diff: multiLineDiff
-)
-print(updatedCode)
+print(result == destination)
 ```
 
 ### Choosing Diff Algorithms
