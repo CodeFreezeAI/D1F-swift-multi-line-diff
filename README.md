@@ -1621,7 +1621,7 @@ func calculateTotal(items: [Product]) -> Double {
 | **Total Time** | 0.1180 ms | 0.3640 ms | **3.1x faster** (Brus) |
 | **Retained Characters** | 21 chars (3.2%) | 397 chars (59.8%) | **18.9x more preservation** (Todd) |
 | **Semantic Awareness** | 🔤 Character-level | 🧠 Structure-aware | Intelligent |
-| **Test Suite** | ✅ 33/33 tests pass | ✅ 33/33 tests pass | 100% reliability |
+| **Test Suite** | ✅ all tests pass | ✅ all tests pass | 100% reliability |
 
 ### Performance Visualization (Updated 2025)
 
