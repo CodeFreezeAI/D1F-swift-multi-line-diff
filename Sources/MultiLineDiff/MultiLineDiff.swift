@@ -1503,7 +1503,7 @@ public enum DiffEncoding {
     ///   - base64Diff: The base64 encoded diff to apply
     /// - Returns: The resulting string after applying the diff
     /// - Throws: An error if decoding or applying the diff fails
-    public static func applyBase64DiffIntelligently(
+    public static func applyBase64SmartDiff(
         to source: String,
         base64Diff: String
     ) throws -> String {
@@ -1599,7 +1599,7 @@ public enum DiffEncoding {
     ///   - encoding: The encoding type of the diff
     /// - Returns: The resulting string after applying the diff
     /// - Throws: An error if decoding or applying the diff fails
-    public static func applyEncodedDiffIntelligently(
+    public static func applyEncodedSmartDiff(
         to source: String,
         encodedDiff: Any,
         encoding: DiffEncoding
@@ -1684,7 +1684,7 @@ public enum DiffEncoding {
     
     /// Applies a diff and verifies the result matches the expected destination
     /// Throws an error if verification fails
-    public static func applyDiffWithVerification(
+    public static func applyDiffWithVerify(
         to source: String,
         diff: DiffResult,
         allowTruncatedSource: Bool = false
@@ -1714,7 +1714,7 @@ public enum DiffEncoding {
     
     /// Intelligently applies a diff with automatic verification
     /// Combines intelligent application with checksum verification
-    public static func applyDiffIntelligentlyWithVerification(
+    public static func applySmartDiffWithVerify(
         to source: String,
         diff: DiffResult
     ) throws -> String {
