@@ -25,11 +25,186 @@ A Swift library for creating and applying diffs to multi-line text content. Supp
 - **Source verification and confidence scoring** 📊
 - Designed for AI code integrity
 - **Enhanced Truncated Diff Support** 🆕
+- **🔥 SmartDiff Methods (Preferred)** 🔥
 
 ## 🖥️ Platform Compatibility
 
 - **macOS**: 13.0+
 - **Swift**: 6.1+
+
+## 🚀 **SmartDiff Methods - Preferred Approach** ⭐
+
+**NEW 2025**: The SmartDiff methods are the **recommended and preferred** way to work with MultiLineDiff. These methods provide intelligent, automatic handling without manual configuration.
+
+### 🔥 Why Choose SmartDiff?
+
+- **🤖 Zero Configuration**: Automatically detects full vs truncated sources
+- **🧠 Intelligent Application**: No manual `allowTruncatedSource` parameters needed
+- **🔐 Built-in Verification**: Automatic checksum validation
+- **🎯 Context-Aware**: Smart section matching with confidence scoring
+- **↩️ Undo Support**: Automatic reverse diff generation
+- **⚡ Performance**: Same blazing-fast speed with enhanced intelligence
+
+### 🎯 SmartDiff API Overview
+
+| Method | Description | Use Case |
+|--------|-------------|----------|
+| `createSmartDiff()` | 🧠 Intelligent diff creation with source storage | **Recommended for all diffs** |
+| `applySmartDiff()` | 🤖 Auto-detecting diff application | **Preferred for applying diffs** |
+| `applyBase64SmartDiff()` | 📦 Smart Base64 diff application | **Best for encoded diffs** |
+| `applyBase64SmartDiffWithVerify()` | 🔐 Smart Base64 diff with verification | **Maximum safety for encoded diffs** |
+| `applySmartDiffWithVerify()` | 🔐 Smart application + verification | **Maximum safety** |
+
+### 🔥 **Recommended Usage Pattern**
+
+```swift
+// ✅ PREFERRED: SmartDiff approach (2025)
+// Step 1: Create smart diff with automatic source storage
+let diff = MultiLineDiff.createSmartDiff(
+    source: originalCode,
+    destination: modifiedCode
+)
+
+// Step 2: Apply intelligently - works with ANY source type automatically!
+let result = try MultiLineDiff.applySmartDiff(to: anySource, diff: diff)
+// Works perfectly with:
+// - Full documents
+// - Truncated sections  
+// - Partial content
+// - Mixed scenarios
+// NO manual configuration needed! 🎉
+```
+
+### 🆚 **SmartDiff vs Traditional Methods**
+
+```swift
+// ❌ OLD WAY: Manual configuration required
+let diff = MultiLineDiff.createDiff(
+    source: truncatedContent,
+    destination: modifiedContent,
+    includeMetadata: true,
+    sourceStartLine: 42  // Manual parameter
+)
+
+let result = try MultiLineDiff.applyDiff(
+    to: fullDocument, 
+    diff: diff,
+    allowTruncatedSource: true  // Manual decision
+)
+
+// ✅ NEW SMARTDIFF WAY: Automatic everything!
+let diff = MultiLineDiff.createSmartDiff(
+    source: truncatedContent,
+    destination: modifiedContent
+)
+
+let result = try MultiLineDiff.applySmartDiff(to: fullDocument, diff: diff)
+// Automatically detects, matches, and applies correctly! 🚀
+```
+
+### 🔐 **SmartDiff with Verification (Maximum Safety)**
+
+```swift
+// Create smart diff with built-in integrity verification
+let diff = MultiLineDiff.createSmartDiff(
+    source: originalCode,
+    destination: modifiedCode
+)
+
+// Apply with automatic verification - safest approach
+let result = try MultiLineDiff.applySmartDiffWithVerify(to: sourceCode, diff: diff)
+
+// Check diff integrity (automatic)
+if MultiLineDiff.verifyDiff(diff) {
+    print("✅ Diff integrity verified")
+}
+
+// Create undo operation (automatic)
+if let undoDiff = MultiLineDiff.createUndoDiff(from: diff) {
+    let restored = try MultiLineDiff.applySmartDiff(to: result, diff: undoDiff)
+    assert(restored == originalCode) // Perfect restoration
+}
+```
+
+### 📦 **SmartDiff with Base64 Encoding**
+
+```swift
+// Create Base64 SmartDiff
+let base64Diff = try MultiLineDiff.createBase64Diff(
+    source: sourceCode,
+    destination: destinationCode
+)
+
+// Apply Base64 SmartDiff - automatically handles everything
+let result = try MultiLineDiff.applyBase64SmartDiff(
+    to: anySource, 
+    base64Diff: base64Diff
+)
+
+// Apply Base64 SmartDiff with verification - maximum safety
+let verifiedResult = try MultiLineDiff.applyBase64SmartDiffWithVerify(
+    to: anySource, 
+    base64Diff: base64Diff
+)
+```
+
+### 🎯 **Real-World SmartDiff Example**
+
+```swift
+let fullDocument = """
+# Documentation
+## Setup Instructions
+Setup content here.
+## Configuration Settings  
+Please follow these setup steps carefully.
+This configuration is essential for operation.
+## Advanced Configuration
+Advanced content here.
+"""
+
+let truncatedSection = """
+## Configuration Settings  
+Please follow these setup steps carefully.
+This configuration is essential for operation.
+"""
+
+let modifiedSection = """
+## Configuration Settings  
+Please follow these UPDATED setup steps carefully.
+This configuration is CRITICAL for operation.
+"""
+
+// ✅ SmartDiff: One method handles everything
+let diff = MultiLineDiff.createSmartDiff(
+    source: truncatedSection,
+    destination: modifiedSection
+)
+
+// Apply to BOTH full document AND truncated section - both work automatically!
+let resultFromFull = try MultiLineDiff.applySmartDiff(to: fullDocument, diff: diff)
+let resultFromTruncated = try MultiLineDiff.applySmartDiff(to: truncatedSection, diff: diff)
+
+// SmartDiff automatically:
+// ✅ Detects source type (full vs truncated)
+// ✅ Finds correct section using context matching
+// ✅ Applies diff with confidence scoring
+// ✅ Verifies integrity with checksums
+// ✅ Handles edge cases gracefully
+```
+
+### 🏆 **SmartDiff Benefits Summary**
+
+| Feature | Traditional Methods | SmartDiff Methods |
+|---------|-------------------|-------------------|
+| **Configuration** | ❌ Manual parameters required | ✅ Zero configuration |
+| **Source Detection** | ❌ Manual `allowTruncatedSource` | ✅ Automatic detection |
+| **Context Matching** | ❌ Basic | ✅ Dual context + confidence |
+| **Verification** | ❌ Manual checksum checking | ✅ Built-in verification |
+| **Undo Operations** | ❌ Manual reverse diff creation | ✅ Automatic undo generation |
+| **Error Handling** | ❌ Basic | ✅ Enhanced with fallbacks |
+| **API Complexity** | ❌ Multiple parameters | ✅ Simple, clean API |
+
+**Recommendation**: Use SmartDiff methods for all new code. They provide the same performance with significantly enhanced intelligence and safety. 🚀
 
 ## 🚀 Enhanced Truncated Diff Support with Auto-Detection
 
@@ -60,36 +235,53 @@ When working with truncated sources, follow these guidelines for `sourceStartLin
 
 1. **If You Know the Exact Line Number**:
 ```swift
+// ✅ PREFERRED: SmartDiff (automatically handles everything)
+let diff = MultiLineDiff.createSmartDiff(
+    source: truncatedContent,
+    destination: modifiedContent,
+    sourceStartLine: 42  // Optional: enhances accuracy
+)
+
+// ❌ TRADITIONAL: Manual configuration
 let diff = MultiLineDiff.createDiff(
     source: truncatedContent,
     destination: modifiedContent,
     includeMetadata: true,
-    sourceStartLine: 42  // Recommended: Use the actual line number if known
+    sourceStartLine: 42  // Manual parameter required
 )
 ```
 
 2. **If Line Number is Unknown**:
 ```swift
+// ✅ PREFERRED: SmartDiff (auto-interpolates)
+let diff = MultiLineDiff.createSmartDiff(
+    source: truncatedContent,
+    destination: modifiedContent
+    // No sourceStartLine needed - SmartDiff handles it
+)
+
+// ❌ TRADITIONAL: Manual fallback
 let diff = MultiLineDiff.createDiff(
     source: truncatedContent,
     destination: modifiedContent,
     includeMetadata: true,
-    sourceStartLine: 1  // Default: Algorithm will interpolate using metadata
+    sourceStartLine: 1  // Manual fallback
 )
 ```
 
-**Recommended Practices**:
-- **Best Practice**: Always specify the exact line number if known
-- **Fallback**: Use `sourceStartLine: 1` when the exact line is uncertain
-- The library uses metadata and context to intelligently locate the correct section
-- Always set `includeMetadata: true` for truncated diffs
+**SmartDiff Practices**:
+- **Best Practice**: Use `createSmartDiff()` - automatically handles line interpolation
+- **Enhanced Accuracy**: Optionally specify `sourceStartLine` for better precision
+- SmartDiff uses dual context and confidence scoring for intelligent section location
+- Built-in verification ensures correct application
 
 ### Line Number Interpolation
 
-When `sourceStartLine: 1` is used, the library:
+SmartDiff automatically:
 - Analyzes preceding and following context
 - Uses metadata to determine the most likely section
 - Intelligently applies the diff to the correct location
+- Provides confidence scoring for section matching
 
 ### Full Document Diff Application
 
@@ -115,7 +307,16 @@ This section provides a comprehensive explanation of fundamental principles.
 Enhanced and more detailed insights.
 """
 
-// Intelligent diff application
+// ✅ PREFERRED: SmartDiff approach (fully automatic)
+let diff = MultiLineDiff.createSmartDiff(
+    source: truncatedSection,
+    destination: updatedSection
+)
+
+// Apply intelligently - works on both full document and truncated section
+let updatedDocument = try MultiLineDiff.applySmartDiff(to: originalDocument, diff: diff)
+
+// ❌ TRADITIONAL: Manual configuration required
 let diff = MultiLineDiff.createDiff(
     source: truncatedSection,
     destination: updatedSection,
@@ -123,56 +324,84 @@ let diff = MultiLineDiff.createDiff(
     sourceStartLine: 2
 )
 
-// Apply diff to full document
 let updatedDocument = try MultiLineDiff.applyDiff(
     to: originalDocument, 
     diff: diff,
-    allowTruncatedSource: true
+    allowTruncatedSource: true  // Manual parameter
 )
 ```
 
-The library handles the complexity of locating and applying the diff, even with partial or truncated sources.
+SmartDiff handles all the complexity automatically while providing the same powerful functionality.
 
 ### 🤖 NEW Intelligent Auto-Application (2025)
 
 The enhanced version automatically detects source type and applies diffs intelligently:
 
 ```swift
-// NEW: Automatic source detection and intelligent application
+// ✅ PREFERRED: SmartDiff - fully automatic
+let diff = MultiLineDiff.createSmartDiff(
+    source: truncatedSection,
+    destination: updatedSection
+)
+
+// Intelligent application - automatically detects if full document or truncated source
+let result = try MultiLineDiff.applySmartDiff(to: anySource, diff: diff)
+// Works with BOTH full documents AND truncated sections automatically!
+
+// ❌ TRADITIONAL: Manual detection required
 let diff = MultiLineDiff.createDiff(
     source: truncatedSection,
     destination: updatedSection,
     includeMetadata: true,
-    sourceStartLine: 2  // Optional: for better accuracy
+    sourceStartLine: 2  // Manual parameter
 )
 
-// Intelligent application - automatically detects if full document or truncated source
+// Manual application with parameters
 let result = try MultiLineDiff.applyDiff(to: anySource, diff: diff)
-// Works with BOTH full documents AND truncated sections automatically!
+// Requires manual `allowTruncatedSource` configuration
 ```
 
 ### 🔐 Enhanced Verification and Undo Operations
 
 ```swift
-// Create diff with enhanced metadata for verification
+// ✅ PREFERRED: SmartDiff with built-in verification
+let diff = MultiLineDiff.createSmartDiff(
+    source: originalCode,
+    destination: modifiedCode
+)
+
+// Automatic verification and checksum generation
+if let hash = diff.metadata?.diffHash {
+    print("✅ Diff integrity hash: \(hash)")
+}
+
+// Apply with automatic verification
+let result = try MultiLineDiff.applySmartDiffWithVerify(to: originalCode, diff: diff)
+
+// Undo operation (automatic reverse diff)
+let undoDiff = MultiLineDiff.createUndoDiff(from: diff)!
+let restored = try MultiLineDiff.applySmartDiff(to: result, diff: undoDiff)
+assert(restored == originalCode) // Perfect restoration
+
+// ❌ TRADITIONAL: Manual verification steps
 let diff = MultiLineDiff.createDiff(
     source: originalCode,
     destination: modifiedCode,
     includeMetadata: true
 )
 
-// Checksum verification
+// Manual checksum verification
 if let hash = diff.metadata?.diffHash {
     print("Diff integrity hash: \(hash)")
 }
 
-// Apply with automatic verification
+// Manual application
 let result = try MultiLineDiff.applyDiff(to: originalCode, diff: diff)
 
-// Undo operation (automatic reverse diff)
+// Manual undo diff creation
 let undoDiff = MultiLineDiff.createUndoDiff(from: diff)
-let restored = try MultiLineDiff.applyDiff(to: result, diff: undoDiff)
-assert(restored == originalCode) // Perfect restoration
+let restored = try MultiLineDiff.applyDiff(to: result, diff: undoDiff!)
+assert(restored == originalCode)
 ```
 
 ### 🎯 Dual Context Matching Example
@@ -201,18 +430,28 @@ Please follow these UPDATED setup steps carefully.
 This configuration is CRITICAL for operation.
 """
 
-// Enhanced diff with dual context
+// ✅ PREFERRED: SmartDiff with enhanced dual context
+let diff = MultiLineDiff.createSmartDiff(
+    source: truncatedSection,
+    destination: modifiedSection
+)
+
+// Automatic intelligent application - works on BOTH:
+let resultFromFull = try MultiLineDiff.applySmartDiff(to: fullDocument, diff: diff)
+let resultFromTruncated = try MultiLineDiff.applySmartDiff(to: truncatedSection, diff: diff)
+
+// Both results are correctly transformed with automatic context matching!
+
+// ❌ TRADITIONAL: Manual dual context handling
 let diff = MultiLineDiff.createDiff(
     source: truncatedSection,
     destination: modifiedSection,
     includeMetadata: true
 )
 
-// Automatic intelligent application - works on BOTH:
-let resultFromFull = try MultiLineDiff.applyDiff(to: fullDocument, diff: diff)
+// Manual application with explicit parameters
+let resultFromFull = try MultiLineDiff.applyDiff(to: fullDocument, diff: diff, allowTruncatedSource: true)
 let resultFromTruncated = try MultiLineDiff.applyDiff(to: truncatedSection, diff: diff)
-
-// Both results are correctly transformed!
 ```
 
 ## 🛡️ Reliability & Automatic Verification
@@ -887,23 +1126,34 @@ func createUser(name: String, email: String, age: Int, avatar: UIImage? = nil) -
 let source = "Hello, world!"
 let destination = "Hello, Swift!"
 
-// Create a diff
-let diff = MultiLineDiff.createDiff(source: source, destination: destination)
+// ✅ PREFERRED: SmartDiff approach
+let diff = MultiLineDiff.createSmartDiff(source: source, destination: destination)
+let result = try MultiLineDiff.applySmartDiff(to: source, diff: diff)
+print(result == destination) // true
 
-// Apply the diff
+// ❌ TRADITIONAL: Manual approach  
+let diff = MultiLineDiff.createDiff(source: source, destination: destination)
 let result = try MultiLineDiff.applyDiff(to: source, diff: diff)
-print(result == destination)
+print(result == destination) // true
 ```
 
 ### Choosing Diff Algorithms
 
 ```swift
-// Automatically choose the best algorithm
+// ✅ PREFERRED: SmartDiff with automatic algorithm selection
+let smartDiff = MultiLineDiff.createSmartDiff(
+    source: sourceCode, 
+    destination: destinationCode
+    // Algorithm automatically selected with fallback verification
+)
+
+// Automatic recommendation (for reference)
 let recommendedAlgorithm = MultiLineDiff.suggestDiffAlgorithm(
     source: sourceCode, 
     destination: destinationCode
 )
 
+// ❌ TRADITIONAL: Manual algorithm selection
 // Todd algorithm with automatic fallback (recommended)
 let reliableDiff = MultiLineDiff.createDiff(
     source: sourceCode, 
@@ -921,34 +1171,72 @@ let brusDiff = MultiLineDiff.createDiff(
 
 ### Algorithm Selection Guide
 
-| Scenario | Recommended Algorithm | Fallback Behavior |
-|----------|----------------------|-------------------|
-| **AI Code Transformations** | `.todd` | ✅ Automatic fallback to `.brus` |
-| **Production Systems** | `.todd` | ✅ Automatic fallback to `.brus` |
-| **Performance Critical** | `.brus` | ❌ No fallback needed |
-| **Simple Text Changes** | `.brus` | ❌ No fallback needed |
+| Scenario | SmartDiff Approach | Traditional Approach | Fallback Behavior |
+|----------|-------------------|----------------------|-------------------|
+| **AI Code Transformations** | `createSmartDiff()` | `.todd` | ✅ Automatic fallback to `.brus` |
+| **Production Systems** | `createSmartDiff()` | `.todd` | ✅ Automatic fallback to `.brus` |
+| **Performance Critical** | `createSmartDiff()` | `.brus` | ❌ No fallback needed |
+| **Simple Text Changes** | `createSmartDiff()` | `.brus` | ❌ No fallback needed |
 
-**Best Practice**: Use `.todd` algorithm for most scenarios - you get sophisticated diffs when possible, with automatic reliability guarantees through fallback.
+**Best Practice**: Use `createSmartDiff()` for all scenarios - you get sophisticated diffs when possible, with automatic reliability guarantees through fallback, plus intelligent application handling.
 
 ### Base64 Encoded Diffs (Recommended for AI Transformations)
 
 ```swift
-// Create a base64 encoded diff
+// ✅ PREFERRED: SmartDiff with Base64
 let base64Diff = try MultiLineDiff.createBase64Diff(
     source: sourceCode, 
     destination: destinationCode
 )
 
-// Apply a base64 encoded diff
-let reconstructedCode = try MultiLineDiff.applyBase64Diff(
+// Apply with automatic intelligence
+let reconstructedCode = try MultiLineDiff.applyBase64SmartDiff(
     to: sourceCode, 
     base64Diff: base64Diff
+)
+
+// Apply with verification for maximum safety
+let verifiedCode = try MultiLineDiff.applyBase64SmartDiffWithVerify(
+    to: sourceCode, 
+    base64Diff: base64Diff
+)
+
+// ❌ TRADITIONAL: Manual Base64 handling
+let base64Diff = try MultiLineDiff.createBase64Diff(
+    source: sourceCode, 
+    destination: destinationCode
+)
+
+// Manual application
+let reconstructedCode = try MultiLineDiff.applyBase64Diff(
+    to: sourceCode, 
+    base64Diff: base64Diff,
+    allowTruncatedSource: false  // Manual parameter
 )
 ```
 
 ### File-Based Diff Operations
 
 ```swift
+// ✅ PREFERRED: SmartDiff with file operations
+let smartDiff = MultiLineDiff.createSmartDiff(
+    source: sourceCode,
+    destination: destinationCode
+)
+
+// Save SmartDiff to file
+try MultiLineDiff.saveDiffToFile(
+    smartDiff, 
+    fileURL: URL(fileURLWithPath: "/path/to/diff.json")
+)
+
+// Load and apply SmartDiff from file
+let loadedDiff = try MultiLineDiff.loadDiffFromFile(
+    fileURL: URL(fileURLWithPath: "/path/to/diff.json")
+)
+let result = try MultiLineDiff.applySmartDiff(to: targetSource, diff: loadedDiff)
+
+// ❌ TRADITIONAL: Manual file operations
 // Save diff to a file
 try MultiLineDiff.saveDiffToFile(
     multiLineDiff, 
@@ -964,30 +1252,58 @@ let loadedDiff = try MultiLineDiff.loadDiffFromFile(
 ### 🆕 NEW Auto-Detection & Verification Features (2025)
 
 ```swift
-// 1. Auto-Detection: Works with any source type automatically
+// ✅ PREFERRED: SmartDiff handles everything automatically
+let diff = MultiLineDiff.createSmartDiff(
+    source: anySource,  // Can be full document OR truncated section
+    destination: modifiedContent
+    // Auto-detection built-in, no manual configuration needed
+)
+
+// Apply intelligently - automatic configuration
+let result = try MultiLineDiff.applySmartDiff(to: anyTarget, diff: diff)
+
+// Verification and undo operations (automatic)
+if MultiLineDiff.verifyDiff(diff) {
+    print("✅ Diff integrity verified automatically")
+}
+
+if let undoDiff = MultiLineDiff.createUndoDiff(from: diff) {
+    let restored = try MultiLineDiff.applySmartDiff(to: result, diff: undoDiff)
+}
+
+// Enhanced metadata access (automatic)
+if let metadata = diff.metadata {
+    print("Algorithm used: \(metadata.algorithmUsed)")
+    print("Application type: \(metadata.applicationType)")
+    print("Source lines: \(metadata.sourceTotalLines)")
+    print("Integrity hash: \(metadata.diffHash ?? "none")")
+}
+
+// ❌ TRADITIONAL: Manual configuration and verification
+// 1. Manual detection required
 let diff = MultiLineDiff.createDiff(
     source: anySource,  // Can be full document OR truncated section
     destination: modifiedContent,
-    includeMetadata: true  // Essential for auto-detection
+    includeMetadata: true  // Manual parameter required
 )
 
-// Apply intelligently - no manual configuration needed
+// Apply with manual configuration - no automatic detection
 let result = try MultiLineDiff.applyDiff(to: anyTarget, diff: diff)
 
-// 2. Checksum Verification
+// 2. Manual checksum verification
 if let hash = diff.metadata?.diffHash {
     print("✅ Diff integrity verified: \(String(hash.prefix(16)))...")
 }
 
-// 3. Undo Operations
+// 3. Manual undo operations
 let undoDiff = MultiLineDiff.createUndoDiff(from: diff)
-let restored = try MultiLineDiff.applyDiff(to: result, diff: undoDiff)
+let restored = try MultiLineDiff.applyDiff(to: result, diff: undoDiff!)
 
-// 4. Source Verification (automatic)
+// 4. Manual source verification (requires custom logic)
 // The library automatically compares input source with stored source content
 // and determines the best application strategy
 
-// 5. Enhanced Metadata Access
+// 5. Manual metadata access
 if let metadata = diff.metadata {
     print("Algorithm used: \(metadata.algorithmUsed)")
     print("Application type: \(metadata.applicationType)")
