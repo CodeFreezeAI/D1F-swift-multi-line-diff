@@ -155,7 +155,7 @@ func demonstrateEnhancedTruncatedDiff() -> Bool {
             // Test verification with application
             print("\n🛡️ Verified Application:")
             do {
-                let verifiedResult = try MultiLineDiff.applySmartDiffWithVerify(
+                let verifiedResult = try MultiLineDiff.applySmartDiff(
                     to: fullDocument,
                     diff: diff
                 )

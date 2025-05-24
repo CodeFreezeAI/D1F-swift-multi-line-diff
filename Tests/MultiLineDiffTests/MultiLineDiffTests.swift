@@ -338,10 +338,6 @@ import Foundation
     
     // Verify
     #expect(result == modifiedFunction, "Applied diff should reproduce the exact modified code")
-    
-    // Display operations for debugging
-    for op in diff.operations {
-    }
 }
 
 @Test func testDiffJSONEncodingDecoding() throws {

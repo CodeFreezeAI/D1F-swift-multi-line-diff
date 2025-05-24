@@ -937,7 +937,7 @@ func main() throws {
         let base64SmartDiff = try MultiLineDiff.createBase64SmartDiff(source: source, destination: destination)
         
         // Test new applyBase64SmartDiffWithVerify method  
-        let result = try MultiLineDiff.applyBase64SmartDiffWithVerify(to: source, base64Diff: base64SmartDiff)
+        let result = try MultiLineDiff.applyBase64SmartDiff(to: source, base64Diff: base64SmartDiff)
         
         // Also test with applyBase64SmartDiff (existing method)
         let result2 = try MultiLineDiff.applyBase64SmartDiff(to: source, base64Diff: base64SmartDiff)
