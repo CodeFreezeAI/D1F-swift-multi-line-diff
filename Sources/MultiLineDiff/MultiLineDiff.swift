@@ -883,7 +883,7 @@ public enum DiffEncoding {
         return result
     }
     
-    /// Apply a section diff to a full document by finding the appropriate section
+    /// Apply a section diff to a full document by finding the appropriate section using both preceding and following context
     private static func applySectionDiff(
         fullSource: String,
         operations: [DiffOperation],
@@ -894,26 +894,50 @@ public enum DiffEncoding {
             return nil
         }
         
-        // Find the section in the full source that matches the preceding context
         let fullLines = fullSource.efficientLines
-        var sectionStartIndex: Int?
+        let followingContext = metadata.followingContext
+        let sourceLineCount = metadata.sourceTotalLines ?? 3
         
-        // Look for a line that contains the preceding context or starts with it
-        for (index, line) in fullLines.enumerated() {
-            if String(line).contains(precedingContext.trimmingCharacters(in: .whitespacesAndNewlines)) ||
-               precedingContext.contains(String(line).trimmingCharacters(in: .whitespacesAndNewlines)) {
-                sectionStartIndex = index
+        // Enhanced section matching using both preceding and following context
+        var bestMatchIndex: Int?
+        var bestMatchConfidence = 0.0
+        
+        // Search through the document looking for the best matching section
+        for startIndex in 0..<fullLines.count {
+            let endIndex = Swift.min(fullLines.count, startIndex + sourceLineCount)
+            
+            // Extract potential section
+            let sectionLines = Array(fullLines[startIndex..<endIndex])
+            let sectionText = sectionLines.joined(separator: "\n")
+            
+            // Calculate confidence score based on both contexts
+            let confidence = calculateSectionMatchConfidence(
+                sectionText: sectionText,
+                precedingContext: precedingContext,
+                followingContext: followingContext,
+                fullLines: fullLines,
+                sectionStartIndex: startIndex,
+                sectionEndIndex: endIndex
+            )
+            
+            // Update best match if this section has higher confidence
+            if confidence > bestMatchConfidence {
+                bestMatchConfidence = confidence
+                bestMatchIndex = startIndex
+            }
+            
+            // If we find a very high confidence match, use it immediately
+            if confidence > 0.85 {
                 break
             }
         }
         
-        guard let startIndex = sectionStartIndex else {
-            return nil // Couldn't find the section
+        // Require minimum confidence to proceed
+        guard let startIndex = bestMatchIndex, bestMatchConfidence > 0.3 else {
+            return nil // Couldn't find a sufficiently confident match
         }
         
-        // Calculate the exact number of lines in the original section
-        let sourceLines = metadata.sourceTotalLines ?? 3 // Default fallback
-        let endIndex = Swift.min(fullLines.count, startIndex + sourceLines)
+        let endIndex = Swift.min(fullLines.count, startIndex + sourceLineCount)
         
         // Extract the section to be modified
         let sectionLines = Array(fullLines[startIndex..<endIndex])
@@ -922,7 +946,7 @@ public enum DiffEncoding {
         // Apply the diff to the section
         let modifiedSection = try applyDiffWithEnhancedProcessing(
             source: sectionText,
-                operations: operations,
+            operations: operations,
             metadata: nil,
             allowTruncatedSource: true
         )
@@ -935,6 +959,120 @@ public enum DiffEncoding {
         resultLines.replaceSubrange(startIndex..<endIndex, with: modifiedLines)
         
         return resultLines.map(String.init).joined(separator: "\n")
+    }
+    
+    /// Calculate confidence score for section matching using both preceding and following context
+    private static func calculateSectionMatchConfidence(
+        sectionText: String,
+        precedingContext: String,
+        followingContext: String?,
+        fullLines: [Substring],
+        sectionStartIndex: Int,
+        sectionEndIndex: Int
+    ) -> Double {
+        var confidence = 0.0
+        
+        // Check preceding context match
+        let precedingScore = calculateContextMatchScore(
+            context: precedingContext,
+            target: sectionText,
+            isPrefix: true
+        )
+        confidence += precedingScore * 0.6 // Weight preceding context more heavily
+        
+        // Check following context match if available
+        if let followingContext = followingContext, !followingContext.isEmpty {
+            let followingScore = calculateContextMatchScore(
+                context: followingContext,
+                target: sectionText,
+                isPrefix: false
+            )
+            confidence += followingScore * 0.4 // Following context gets moderate weight
+        }
+        
+        // Additional scoring based on position and surrounding content
+        let positionScore = calculatePositionalContextScore(
+            fullLines: fullLines,
+            sectionStartIndex: sectionStartIndex,
+            sectionEndIndex: sectionEndIndex,
+            precedingContext: precedingContext,
+            followingContext: followingContext
+        )
+        confidence += positionScore * 0.2
+        
+        return Swift.min(confidence, 1.0)
+    }
+    
+    /// Calculate how well a context matches a target string
+    private static func calculateContextMatchScore(
+        context: String,
+        target: String,
+        isPrefix: Bool
+    ) -> Double {
+        let contextTrimmed = context.trimmingCharacters(in: .whitespacesAndNewlines)
+        let targetTrimmed = target.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        // Exact match gets highest score
+        if targetTrimmed.contains(contextTrimmed) || contextTrimmed.contains(targetTrimmed) {
+            return 1.0
+        }
+        
+        // Check for partial matches at the beginning or end
+        if isPrefix {
+            if targetTrimmed.hasPrefix(contextTrimmed) || contextTrimmed.hasPrefix(targetTrimmed) {
+                return 0.8
+            }
+        } else {
+            if targetTrimmed.hasSuffix(contextTrimmed) || contextTrimmed.hasSuffix(targetTrimmed) {
+                return 0.8
+            }
+        }
+        
+        // Calculate similarity based on common words/tokens
+        let contextWords = Set(contextTrimmed.split(separator: " "))
+        let targetWords = Set(targetTrimmed.split(separator: " "))
+        
+        guard !contextWords.isEmpty && !targetWords.isEmpty else { return 0.0 }
+        
+        let commonWords = contextWords.intersection(targetWords)
+        let similarity = Double(commonWords.count) / Double(max(contextWords.count, targetWords.count))
+        
+        return similarity * 0.6 // Partial word matching gets moderate score
+    }
+    
+    /// Calculate positional context score by examining surrounding lines
+    private static func calculatePositionalContextScore(
+        fullLines: [Substring],
+        sectionStartIndex: Int,
+        sectionEndIndex: Int,
+        precedingContext: String,
+        followingContext: String?
+    ) -> Double {
+        var score = 0.0
+        
+        // Check lines immediately before the section
+        if sectionStartIndex > 0 {
+            let linesBefore = Array(fullLines[max(0, sectionStartIndex - 2)..<sectionStartIndex])
+            let contextBefore = linesBefore.joined(separator: "\n")
+            
+            if contextBefore.contains(precedingContext.trimmingCharacters(in: .whitespacesAndNewlines)) {
+                score += 0.5
+            }
+        }
+        
+        // Check lines immediately after the section
+        if let followingContext = followingContext, 
+           !followingContext.isEmpty,
+           sectionEndIndex < fullLines.count {
+            let linesAfter = Array(fullLines[sectionEndIndex..<min(fullLines.count, sectionEndIndex + 2)])
+            let contextAfter = linesAfter.joined(separator: "\n")
+            
+            if contextAfter.contains(followingContext.trimmingCharacters(in: .whitespacesAndNewlines)) {
+                score += 0.5
+            }
+        }
+        
+        return score
     }
     
     /// Enhanced retain operation handling

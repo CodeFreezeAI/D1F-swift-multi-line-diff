@@ -925,6 +925,10 @@ func main() throws {
         return demonstrateTruncatedDiff()
     }
     
+    runTest("Enhanced Truncated Diff with Dual Context") {
+        return demonstrateEnhancedTruncatedDiff()
+    }
+    
     let endTime = getCurrentTimeMs()
     let totalExecutionTime = Double(endTime - startTime) / 1000.0
     
