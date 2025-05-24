@@ -38,7 +38,7 @@ extension MultiLineDiff {
         
         // Verify the Todd result by applying it
         do {
-            let appliedResult = try applyDiff(to: source, diff: toddResult, allowTruncatedSource: false)
+            let appliedResult = try applyDiff(to: source, diff: toddResult)
             if appliedResult == destination {
                 return (toddResult, .todd)
             } else {

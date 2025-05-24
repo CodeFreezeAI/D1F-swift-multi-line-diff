@@ -2,7 +2,7 @@
 
 [![Swift 6.1](https://img.shields.io/badge/Swift-6.1-orange.svg)](https://swift.org)
 [![Website](https://img.shields.io/badge/website-xcf.ai-blue.svg)](https://xcf.ai)
-[![Version](https://img.shields.io/badge/version-1.2.5-green.svg)](https://github.com/toddbruss/swift-multi-line-diff)
+[![Version](https://img.shields.io/badge/version-1.2.6-green.svg)](https://github.com/toddbruss/swift-multi-line-diff)
 [![GitHub stars](https://img.shields.io/github/stars/codefreezeai/swift-multi-line-diff.svg?style=social)](https://github.com/codefreezeai/swift-multi-line-diff/stargazers)
 [![GitHub downloads](https://img.shields.io/github/downloads/codefreezeai/swift-multi-line-diff/total.svg)](https://github.com/codefreezeai/swift-multi-line-diff/releases)
 [![GitHub forks](https://img.shields.io/github/forks/codefreezeai/swift-multi-line-diff.svg?style=social)](https://github.com/codefreezeai/swift-multi-line-diff/network)
@@ -25,18 +25,17 @@ A Swift library for creating and applying diffs to multi-line text content. Supp
 - **Source verification and confidence scoring** 📊
 - Designed for AI code integrity
 - **Enhanced Truncated Diff Support** 🆕
-- **🔥 SmartDiff Methods (Preferred)** 🔥
 
 ## 🖥️ Platform Compatibility
 
 - **macOS**: 13.0+
 - **Swift**: 6.1+
 
-## 🚀 **SmartDiff Methods - Preferred Approach** ⭐
+## 🚀 **Enhanced Core Methods - Intelligence Built-In** ⭐
 
-**NEW 2025**: The SmartDiff methods are the **recommended and preferred** way to work with MultiLineDiff. These methods provide intelligent, automatic handling without manual configuration.
+**NEW 2025**: The standard `createDiff()` and `applyDiff()` methods now include all intelligent capabilities built-in. No special "Smart" methods needed!
 
-### 🔥 Why Choose SmartDiff?
+### 🔥 Why Choose the Enhanced Core Methods?
 
 - **🤖 Zero Configuration**: Automatically detects full vs truncated sources
 - **🧠 Intelligent Application**: No manual `allowTruncatedSource` parameters needed
@@ -45,28 +44,29 @@ A Swift library for creating and applying diffs to multi-line text content. Supp
 - **↩️ Undo Support**: Automatic reverse diff generation
 - **⚡ Performance**: Same blazing-fast speed with enhanced intelligence
 
-### 🎯 SmartDiff API Overview
+### 🎯 Core API Overview
 
 | Method | Description | Use Case |
 |--------|-------------|----------|
-| `createSmartDiff()` | 🧠 Intelligent diff creation with source storage | **Recommended for all diffs** |
-| `applySmartDiff()` | 🤖 Auto-detecting diff application | **Preferred for applying diffs** |
-| `applyBase64SmartDiff()` | 📦 Smart Base64 diff application | **Best for encoded diffs** |
-| `applyBase64SmartDiffWithVerify()` | 🔐 Smart Base64 diff with verification | **Maximum safety for encoded diffs** |
-| `applySmartDiffWithVerify()` | 🔐 Smart application + verification | **Maximum safety** |
+| `createDiff()` | 🧠 Intelligent diff creation with source storage | **Standard for all diffs** |
+| `createBase64Diff()` | 📦 Intelligent base 64 diff | **Standard for all diffs** |
+| `applyDiff()` | 🤖 Auto-detecting diff application | **Standard for applying diffs** |
+| `applyBase64Diff()` | 📦 Base64 diff application | **For encoded diffs** |
+| `verifyDiff()` | 🔐 Diff integrity verification | **For validation** |
+| `createUndoDiff()` | ↩️ Automatic undo generation | **For rollback** |
 
 ### 🔥 **Recommended Usage Pattern**
 
 ```swift
-// ✅ PREFERRED: SmartDiff approach (2025)
-// Step 1: Create smart diff with automatic source storage
-let diff = MultiLineDiff.createSmartDiff(
+// ✅ STANDARD: Enhanced core methods (2025)
+// Step 1: Create diff with automatic intelligence
+let diff = MultiLineDiff.createDiff(
     source: originalCode,
     destination: modifiedCode
 )
 
 // Step 2: Apply intelligently - works with ANY source type automatically!
-let result = try MultiLineDiff.applySmartDiff(to: anySource, diff: diff)
+let result = try MultiLineDiff.applyDiff(to: anySource, diff: diff)
 // Works perfectly with:
 // - Full documents
 // - Truncated sections  
@@ -75,7 +75,7 @@ let result = try MultiLineDiff.applySmartDiff(to: anySource, diff: diff)
 // NO manual configuration needed! 🎉
 ```
 
-### 🆚 **SmartDiff vs Traditional Methods**
+### 🆚 **Enhanced vs Traditional Methods**
 
 ```swift
 // ❌ OLD WAY: Manual configuration required
@@ -92,27 +92,27 @@ let result = try MultiLineDiff.applyDiff(
     allowTruncatedSource: true  // Manual decision
 )
 
-// ✅ NEW SMARTDIFF WAY: Automatic everything!
-let diff = MultiLineDiff.createSmartDiff(
+// ✅ NEW WAY: Automatic everything!
+let diff = MultiLineDiff.createDiff(
     source: truncatedContent,
     destination: modifiedContent
 )
 
-let result = try MultiLineDiff.applySmartDiff(to: fullDocument, diff: diff)
+let result = try MultiLineDiff.applyDiff(to: fullDocument, diff: diff)
 // Automatically detects, matches, and applies correctly! 🚀
 ```
 
-### 🔐 **SmartDiff with Verification (Maximum Safety)**
+### 🔐 **Core Methods with Verification (Maximum Safety)**
 
 ```swift
-// Create smart diff with built-in integrity verification
-let diff = MultiLineDiff.createSmartDiff(
+// Create diff with built-in integrity verification
+let diff = MultiLineDiff.createDiff(
     source: originalCode,
     destination: modifiedCode
 )
 
-// Apply with automatic verification - safest approach
-let result = try MultiLineDiff.applySmartDiffWithVerify(to: sourceCode, diff: diff)
+// Apply with automatic verification built-in
+let result = try MultiLineDiff.applyDiff(to: sourceCode, diff: diff)
 
 // Check diff integrity (automatic)
 if MultiLineDiff.verifyDiff(diff) {
@@ -121,34 +121,28 @@ if MultiLineDiff.verifyDiff(diff) {
 
 // Create undo operation (automatic)
 if let undoDiff = MultiLineDiff.createUndoDiff(from: diff) {
-    let restored = try MultiLineDiff.applySmartDiff(to: result, diff: undoDiff)
+    let restored = try MultiLineDiff.applyDiff(to: result, diff: undoDiff)
     assert(restored == originalCode) // Perfect restoration
 }
 ```
 
-### 📦 **SmartDiff with Base64 Encoding**
+### 📦 **Core Methods with Base64 Encoding**
 
 ```swift
-// Create Base64 SmartDiff
+// Create Base64 diff
 let base64Diff = try MultiLineDiff.createBase64Diff(
     source: sourceCode,
     destination: destinationCode
 )
 
-// Apply Base64 SmartDiff - automatically handles everything
-let result = try MultiLineDiff.applyBase64SmartDiff(
-    to: anySource, 
-    base64Diff: base64Diff
-)
-
-// Apply Base64 SmartDiff with verification - maximum safety
-let verifiedResult = try MultiLineDiff.applyBase64SmartDiffWithVerify(
+// Apply Base64 diff - automatically handles everything
+let result = try MultiLineDiff.applyBase64Diff(
     to: anySource, 
     base64Diff: base64Diff
 )
 ```
 
-### 🎯 **Real-World SmartDiff Example**
+### 🎯 **Real-World Example**
 
 ```swift
 let fullDocument = """
@@ -174,17 +168,17 @@ Please follow these UPDATED setup steps carefully.
 This configuration is CRITICAL for operation.
 """
 
-// ✅ SmartDiff: One method handles everything
-let diff = MultiLineDiff.createSmartDiff(
+// ✅ Enhanced Core Methods: One method handles everything
+let diff = MultiLineDiff.createDiff(
     source: truncatedSection,
     destination: modifiedSection
 )
 
 // Apply to BOTH full document AND truncated section - both work automatically!
-let resultFromFull = try MultiLineDiff.applySmartDiff(to: fullDocument, diff: diff)
-let resultFromTruncated = try MultiLineDiff.applySmartDiff(to: truncatedSection, diff: diff)
+let resultFromFull = try MultiLineDiff.applyDiff(to: fullDocument, diff: diff)
+let resultFromTruncated = try MultiLineDiff.applyDiff(to: truncatedSection, diff: diff)
 
-// SmartDiff automatically:
+// Core methods automatically:
 // ✅ Detects source type (full vs truncated)
 // ✅ Finds correct section using context matching
 // ✅ Applies diff with confidence scoring
@@ -192,9 +186,9 @@ let resultFromTruncated = try MultiLineDiff.applySmartDiff(to: truncatedSection,
 // ✅ Handles edge cases gracefully
 ```
 
-### 🏆 **SmartDiff Benefits Summary**
+### 🏆 **Core Methods Benefits Summary**
 
-| Feature | Traditional Methods | SmartDiff Methods |
+| Feature | Traditional Methods | Enhanced Core Methods |
 |---------|-------------------|-------------------|
 | **Configuration** | ❌ Manual parameters required | ✅ Zero configuration |
 | **Source Detection** | ❌ Manual `allowTruncatedSource` | ✅ Automatic detection |
@@ -204,7 +198,7 @@ let resultFromTruncated = try MultiLineDiff.applySmartDiff(to: truncatedSection,
 | **Error Handling** | ❌ Basic | ✅ Enhanced with fallbacks |
 | **API Complexity** | ❌ Multiple parameters | ✅ Simple, clean API |
 
-**Recommendation**: Use SmartDiff methods for all new code. They provide the same performance with significantly enhanced intelligence and safety. 🚀
+**Recommendation**: Use the enhanced core methods for all new code. They provide the same performance with significantly enhanced intelligence and safety. 🚀
 
 ## 🚀 Enhanced Truncated Diff Support with Auto-Detection
 
@@ -235,8 +229,8 @@ When working with truncated sources, follow these guidelines for `sourceStartLin
 
 1. **If You Know the Exact Line Number**:
 ```swift
-// ✅ PREFERRED: SmartDiff (automatically handles everything)
-let diff = MultiLineDiff.createSmartDiff(
+// ✅ PREFERRED: Enhanced core methods (automatically handles everything)
+let diff = MultiLineDiff.createDiff(
     source: truncatedContent,
     destination: modifiedContent,
     sourceStartLine: 42  // Optional: enhances accuracy
@@ -253,11 +247,11 @@ let diff = MultiLineDiff.createDiff(
 
 2. **If Line Number is Unknown**:
 ```swift
-// ✅ PREFERRED: SmartDiff (auto-interpolates)
-let diff = MultiLineDiff.createSmartDiff(
+// ✅ PREFERRED: Core methods (auto-interpolates)
+let diff = MultiLineDiff.createDiff(
     source: truncatedContent,
     destination: modifiedContent
-    // No sourceStartLine needed - SmartDiff handles it
+    // No sourceStartLine needed - core methods handle it
 )
 
 // ❌ TRADITIONAL: Manual fallback
@@ -269,15 +263,15 @@ let diff = MultiLineDiff.createDiff(
 )
 ```
 
-**SmartDiff Practices**:
-- **Best Practice**: Use `createSmartDiff()` - automatically handles line interpolation
+**Enhanced Core Practices**:
+- **Best Practice**: Use `createDiff()` - automatically handles line interpolation
 - **Enhanced Accuracy**: Optionally specify `sourceStartLine` for better precision
-- SmartDiff uses dual context and confidence scoring for intelligent section location
+- Core methods use dual context and confidence scoring for intelligent section location
 - Built-in verification ensures correct application
 
 ### Line Number Interpolation
 
-SmartDiff automatically:
+The core methods automatically:
 - Analyzes preceding and following context
 - Uses metadata to determine the most likely section
 - Intelligently applies the diff to the correct location
@@ -307,14 +301,14 @@ This section provides a comprehensive explanation of fundamental principles.
 Enhanced and more detailed insights.
 """
 
-// ✅ PREFERRED: SmartDiff approach (fully automatic)
-let diff = MultiLineDiff.createSmartDiff(
+// ✅ PREFERRED: Enhanced core methods (fully automatic)
+let diff = MultiLineDiff.createDiff(
     source: truncatedSection,
     destination: updatedSection
 )
 
 // Apply intelligently - works on both full document and truncated section
-let updatedDocument = try MultiLineDiff.applySmartDiff(to: originalDocument, diff: diff)
+let updatedDocument = try MultiLineDiff.applyDiff(to: originalDocument, diff: diff)
 
 // ❌ TRADITIONAL: Manual configuration required
 let diff = MultiLineDiff.createDiff(
@@ -331,21 +325,21 @@ let updatedDocument = try MultiLineDiff.applyDiff(
 )
 ```
 
-SmartDiff handles all the complexity automatically while providing the same powerful functionality.
+The core methods handle all the complexity automatically while providing the same powerful functionality.
 
 ### 🤖 NEW Intelligent Auto-Application (2025)
 
 The enhanced version automatically detects source type and applies diffs intelligently:
 
 ```swift
-// ✅ PREFERRED: SmartDiff - fully automatic
-let diff = MultiLineDiff.createSmartDiff(
+// ✅ PREFERRED: Core methods - fully automatic
+let diff = MultiLineDiff.createDiff(
     source: truncatedSection,
     destination: updatedSection
 )
 
 // Intelligent application - automatically detects if full document or truncated source
-let result = try MultiLineDiff.applySmartDiff(to: anySource, diff: diff)
+let result = try MultiLineDiff.applyDiff(to: anySource, diff: diff)
 // Works with BOTH full documents AND truncated sections automatically!
 
 // ❌ TRADITIONAL: Manual detection required
@@ -364,8 +358,8 @@ let result = try MultiLineDiff.applyDiff(to: anySource, diff: diff)
 ### 🔐 Enhanced Verification and Undo Operations
 
 ```swift
-// ✅ PREFERRED: SmartDiff with built-in verification
-let diff = MultiLineDiff.createSmartDiff(
+// ✅ PREFERRED: Core methods with built-in verification
+let diff = MultiLineDiff.createDiff(
     source: originalCode,
     destination: modifiedCode
 )
@@ -376,11 +370,11 @@ if let hash = diff.metadata?.diffHash {
 }
 
 // Apply with automatic verification
-let result = try MultiLineDiff.applySmartDiffWithVerify(to: originalCode, diff: diff)
+let result = try MultiLineDiff.applyDiff(to: originalCode, diff: diff)
 
 // Undo operation (automatic reverse diff)
 let undoDiff = MultiLineDiff.createUndoDiff(from: diff)!
-let restored = try MultiLineDiff.applySmartDiff(to: result, diff: undoDiff)
+let restored = try MultiLineDiff.applyDiff(to: result, diff: undoDiff)
 assert(restored == originalCode) // Perfect restoration
 
 // ❌ TRADITIONAL: Manual verification steps
@@ -430,15 +424,15 @@ Please follow these UPDATED setup steps carefully.
 This configuration is CRITICAL for operation.
 """
 
-// ✅ PREFERRED: SmartDiff with enhanced dual context
-let diff = MultiLineDiff.createSmartDiff(
+// ✅ PREFERRED: Core methods with enhanced dual context
+let diff = MultiLineDiff.createDiff(
     source: truncatedSection,
     destination: modifiedSection
 )
 
 // Automatic intelligent application - works on BOTH:
-let resultFromFull = try MultiLineDiff.applySmartDiff(to: fullDocument, diff: diff)
-let resultFromTruncated = try MultiLineDiff.applySmartDiff(to: truncatedSection, diff: diff)
+let resultFromFull = try MultiLineDiff.applyDiff(to: fullDocument, diff: diff)
+let resultFromTruncated = try MultiLineDiff.applyDiff(to: truncatedSection, diff: diff)
 
 // Both results are correctly transformed with automatic context matching!
 
@@ -530,22 +524,53 @@ assert(result == complexDestination) // Always passes
 - **Early Exit**: If Todd succeeds (most cases), no additional processing
 - **Smart Caching**: Verification results are internally optimized
 
-## Base64 Diff Encoding
+## 🚀 Why Base64?
 
-Compact and safe diff representation with built-in base64 encoding:
+1. **Compact Representation**: Reduces diff size
+2. **Safe Transmission**: Avoids escaping issues
+3. **Universal Compatibility**: Works across different systems
+4. **AI-Friendly**: Ideal for code transformation pipelines
 
-```swift
-// Create a base64 encoded diff
-let base64Diff = try MultiLineDiff.createBase64Diff(
-    source: originalCode, 
-    destination: modifiedCode
-)
+## 🔍 Algorithm Complexity Analysis
 
-// Apply base64 encoded diff
-let reconstructedCode = try MultiLineDiff.applyBase64Diff(
-    to: originalCode, 
-    base64Diff: base64Diff
-)
+*Based on actual performance measurements from MultiLineDiffRunner*
+
+### Brus - Simple - Algorithm Big O Notation
+
+| Metric | Complexity | Explanation | Real Performance | Visual |
+|--------|------------|-------------|------------------|----------------------|
+| **Time Complexity** | O(n) | Linear time complexity | **0.0960 ms create** | 🟢🟢🟢  |
+| **Space Complexity** | O(1) | Constant space usage | **Minimal memory** | 🟢🟢🟢  |
+| **Apply Performance** | O(n) | Direct character operations | **0.0220 ms apply** | 🟢🟢🟢  |
+| **Total Operations** | Low | Simple retain/insert/delete | **4 operations** | 🟢🟢🟢  |
+| **Best Case** | Ω(1) | Identical strings | **<0.01 ms** | 🟢🟢🟢  |
+| **Worst Case** | O(n) | Complete string replacement | **~0.5 ms** | 🟢🟢🟢  |
+
+#### Performance Profile
+```
+Creation Speed:  🟢🟢🟢 (0.0960 ms)
+Application:     🟢🟢🟢 (0.0220 ms) 
+Memory Usage:    🟢🟢🟢 (Minimal)
+Operation Count: 🟢🟢🟢 (4 ops)
+```
+
+### Todd - Smart - Algorithm Big O Notation
+
+| Metric | Complexity | Explanation | Real Performance | Visual |
+|--------|------------|-------------|------------------|----------------------|
+| **Time Complexity** | O(n log n) | LCS-based semantic analysis | **0.3460 ms create** | 🟢🟢🟡  |
+| **Space Complexity** | O(n) | Linear space for LCS table | **Optimized memory** | 🟢🟢🟡  |
+| **Apply Performance** | O(n) | Sequential operation application | **0.0180 ms apply** | 🟢🟢🟢  |
+| **Total Operations** | High | Granular semantic operations | **22 operations** | 🟢🟢🟡  |
+| **Best Case** | Ω(n) | Simple structural changes | **~0.2 ms** | 🟢🟢🟡  |
+| **Worst Case** | O(n²) | Complex text transformations | **~1.0 ms** | 🟢🟡🔴  |
+
+#### Performance Profile
+```
+Creation Speed:  🟢🟢🟡 (0.3460 ms) - Performance optimized!
+Application:     🟢🟢🟢 (0.0180 ms) - Excellent performance
+Memory Usage:    🟢🟢🟡 (Optimized LCS)
+Operation Count: 🟢🟢🟡 (22 ops - 5.5x more detailed)
 ```
 
 ## 🚀 Performance Optimizations for Swift 6.1
@@ -996,7 +1021,6 @@ func createUser(name: String, email: String, age: Int, avatar: UIImage? = nil) -
 │ │ ---     guard validateEmail(email) else {
 │ │ ---         return nil
 │ │ ---     }
-│ │ ---     return User(name: name, email: email, age: age)
 │ │ +++ import UIKit
 │ │ +++ 
 │ │ +++ struct User {
@@ -1126,9 +1150,9 @@ func createUser(name: String, email: String, age: Int, avatar: UIImage? = nil) -
 let source = "Hello, world!"
 let destination = "Hello, Swift!"
 
-// ✅ PREFERRED: SmartDiff approach
-let diff = MultiLineDiff.createSmartDiff(source: source, destination: destination)
-let result = try MultiLineDiff.applySmartDiff(to: source, diff: diff)
+// ✅ PREFERRED: Enhanced core methods approach
+let diff = MultiLineDiff.createDiff(source: source, destination: destination)
+let result = try MultiLineDiff.applyDiff(to: source, diff: diff)
 print(result == destination) // true
 
 // ❌ TRADITIONAL: Manual approach  
@@ -1140,8 +1164,8 @@ print(result == destination) // true
 ### Choosing Diff Algorithms
 
 ```swift
-// ✅ PREFERRED: SmartDiff with automatic algorithm selection
-let smartDiff = MultiLineDiff.createSmartDiff(
+// ✅ PREFERRED: Enhanced core methods with automatic algorithm selection
+let diff = MultiLineDiff.createDiff(
     source: sourceCode, 
     destination: destinationCode
     // Algorithm automatically selected with fallback verification
@@ -1171,32 +1195,26 @@ let brusDiff = MultiLineDiff.createDiff(
 
 ### Algorithm Selection Guide
 
-| Scenario | SmartDiff Approach | Traditional Approach | Fallback Behavior |
+| Scenario | Enhanced Core Approach | Traditional Approach | Fallback Behavior |
 |----------|-------------------|----------------------|-------------------|
-| **AI Code Transformations** | `createSmartDiff()` | `.todd` | ✅ Automatic fallback to `.brus` |
-| **Production Systems** | `createSmartDiff()` | `.todd` | ✅ Automatic fallback to `.brus` |
-| **Performance Critical** | `createSmartDiff()` | `.brus` | ❌ No fallback needed |
-| **Simple Text Changes** | `createSmartDiff()` | `.brus` | ❌ No fallback needed |
+| **AI Code Transformations** | `createDiff()` | `.todd` | ✅ Automatic fallback to `.brus` |
+| **Production Systems** | `createDiff()` | `.todd` | ✅ Automatic fallback to `.brus` |
+| **Performance Critical** | `createDiff()` | `.brus` | ❌ No fallback needed |
+| **Simple Text Changes** | `createDiff()` | `.brus` | ❌ No fallback needed |
 
-**Best Practice**: Use `createSmartDiff()` for all scenarios - you get sophisticated diffs when possible, with automatic reliability guarantees through fallback, plus intelligent application handling.
+**Best Practice**: Use `createDiff()` for all scenarios - you get sophisticated diffs when possible, with automatic reliability guarantees through fallback, plus intelligent application handling.
 
 ### Base64 Encoded Diffs (Recommended for AI Transformations)
 
 ```swift
-// ✅ PREFERRED: SmartDiff with Base64
+// ✅ PREFERRED: Enhanced core methods with Base64
 let base64Diff = try MultiLineDiff.createBase64Diff(
     source: sourceCode, 
     destination: destinationCode
 )
 
 // Apply with automatic intelligence
-let reconstructedCode = try MultiLineDiff.applyBase64SmartDiff(
-    to: sourceCode, 
-    base64Diff: base64Diff
-)
-
-// Apply with verification for maximum safety
-let verifiedCode = try MultiLineDiff.applyBase64SmartDiffWithVerify(
+let reconstructedCode = try MultiLineDiff.applyBase64Diff(
     to: sourceCode, 
     base64Diff: base64Diff
 )
@@ -1218,23 +1236,23 @@ let reconstructedCode = try MultiLineDiff.applyBase64Diff(
 ### File-Based Diff Operations
 
 ```swift
-// ✅ PREFERRED: SmartDiff with file operations
-let smartDiff = MultiLineDiff.createSmartDiff(
+// ✅ PREFERRED: Enhanced core methods with file operations
+let diff = MultiLineDiff.createDiff(
     source: sourceCode,
     destination: destinationCode
 )
 
-// Save SmartDiff to file
+// Save diff to file
 try MultiLineDiff.saveDiffToFile(
-    smartDiff, 
+    diff, 
     fileURL: URL(fileURLWithPath: "/path/to/diff.json")
 )
 
-// Load and apply SmartDiff from file
+// Load and apply diff from file
 let loadedDiff = try MultiLineDiff.loadDiffFromFile(
     fileURL: URL(fileURLWithPath: "/path/to/diff.json")
 )
-let result = try MultiLineDiff.applySmartDiff(to: targetSource, diff: loadedDiff)
+let result = try MultiLineDiff.applyDiff(to: targetSource, diff: loadedDiff)
 
 // ❌ TRADITIONAL: Manual file operations
 // Save diff to a file
@@ -1252,15 +1270,15 @@ let loadedDiff = try MultiLineDiff.loadDiffFromFile(
 ### 🆕 NEW Auto-Detection & Verification Features (2025)
 
 ```swift
-// ✅ PREFERRED: SmartDiff handles everything automatically
-let diff = MultiLineDiff.createSmartDiff(
+// ✅ PREFERRED: Enhanced core methods handle everything automatically
+let diff = MultiLineDiff.createDiff(
     source: anySource,  // Can be full document OR truncated section
     destination: modifiedContent
     // Auto-detection built-in, no manual configuration needed
 )
 
 // Apply intelligently - automatic configuration
-let result = try MultiLineDiff.applySmartDiff(to: anyTarget, diff: diff)
+let result = try MultiLineDiff.applyDiff(to: anyTarget, diff: diff)
 
 // Verification and undo operations (automatic)
 if MultiLineDiff.verifyDiff(diff) {
@@ -1268,7 +1286,7 @@ if MultiLineDiff.verifyDiff(diff) {
 }
 
 if let undoDiff = MultiLineDiff.createUndoDiff(from: diff) {
-    let restored = try MultiLineDiff.applySmartDiff(to: result, diff: undoDiff)
+    let restored = try MultiLineDiff.applyDiff(to: result, diff: undoDiff)
 }
 
 // Enhanced metadata access (automatic)
@@ -1422,8 +1440,8 @@ let data = try Data(contentsOf: fileURL, options: [.mappedIfSafe])
 | Metric | Previous | Current (2025) | Improvement |
 |--------|----------|----------------|-------------|
 | **Test Suite** | 33 tests | 33 tests | ✅ 100% reliability maintained |
-| **Brus Create** | 0.027ms | 0.103ms | Consistent performance |
-| **Todd Create** | 0.323ms | 0.402ms | Stable with new features |
+| **Brus Create** | 0.027ms | 0.0960ms | Consistent performance |
+| **Todd Create** | 0.323ms | 0.3460ms | Stable with new features |
 | **Algorithm Fallback** | Manual | Automatic | 🤖 Intelligent |
 | **Source Detection** | Manual | Automatic | 🧠 Smart |
 | **Verification** | Basic | Enhanced | 🔐 Comprehensive |
@@ -1592,88 +1610,44 @@ func calculateTotal(items: [Product]) -> Double {
 
 ### Performance Comparison Results (Updated 2025 - Latest Benchmarks)
 
-**Test Environment**: 33 comprehensive tests, **1000 iterations** per algorithm, averaged results
+**Test Environment**: 1000 iterations, Source Code: 664 chars, Modified Code: 1053 chars
 
 | Metric | Brus Algorithm | Todd Algorithm | Performance Ratio |
 |--------|----------------|----------------|-------------------|
 | **Total Operations** | 4 operations | 22 operations | 5.5x more granular |
-| **Create Diff Time** | 0.097 ms | 0.395 ms | **4.1x faster** (Brus) |
-| **Apply Diff Time** | 0.004 ms | 0.007 ms | **1.8x faster** (Brus) |
-| **Total Time** | 0.101 ms | 0.402 ms | **4.0x faster** (Brus) |
+| **Create Diff Time** | 0.0960 ms | 0.3460 ms | **3.6x faster** (Brus) |
+| **Apply Diff Time** | 0.0220 ms | 0.0180 ms | **1.2x faster** (Todd) |
+| **Total Time** | 0.1180 ms | 0.3640 ms | **3.1x faster** (Brus) |
 | **Retained Characters** | 21 chars (3.2%) | 397 chars (59.8%) | **18.9x more preservation** (Todd) |
 | **Semantic Awareness** | 🔤 Character-level | 🧠 Structure-aware | Intelligent |
 | **Test Suite** | ✅ 33/33 tests pass | ✅ 33/33 tests pass | 100% reliability |
-
-## 🚀 Why Base64?
-
-1. **Compact Representation**: Reduces diff size
-2. **Safe Transmission**: Avoids escaping issues
-3. **Universal Compatibility**: Works across different systems
-4. **AI-Friendly**: Ideal for code transformation pipelines
-
-## 🔍 Algorithm Complexity Analysis
-
-*Based on actual performance measurements from MultiLineDiffRunner*
-
-### Brus - Simple - Algorithm Big O Notation
-
-| Metric | Complexity | Explanation | Real Performance | Visual |
-|--------|------------|-------------|------------------|----------------------|
-| **Time Complexity** | O(n) | Linear time complexity | **0.027ms create** | 🟢🟢🟢  |
-| **Space Complexity** | O(1) | Constant space usage | **Minimal memory** | 🟢🟢🟢  |
-| **Apply Performance** | O(n) | Direct character operations | **0.002ms apply** | 🟢🟢🟢  |
-| **Total Operations** | Low | Simple retain/insert/delete | **~4 operations** | 🟢🟢🟢  |
-| **Best Case** | Ω(1) | Identical strings | **<0.01ms** | 🟢🟢🟢  |
-| **Worst Case** | O(n) | Complete string replacement | **~0.5ms** | 🟢🟢🟢  |
-
-#### Performance Profile
-```
-Creation Speed:  🟢🟢🟢 (0.027ms)
-Application:     🟢🟢🟢 (0.002ms) 
-Memory Usage:    🟢🟢🟢 (Minimal)
-Operation Count: 🟢🟢🟢 (4 ops)
-```
-
-### Todd - Smart - Algorithm Big O Notation
-
-| Metric | Complexity | Explanation | Real Performance | Visual |
-|--------|------------|-------------|------------------|----------------------|
-| **Time Complexity** | O(n log n) | LCS-based semantic analysis | **0.323ms create** | 🟢🟢🟡  |
-| **Space Complexity** | O(n) | Linear space for LCS table | **Optimized memory** | 🟢🟢🟡  |
-| **Apply Performance** | O(n) | Sequential operation application | **0.003ms apply** | 🟢🟢🟢  |
-| **Total Operations** | High | Granular semantic operations | **~22 operations** | 🟢🟢🟡  |
-| **Best Case** | Ω(n) | Simple structural changes | **~0.2ms** | 🟢🟢🟡  |
-| **Worst Case** | O(n²) | Complex text transformations | **~1.0ms** | 🟢🟡🔴  |
-
-#### Performance Profile
-```
-Creation Speed:  🟢🟢🟡 (0.323ms) - Performance optimized!
-Application:     🟢🟢🟢 (0.003ms) - Excellent performance
-Memory Usage:    🟢🟢🟡 (Optimized LCS)
-Operation Count: 🟢🟢🟡 (22 ops - 5.5x more detailed)
-```
-
-### Real-World Performance Comparison (2025 Updated Benchmarks)
-
-*Measured on 664-character source code transformation, averaged over **1000 iterations***
-
-| Algorithm | Create Time | Apply Time | Total Time | Operations | Speed Factor |
-|-----------|-------------|------------|------------|------------|--------------|
-| **Brus** | 0.097ms | 0.004ms | **0.101ms** | 4 | **1.0x** ⚡ |
-| **Todd** | 0.395ms | 0.007ms | **0.402ms** | 22 | **4.0x slower** |
 
 ### Performance Visualization (Updated 2025)
 
 ```
 Speed Comparison (Total Time - 1000 iterations averaged):
-Brus: ███████████████████████████ 0.101ms
-Todd: ██████████████████████████████████████████████████████████████████████████████████████████████████████████ 0.402ms
+Brus: ██████████ 0.1180 ms
+Todd: ████████████████████████████████████ 0.3640 ms
 
-Operation Granularity:
-Brus: ████ (4 operations - simple & fast)
-Todd: ██████████████████████████████████████████████████ (22 operations - detailed & intelligent)
+Operation Breakdown:
+Brus: 4 ops (2 retain, 1 insert, 1 delete)
+  - Retained: 21 chars (3.2%)
+  - Inserted: 1032 chars
+  - Deleted: 643 chars
+
+Todd: 22 ops (9 retain, 8 insert, 5 delete)
+  - Retained: 397 chars (59.8%)
+  - Inserted: 656 chars
+  - Deleted: 267 chars
 
 Test Suite Performance:
 33 Tests: ✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅ (100% pass rate)
 Duration: ~0.224-0.565 seconds for complete test suite
 ```
+
+### Performance Comparison (Detailed Metrics)
+
+| Algorithm | Create Time | Apply Time | Total Time | Operations | Speed Factor |
+|-----------|-------------|------------|------------|------------|--------------|
+| **Brus** | 0.0960 ms | 0.0220 ms | **0.1180 ms** | 4 | **1.0x** ⚡ |
+| **Todd** | 0.3460 ms | 0.0180 ms | **0.3640 ms** | 22 | **3.1x slower** |

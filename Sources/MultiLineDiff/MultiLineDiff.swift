@@ -114,49 +114,6 @@ import CryptoKit
         )
     }
     
-    /// Creates a diff with explicit source content storage for intelligent application
-    ///
-    /// This method is specifically designed for scenarios where you want to ensure
-    /// the diff contains the original source for verification during application.
-    ///
-    /// # Example
-    /// ```swift
-    /// let truncatedSection = "Section content..."
-    /// let modifiedSection = "Modified section content..."
-    ///
-    /// // Create diff with source stored for verification
-    /// let diff = MultiLineDiff.createVerifiableDiff(
-    ///     source: truncatedSection,
-    ///     destination: modifiedSection
-    /// )
-    ///
-    /// // Later, intelligently apply to either full document or truncated section
-    /// let result = try MultiLineDiff.applyDiffIntelligently(to: fullDocument, diff: diff)
-    /// ```
-    ///
-    /// - Parameters:
-    ///   - source: The original text to transform from
-    ///   - destination: The target text to transform to
-    ///   - algorithm: Diff generation strategy (defaults to semantic Todd algorithm)
-    ///   - sourceStartLine: Optional starting line number for precise tracking
-    ///
-    /// - Returns: A `DiffResult` with source content stored for automatic verification
-    public static func createSmartDiff(
-        source: String,
-        destination: String,
-        algorithm: DiffAlgorithm = .todd,
-        sourceStartLine: Int? = nil
-    ) -> DiffResult {
-        return createDiff(
-            source: source,
-            destination: destination,
-            algorithm: algorithm,
-            includeMetadata: true,
-            sourceStartLine: sourceStartLine
-        )
-    }
-
-    
     // MARK: - Base64 and Encoding Methods
     
     /// Creates a base64 encoded diff between two strings
@@ -204,7 +161,7 @@ import CryptoKit
         sourceStartLine: Int? = nil
     ) throws -> String {
         // Create SmartDiff with intelligent metadata storage
-        let diff = createSmartDiff(
+        let diff = createDiff(
             source: source,
             destination: destination,
             algorithm: algorithm,
@@ -264,46 +221,30 @@ import CryptoKit
     /// - Throws: An error if the diff cannot be applied correctly
     public static func applyDiff(
         to source: String,
-        diff: DiffResult,
-        allowTruncatedSource: Bool = false
+        diff: DiffResult
     ) throws -> String {
         // Handle empty operations case explicitly
         if diff.operations.isEmpty {
             return source
         }
     
+        let allowTruncated = shouldAllowTruncatedSource(for: source, diff: diff)
+
         // Use enhanced string processing for diff application
         let result = try applyDiffWithEnhancedProcessing(
             source: source,
             operations: diff.operations,
             metadata: diff.metadata,
-            allowTruncatedSource: allowTruncatedSource
+            allowTruncatedSource: allowTruncated
         )
         
         try performSmartVerification(source: source, result: result, diff: diff)
         return result
     }
     
-    /// Intelligent diff application that automatically determines handling based on metadata and source verification
-    /// - Parameters:
-    ///   - source: The original string (could be full or truncated)
-    ///   - diff: The diff to apply
-    /// - Returns: The resulting string after applying the diff
-    /// - Throws: An error if the diff cannot be applied correctly
-    public static func applySmartDiff(
-        to source: String,
-        diff: DiffResult
-    ) throws -> String {
-        let allowTruncated = shouldAllowTruncatedSource(for: source, diff: diff)
-        let result = try applyDiff(to: source, diff: diff, allowTruncatedSource: allowTruncated)
-        try performSmartVerification(source: source, result: result, diff: diff)
-        return result
-        
-    }
-    
     /// Enhanced diff application with Swift 6.1 optimizations
     @_optimize(speed)
-    public static func applyDiffWithEnhancedProcessing(
+    private static func applyDiffWithEnhancedProcessing(
         source: String,
         operations: [DiffOperation],
         metadata: DiffMetadata?,
@@ -333,7 +274,7 @@ import CryptoKit
     }
     
     /// Apply a section diff to a full document by finding the appropriate section using both preceding and following context
-    public static func applySectionDiff(
+    private static func applySectionDiff(
         fullSource: String,
         operations: [DiffOperation],
         metadata: DiffMetadata
@@ -376,21 +317,7 @@ import CryptoKit
         allowTruncatedSource: Bool = false
     ) throws -> String {
         let diff = try diffFromBase64(base64Diff)
-        return try applyDiff(to: source, diff: diff, allowTruncatedSource: allowTruncatedSource)
-    }
-    
-    /// Intelligently applies a base64 encoded diff to a source string with automatic detection
-    /// - Parameters:
-    ///   - source: The original string (could be full or truncated)
-    ///   - base64Diff: The base64 encoded diff to apply
-    /// - Returns: The resulting string after applying the diff
-    /// - Throws: An error if decoding or applying the diff fails
-    public static func applyBase64SmartDiff(
-        to source: String,
-        base64Diff: String
-    ) throws -> String {
-        let diff = try diffFromBase64(base64Diff)
-        return try applySmartDiff(to: source, diff: diff)
+        return try applyDiff(to: source, diff: diff)
     }
     
     /// Applies an encoded diff to a source string
@@ -408,7 +335,7 @@ import CryptoKit
         allowTruncatedSource: Bool = false
     ) throws -> String {
         let diff = try decodeEncodedDiff(encodedDiff: encodedDiff, encoding: encoding)
-        return try applyDiff(to: source, diff: diff, allowTruncatedSource: allowTruncatedSource)
+        return try applyDiff(to: source, diff: diff)
     }
     
     /// Intelligently applies an encoded diff to a source string with automatic detection
@@ -424,6 +351,6 @@ import CryptoKit
         encoding: DiffEncoding
     ) throws -> String {
         let diff = try decodeEncodedDiff(encodedDiff: encodedDiff, encoding: encoding)
-        return try applySmartDiff(to: source, diff: diff)
+        return try applyDiff(to: source, diff: diff)
     }
 }

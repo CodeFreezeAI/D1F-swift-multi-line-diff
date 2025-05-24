@@ -27,8 +27,7 @@ import Foundation
     // Apply the diff to the truncated section
     let result = try MultiLineDiff.applyDiff(
         to: truncatedSection,
-        diff: truncatedDiff,
-        allowTruncatedSource: true
+        diff: truncatedDiff
     )
     
     // Verify the result
@@ -123,8 +122,7 @@ import Foundation
     // Apply the truncated diff to the full document
     let result = try MultiLineDiff.applyDiff(
         to: fullDocument,
-        diff: truncatedDiff,
-        allowTruncatedSource: true
+        diff: truncatedDiff
     )
     
     // Verify the result
@@ -153,7 +151,7 @@ import Foundation
     let diff = DiffResult(operations: operations)
     
     do {
-        _ = try MultiLineDiff.applyDiff(to: truncatedSource, diff: diff, allowTruncatedSource: true)
+        _ = try MultiLineDiff.applyDiff(to: truncatedSource, diff: diff)
         // Should succeed with allowTruncatedSource = true
     } catch {
         throw TestError("Should not throw with allowTruncatedSource = true")
@@ -179,8 +177,7 @@ import Foundation
     
     let result = try MultiLineDiff.applyDiff(
         to: truncated, 
-        diff: beginningTruncatedDiff,
-        allowTruncatedSource: true
+        diff: beginningTruncatedDiff
     )
     
     #expect(result.hasSuffix("modified."), "Failed to apply diff to beginning-truncated string")
@@ -197,8 +194,7 @@ import Foundation
     
     let emptyResult = try MultiLineDiff.applyDiff(
         to: "Test string", 
-        diff: emptyDiff,
-        allowTruncatedSource: true
+        diff: emptyDiff
     )
     
     #expect(emptyResult == "Test string", "Empty operations should not modify the source")

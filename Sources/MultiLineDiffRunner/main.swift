@@ -865,8 +865,7 @@ func demonstrateTruncatedDiff() -> Bool {
                // Apply the truncated diff to the full original file
         let resultFromTruncated = try MultiLineDiff.applyDiff(
             to: originalContent,
-            diff: truncatedDiff,
-            allowTruncatedSource: true
+            diff: truncatedDiff
         )
         
         // Check if the result matches the partially modified output
@@ -937,10 +936,10 @@ func main() throws {
         let base64SmartDiff = try MultiLineDiff.createBase64SmartDiff(source: source, destination: destination)
         
         // Test new applyBase64SmartDiffWithVerify method  
-        let result = try MultiLineDiff.applyBase64SmartDiff(to: source, base64Diff: base64SmartDiff)
+        let result = try MultiLineDiff.applyBase64Diff(to: source, base64Diff: base64SmartDiff)
         
         // Also test with applyBase64SmartDiff (existing method)
-        let result2 = try MultiLineDiff.applyBase64SmartDiff(to: source, base64Diff: base64SmartDiff)
+        let result2 = try MultiLineDiff.applyBase64Diff(to: source, base64Diff: base64SmartDiff)
         
         return result == destination && result2 == destination
     }

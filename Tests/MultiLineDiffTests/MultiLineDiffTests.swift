@@ -560,10 +560,6 @@ import Foundation
     // Save result
     try result.data(using: .utf8)?.write(to: outputFileURL)
     
-    // Print first few diff operations for debugging
-    for (index, op) in loadedDiff.operations.prefix(10).enumerated() {
-    }
-    
     // Verify result matches modified content
     #expect(result == modifiedContent, "Output from applying diff should match the modified content")
     
@@ -703,14 +699,6 @@ public func generateDiffStats(_ diff: DiffResult) -> (insertedLines: Int, delete
     
     // Verify result
     #expect(applied == destination, "Todd diff should correctly handle complex changes")
-    
-    // Compare with brus algorithm
-    let brusDiff = MultiLineDiff.createDiff(source: source, destination: destination)
-    
-    // Print first few operations for debugging
-    let maxOps = min(5, diff.operations.count)
-    for i in 0..<maxOps {
-    }
 }
 
 // Helper for throwing errors in tests
@@ -985,11 +973,9 @@ class TestFileManager {
         let startTime = Date()
         let diffResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .brus)
         brusDiff = try MultiLineDiff.diffToBase64(diffResult)
-        let createTime = Date().timeIntervalSince(startTime)
         
         let applyStartTime = Date()
         let result = try MultiLineDiff.applyBase64Diff(to: source, base64Diff: brusDiff)
-        let applyTime = Date().timeIntervalSince(applyStartTime)
         
         // Verify correctness
         #expect(result == destination, "Brus algorithm failed for large file")
@@ -997,7 +983,6 @@ class TestFileManager {
         // Print performance metrics
         
         // Print a sample of operations for debugging
-        let operations = diffResult.operations.prefix(3)
     }
     
     // Test Todd algorithm (explicitly set to .todd)
@@ -1005,11 +990,9 @@ class TestFileManager {
         let startTime = Date()
         let diffResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .todd)
         toddDiff = try MultiLineDiff.diffToBase64(diffResult)
-        let createTime = Date().timeIntervalSince(startTime)
         
         let applyStartTime = Date()
         let result = try MultiLineDiff.applyBase64Diff(to: source, base64Diff: toddDiff)
-        let applyTime = Date().timeIntervalSince(applyStartTime)
         
         // Verify correctness
         #expect(result == destination, "Todd algorithm succeeded for large file")
@@ -1017,17 +1000,10 @@ class TestFileManager {
         // Print performance metrics
         
         // Print a sample of operations for debugging
-        let operations = diffResult.operations.prefix(3)
     }
     
     // Verify the diffs are actually different
     #expect(brusDiff != toddDiff, "Brus and Todd algorithms should produce different diffs")
-    
-    if brusDiff == toddDiff {
-        
-        // Compare first 100 characters for debugging
-        let prefixLength = min(100, brusDiff.count)
-    }
 }
 
 // MARK: - Truncated String Tests
@@ -1046,7 +1022,7 @@ class TestFileManager {
     let diff = DiffResult(operations: operations)
     
     // With allowTruncatedSource, we should be able to apply the diff
-    let result = try MultiLineDiff.applyDiff(to: truncatedSource, diff: diff, allowTruncatedSource: true)
+    let result = try MultiLineDiff.applyDiff(to: truncatedSource, diff: diff)
     #expect(result == "Swift", "Should replace 'world' with 'Swift'")
 }
 
@@ -1079,7 +1055,12 @@ class TestFileManager {
     // Expected result after applying to full source
     let expectedResult = "Line 1\nLine 2\nLine 3\nModified Line 4\nLine 5"
     
-    // Test direct application with a specialized diff for the full source
+    // Test truncated source diff application
+    let truncatedResult = try MultiLineDiff.applyDiff(to: truncatedSource, diff: diff)
+    
+    #expect(truncatedResult == truncatedDestination, "Truncated diff should apply correctly")
+    
+    // Test full source diff application with specialized operations
     let fullOperations: [DiffOperation] = [
         .retain(21),  // Retain until Line 4
         .delete(6),   // Delete "Line 4"
@@ -1088,7 +1069,13 @@ class TestFileManager {
     ]
     
     let fullDiff = DiffResult(operations: fullOperations)
-    let result = try MultiLineDiff.applyDiff(to: fullSource, diff: fullDiff)
+    let fullResult = try MultiLineDiff.applyDiff(to: fullSource, diff: fullDiff)
     
-    #expect(result == expectedResult, "Full diff should apply correctly")
+    #expect(fullResult == expectedResult, "Full diff should apply correctly")
+    
+    // Additional test to verify metadata usage
+    #expect(diff.metadata?.sourceStartLine == 2, "Metadata source start line should be correct")
+    #expect(diff.metadata?.sourceTotalLines == 5, "Metadata total lines should be correct")
+    #expect(diff.metadata?.precedingContext == "Line 2\nLine 3", "Preceding context should match")
+    #expect(diff.metadata?.followingContext == "Line 4\nLine 5", "Following context should match")
 }
