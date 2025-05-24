@@ -50,7 +50,7 @@ This is a Swift library for creating and applying diffs to multi-line text conte
 | Method | Description | Use Case |
 |--------|-------------|----------|
 | `createDiff()` | 🧠 Intelligent diff creation with source storage | **Standard for all diffs** |
-| `createBase64Diff()` | 📦 Intelligent base 64 diff | **Standard for all diffs** |
+| `createBase64Diff()` | 📦 Intelligent Base64 diff | **Standard for all diffs** |
 | `applyDiff()` | 🤖 Auto-detecting diff application | **Standard for applying diffs** |
 | `applyBase64Diff()` | 📦 Base64 diff application | **For encoded diffs** |
 | `verifyDiff()` | 🔐 Diff integrity verification | **For validation** |
