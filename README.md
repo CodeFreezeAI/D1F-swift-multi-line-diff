@@ -47,7 +47,7 @@ MultiLineDiff now features **intelligent auto-detection** and enhanced truncated
 
 ### Key Truncated Diff Capabilities
 
-- Apply diffs to partial documents
+- Apply diffs to full or partial documents
 - Preserve context and metadata
 - Intelligent section replacement
 - Automatic line number interpolation
