@@ -2,7 +2,7 @@
 
 [![Swift 6.1](https://img.shields.io/badge/Swift-6.1-orange.svg)](https://swift.org)
 [![Website](https://img.shields.io/badge/website-xcf.ai-blue.svg)](https://xcf.ai)
-[![Version](https://img.shields.io/badge/version-1.2.2-green.svg)](https://github.com/toddbruss/swift-multi-line-diff)
+[![Version](https://img.shields.io/badge/version-1.2.3-green.svg)](https://github.com/toddbruss/swift-multi-line-diff)
 [![GitHub stars](https://img.shields.io/github/stars/codefreezeai/swift-multi-line-diff.svg?style=social)](https://github.com/codefreezeai/swift-multi-line-diff/stargazers)
 [![GitHub downloads](https://img.shields.io/github/downloads/codefreezeai/swift-multi-line-diff/total.svg)](https://github.com/codefreezeai/swift-multi-line-diff/releases)
 [![GitHub forks](https://img.shields.io/github/forks/codefreezeai/swift-multi-line-diff.svg?style=social)](https://github.com/codefreezeai/swift-multi-line-diff/network)
@@ -1276,15 +1276,15 @@ func calculateTotal(items: [Product]) -> Double {
 
 ### Performance Comparison Results (Updated 2025 - Latest Benchmarks)
 
-**Test Environment**: 33 comprehensive tests, 3 iterations each, 1000 operations per algorithm
+**Test Environment**: 33 comprehensive tests, **1000 iterations** per algorithm, averaged results
 
 | Metric | Brus Algorithm | Todd Algorithm | Performance Ratio |
 |--------|----------------|----------------|-------------------|
 | **Total Operations** | 4 operations | 22 operations | 5.5x more granular |
-| **Create Diff Time** | 0.103 ms | 0.402 ms | 3.9x faster (Brus) |
-| **Apply Diff Time** | 0.003 ms | 0.006 ms | 2.0x faster (Brus) |
-| **Total Time** | 0.106 ms | 0.408 ms | 3.8x faster (Brus) |
-| **Retained Characters** | 21 chars (3.2%) | 397 chars (59.8%) | 18.9x more preservation |
+| **Create Diff Time** | 0.097 ms | 0.395 ms | **4.1x faster** (Brus) |
+| **Apply Diff Time** | 0.004 ms | 0.007 ms | **1.8x faster** (Brus) |
+| **Total Time** | 0.101 ms | 0.402 ms | **4.0x faster** (Brus) |
+| **Retained Characters** | 21 chars (3.2%) | 397 chars (59.8%) | **18.9x more preservation** (Todd) |
 | **Semantic Awareness** | 🔤 Character-level | 🧠 Structure-aware | Intelligent |
 | **Test Suite** | ✅ 33/33 tests pass | ✅ 33/33 tests pass | 100% reliability |
 
@@ -1339,19 +1339,19 @@ Operation Count: 🟢🟢🟡 (22 ops - 5.5x more detailed)
 
 ### Real-World Performance Comparison (2025 Updated Benchmarks)
 
-*Measured on 664-character source code transformation, averaged over 3 test runs*
+*Measured on 664-character source code transformation, averaged over **1000 iterations***
 
 | Algorithm | Create Time | Apply Time | Total Time | Operations | Speed Factor |
 |-----------|-------------|------------|------------|------------|--------------|
-| **Brus** | 0.103ms | 0.003ms | **0.106ms** | 4 | **1.0x** ⚡ |
-| **Todd** | 0.402ms | 0.006ms | **0.408ms** | 22 | **3.8x slower** |
+| **Brus** | 0.097ms | 0.004ms | **0.101ms** | 4 | **1.0x** ⚡ |
+| **Todd** | 0.395ms | 0.007ms | **0.402ms** | 22 | **4.0x slower** |
 
 ### Performance Visualization (Updated 2025)
 
 ```
-Speed Comparison (Total Time):
-Brus: ████████████████████████████ 0.106ms
-Todd: ██████████████████████████████████████████████████████████████████████████████████████████████████████████ 0.408ms
+Speed Comparison (Total Time - 1000 iterations averaged):
+Brus: ███████████████████████████ 0.101ms
+Todd: ██████████████████████████████████████████████████████████████████████████████████████████████████████████ 0.402ms
 
 Operation Granularity:
 Brus: ████ (4 operations - simple & fast)
@@ -1359,5 +1359,5 @@ Todd: ████████████████████████�
 
 Test Suite Performance:
 33 Tests: ✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅ (100% pass rate)
-Duration: ~0.205-0.214 seconds for complete test suite
+Duration: ~0.224-0.565 seconds for complete test suite
 ```

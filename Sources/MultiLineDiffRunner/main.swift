@@ -670,8 +670,8 @@ func demonstrateAlgorithmComparison() -> Bool {
        }
        
        // Print detailed operations for both algorithms
-       printDetailedOperations(brusMeasurement.diff, algorithmName: "Brus")
-       printDetailedOperations(toddMeasurement.diff, algorithmName: "Todd")
+       // printDetailedOperations(brusMeasurement.diff, algorithmName: "Brus")
+       // printDetailedOperations(toddMeasurement.diff, algorithmName: "Todd")
        
        // Print detailed comparison
        print("\n=== Diff Algorithm Comparison ===")
@@ -859,8 +859,7 @@ func demonstrateTruncatedDiff() -> Bool {
             source: truncatedContent,
             destination: truncatedModifiedContent,
             algorithm: .todd,
-            includeMetadata: true,
-            sourceStartLine: 11,
+            includeMetadata: true
         )
         
                // Apply the truncated diff to the full original file

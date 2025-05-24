@@ -360,6 +360,20 @@ public struct DiffMetadata: Equatable, Codable {
     // Performance tracking (optional)
     public let diffGenerationTime: Double?
     
+    // Compact 3-character keys for maximum JSON size reduction while keeping variable names unchanged
+    private enum CodingKeys: String, CodingKey {
+        case sourceStartLine = "str"      // Start line number
+        case sourceTotalLines = "cnt"     // Total line count
+        case precedingContext = "pre"     // Context before section
+        case followingContext = "fol"     // Context after section
+        case sourceContent = "src"        // Original source content
+        case destinationContent = "dst"   // Target destination content
+        case algorithmUsed = "alg"        // Algorithm used (brus/todd)
+        case diffHash = "hsh"             // SHA256 integrity hash
+        case applicationType = "app"      // Application type (full/truncated)
+        case diffGenerationTime = "tim"   // Performance timing (optional)
+    }
+    
     public init(
         sourceStartLine: Int? = nil,
         sourceTotalLines: Int? = nil,
@@ -688,7 +702,7 @@ public enum DiffEncoding {
     ///   - sourceStartLine: Optional starting line number for precise tracking
     ///
     /// - Returns: A `DiffResult` with source content stored for automatic verification
-    public static func createVerifiableDiff(
+    public static func createSmartDiff(
         source: String,
         destination: String,
         algorithm: DiffAlgorithm = .todd,
@@ -1094,7 +1108,7 @@ public enum DiffEncoding {
     ///   - diff: The diff to apply
     /// - Returns: The resulting string after applying the diff
     /// - Throws: An error if the diff cannot be applied correctly
-    public static func applyDiffIntelligently(
+    public static func applySmartDiff(
         to source: String,
         diff: DiffResult
     ) throws -> String {
@@ -1494,7 +1508,7 @@ public enum DiffEncoding {
         base64Diff: String
     ) throws -> String {
         let diff = try diffFromBase64(base64Diff)
-        return try applyDiffIntelligently(to: source, diff: diff)
+        return try applySmartDiff(to: source, diff: diff)
     }
     
     /// Creates a diff in the specified encoding
@@ -1612,7 +1626,7 @@ public enum DiffEncoding {
         }
         
         // Apply the decoded diff intelligently
-        return try applyDiffIntelligently(to: source, diff: diff)
+        return try applySmartDiff(to: source, diff: diff)
     }
     
     // MARK: - Private Implementation
@@ -1704,7 +1718,7 @@ public enum DiffEncoding {
         to source: String,
         diff: DiffResult
     ) throws -> String {
-        let result = try applyDiffIntelligently(to: source, diff: diff)
+        let result = try applySmartDiff(to: source, diff: diff)
         
         // Smart verification: only verify if we're applying to the same type of source
         if let metadata = diff.metadata,

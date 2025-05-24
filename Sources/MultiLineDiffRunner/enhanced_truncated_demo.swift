@@ -48,7 +48,7 @@ func demonstrateEnhancedTruncatedDiff() -> Bool {
     print(truncatedModified)
 
     // Create diff with enhanced metadata that includes both contexts and source verification
-    let diff = MultiLineDiff.createVerifiableDiff(
+    let diff = MultiLineDiff.createSmartDiff(
         source: truncatedOriginal,
         destination: truncatedModified,
         algorithm: .todd,
@@ -79,7 +79,7 @@ func demonstrateEnhancedTruncatedDiff() -> Bool {
     do {
         // First demonstrate intelligent application that auto-detects source type
         print("\n🤖 Intelligent Application (auto-detects full vs truncated source):")
-        let intelligentResult = try MultiLineDiff.applyDiffIntelligently(
+        let intelligentResult = try MultiLineDiff.applySmartDiff(
             to: fullDocument,
             diff: diff
         )
@@ -89,7 +89,7 @@ func demonstrateEnhancedTruncatedDiff() -> Bool {
         
         // Also demonstrate applying to the truncated source directly
         print("\n🔧 Intelligent Application to truncated source:")
-        let truncatedResult = try MultiLineDiff.applyDiffIntelligently(
+        let truncatedResult = try MultiLineDiff.applySmartDiff(
             to: truncatedOriginal,
             diff: diff
         )
@@ -137,10 +137,10 @@ func demonstrateEnhancedTruncatedDiff() -> Bool {
             print("• Diff checksum verification: \(checksumValid ? "✅ PASSED" : "❌ FAILED")")
             
             // Test undo functionality
-            print("\n↩️  Undo Operation:")
+            print("\n↩️ Undo Operation:")
             if let undoDiff = MultiLineDiff.createUndoDiff(from: diff) {
                 do {
-                    let undoResult = try MultiLineDiff.applyDiffIntelligently(to: truncatedModified, diff: undoDiff)
+                    let undoResult = try MultiLineDiff.applySmartDiff(to: truncatedModified, diff: undoDiff)
                     let undoWorked = undoResult == truncatedOriginal
                     print("• Undo diff creation: ✅ SUCCESS")
                     print("• Undo application: \(undoWorked ? "✅ SUCCESS" : "❌ FAILED")")
@@ -153,7 +153,7 @@ func demonstrateEnhancedTruncatedDiff() -> Bool {
             }
             
             // Test verification with application
-            print("\n🛡️  Verified Application:")
+            print("\n🛡️ Verified Application:")
             do {
                 let verifiedResult = try MultiLineDiff.applyDiffIntelligentlyWithVerification(
                     to: fullDocument,
