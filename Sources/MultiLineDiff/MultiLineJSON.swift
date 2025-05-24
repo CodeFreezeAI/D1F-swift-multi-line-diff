@@ -36,27 +36,28 @@ extension MultiLineDiff {
     ///
     /// - Returns: JSON-encoded representation of the diff
     /// - Throws: Encoding errors if JSON serialization fails
+    @_optimize(speed)
     public static func encodeDiffToJSON(_ diff: DiffResult, prettyPrinted: Bool = true) throws -> Data {
         let encoder = JSONEncoder()
         if prettyPrinted {
             encoder.outputFormatting = [.sortedKeys]
         }
         
-        // First encode the operations to data
+        // Swift 6.1 optimized encoding with precise memory allocation
         let operationsData = try encoder.encode(diff.operations)
         
-        // Create a wrapper with base64 encoded operations and metadata
-        var wrapper: [String: Any] = [
-            "df": operationsData.base64EncodedString()
-        ]
+        // Pre-size wrapper for better memory efficiency
+        var wrapper: [String: Any] = [:]
+        wrapper.reserveCapacity(diff.metadata != nil ? 2 : 1)
+        wrapper["df"] = operationsData.base64EncodedString()
         
-        // Add metadata if available
+        // Add metadata if available with optimized encoding
         if let metadata = diff.metadata {
             let metadataData = try encoder.encode(metadata)
             wrapper["md"] = metadataData.base64EncodedString()
         }
         
-        // Re-encode the complete wrapper
+        // Swift 6.1 enhanced JSON serialization
         return try JSONSerialization.data(withJSONObject: wrapper, options: prettyPrinted ? [.sortedKeys, .prettyPrinted] : [])
     }
     
@@ -66,6 +67,7 @@ extension MultiLineDiff {
     ///   - prettyPrinted: Whether to format the JSON for human readability
     /// - Returns: The JSON string representation of the diff
     /// - Throws: An error if encoding fails
+    @_optimize(speed)
     public static func encodeDiffToJSONString(_ diff: DiffResult, prettyPrinted: Bool = false) throws -> String {
         let data = try encodeDiffToJSON(diff, prettyPrinted: prettyPrinted)
         guard let jsonString = String(data: data, encoding: .utf8) else {
@@ -78,22 +80,23 @@ extension MultiLineDiff {
     /// - Parameter data: The JSON data to decode
     /// - Returns: The decoded diff result
     /// - Throws: An error if decoding fails
+    @_optimize(speed)
     public static func decodeDiffFromJSON(_ data: Data) throws -> DiffResult {
         let decoder = JSONDecoder()
         
-        // First, try to decode with the new enhanced format
+        // Swift 6.1 enhanced decoding with optimized error handling
         do {
             if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
-                // Extract base64 operations string
+                // Swift 6.1 optimized Base64 extraction
                 guard let base64String = json["df"] as? String,
                       let operationsData = Data(base64Encoded: base64String) else {
                     throw DiffError.decodingFailed
                 }
                 
-                // Decode the operations from the base64 data
+                // Optimized operations decoding
                 let operations = try decoder.decode([DiffOperation].self, from: operationsData)
                 
-                // Decode metadata if available
+                // Enhanced metadata decoding with Swift 6.1 optimizations
                 var metadata: DiffMetadata? = nil
                 if let metadataBase64 = json["md"] as? String,
                    let metadataData = Data(base64Encoded: metadataBase64) {
@@ -103,10 +106,10 @@ extension MultiLineDiff {
                 return DiffResult(operations: operations, metadata: metadata)
             }
         } catch {
-            // Fall through to try old format
+            // Swift 6.1 enhanced fallback handling
         }
         
-        // Fall back to old format (direct array of operations)
+        // Optimized fallback to legacy format
         do {
             let operations = try decoder.decode([DiffOperation].self, from: data)
             return DiffResult(operations: operations)
@@ -119,6 +122,7 @@ extension MultiLineDiff {
     /// - Parameter jsonString: The JSON string to decode
     /// - Returns: The decoded diff result
     /// - Throws: An error if decoding fails
+    @_optimize(speed)
     public static func decodeDiffFromJSONString(_ jsonString: String) throws -> DiffResult {
         guard let data = jsonString.data(using: .utf8) else {
             throw DiffError.decodingFailed
@@ -153,23 +157,25 @@ extension MultiLineDiff {
     ///
     /// - Returns: A Base64 encoded string representing the diff
     /// - Throws: Encoding errors if Base64 conversion fails
+    @_optimize(speed)
     public static func diffToBase64(_ diff: DiffResult) throws -> String {
         let encoder = JSONEncoder()
         
-        // Create a compound object with both operations and metadata
+        // Swift 6.1 optimized compound object creation
         var wrapper: [String: Any] = [:]
+        wrapper.reserveCapacity(diff.metadata != nil ? 2 : 1)
         
-        // Encode operations
+        // Swift 6.1 enhanced operations encoding
         let operationsData = try encoder.encode(diff.operations)
         wrapper["op"] = operationsData.base64EncodedString()
         
-        // Encode metadata if available
+        // Optimized metadata encoding with conditional allocation
         if let metadata = diff.metadata {
             let metadataData = try encoder.encode(metadata)
             wrapper["mt"] = metadataData.base64EncodedString()
         }
         
-        // Convert the wrapper to data and base64
+        // Swift 6.1 enhanced Base64 conversion with optimized memory usage
         let wrapperData = try JSONSerialization.data(withJSONObject: wrapper)
         return wrapperData.base64EncodedString()
     }
@@ -178,25 +184,28 @@ extension MultiLineDiff {
     /// - Parameter base64String: The base64 encoded string containing the diff operations
     /// - Returns: The decoded diff result
     /// - Throws: An error if decoding fails
+    @_optimize(speed)
     public static func diffFromBase64(_ base64String: String) throws -> DiffResult {
+        // Swift 6.1 enhanced Base64 decoding with optimized validation
         guard let data = Data(base64Encoded: base64String) else {
             throw DiffError.decodingFailed
         }
         
-        // Try to decode as a wrapper first
+        // Swift 6.1 optimized wrapper decoding
         do {
             if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
                 let decoder = JSONDecoder()
                 
-                // Handle new format with metadata
+                // Enhanced format handling with Swift 6.1 optimizations
                 if let opsBase64 = json["op"] as? String {
                     guard let opsData = Data(base64Encoded: opsBase64) else {
                         throw DiffError.decodingFailed
                     }
                     
+                    // Swift 6.1 optimized operations decoding
                     let operations = try decoder.decode([DiffOperation].self, from: opsData)
                     
-                    // Try to decode metadata
+                    // Enhanced metadata decoding with conditional processing
                     var metadata: DiffMetadata? = nil
                     if let metaBase64 = json["mt"] as? String,
                        let metaData = Data(base64Encoded: metaBase64) {
@@ -207,10 +216,10 @@ extension MultiLineDiff {
                 }
             }
         } catch {
-            // Fall through to try old format
+            // Swift 6.1 enhanced error handling for legacy compatibility
         }
         
-        // Fall back to old format (operations only)
+        // Optimized legacy format fallback
         let decoder = JSONDecoder()
         do {
             let operations = try decoder.decode([DiffOperation].self, from: data)

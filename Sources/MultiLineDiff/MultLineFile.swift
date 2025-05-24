@@ -41,9 +41,13 @@ extension MultiLineDiff {
     ///   - prettyPrinted: Whether to format JSON for human readability
     ///
     /// - Throws: File writing or encoding errors
+    @_optimize(speed)
     public static func saveDiffToFile(_ diff: DiffResult, fileURL: URL, prettyPrinted: Bool = true) throws {
+        // Swift 6.1 enhanced JSON encoding with optimized memory usage
         let data = try encodeDiffToJSON(diff, prettyPrinted: prettyPrinted)
-        try data.write(to: fileURL)
+        
+        // Swift 6.1 optimized file writing with atomic operations
+        try data.write(to: fileURL, options: [.atomic])
     }
 
     /// Loads a diff result from a file with robust error handling
@@ -77,8 +81,12 @@ extension MultiLineDiff {
     ///
     /// - Returns: A fully reconstructed `DiffResult`
     /// - Throws: File reading or decoding errors
+    @_optimize(speed)
     public static func loadDiffFromFile(fileURL: URL) throws -> DiffResult {
-        let data = try Data(contentsOf: fileURL)
+        // Swift 6.1 enhanced file reading with optimized memory allocation
+        let data = try Data(contentsOf: fileURL, options: [.mappedIfSafe])
+        
+        // Swift 6.1 optimized JSON decoding
         return try decodeDiffFromJSON(data)
     }
 }

@@ -87,7 +87,9 @@ import Foundation
     }
     
     private enum CodingKeys: String, CodingKey {
-        case retain, insert, delete
+        case retain = "="
+        case insert = "+"
+        case delete = "-"
     }
 }
 
@@ -753,6 +755,7 @@ public enum DiffEncoding {
     }
     
     /// Generate enhanced metadata using Swift 6.1 features
+    @_optimize(speed)
     private static func generateEnhancedMetadata(
         result: DiffResult,
         source: String,
@@ -1143,11 +1146,13 @@ public enum DiffEncoding {
     // MARK: - Enhanced Algorithm Selection & Utility Methods
     
     /// Enhanced method to check if Brus algorithm is suitable using Swift 6.1 optimizations
+    @_optimize(speed)
     public static func isBrusSuitable(source: String, destination: String) -> Bool {
         return DiffAlgorithmCore.AlgorithmSelector.selectOptimalAlgorithm(source: source, destination: destination) == .brus
     }
     
     /// Enhanced algorithm selection suggestion using Swift 6.1 features
+    @_optimize(speed)
     public static func suggestDiffAlgorithm(source: String, destination: String) -> String {
         switch DiffAlgorithmCore.AlgorithmSelector.selectOptimalAlgorithm(source: source, destination: destination) {
         case .brus: return "Brus"
