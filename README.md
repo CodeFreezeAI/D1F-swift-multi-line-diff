@@ -563,7 +563,7 @@ Operation Count: 🟢🟢🟢 (4 ops)
 | **Space Complexity** | O(n) | Linear space for LCS table | **Optimized memory** | 🟢🟢🟢  |
 | **Apply Performance** | O(n) | Sequential operation application | **0.0180 ms apply** | 🟢🟢🟢  |
 | **Total Operations** | High | Granular semantic operations | **22 operations** | 🟢🟢🟡  |
-| **Best Case** | Ω(n) | Simple structural changes | **~0.2 ms** | 🟢🟢🟡  |
+| **Best Case** | Ω(n) | Simple structural changes | **~0.2 ms** | 🟢🟢🟢 |
 | **Worst Case** | O(n²) | Complex text transformations | **~1.0 ms** | 🟢🟢🟡  |
 
 #### Performance Profile
