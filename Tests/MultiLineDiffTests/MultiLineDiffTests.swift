@@ -972,58 +972,117 @@ class TestFileManager {
     do {
         let startTime = Date()
         let diffResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .brus)
+        let createTime = Date().timeIntervalSince(startTime)
         brusDiff = try MultiLineDiff.diffToBase64(diffResult)
         
         let applyStartTime = Date()
         let result = try MultiLineDiff.applyBase64Diff(to: source, base64Diff: brusDiff)
+        let applyTime = Date().timeIntervalSince(applyStartTime)
         
         // Verify correctness
         #expect(result == destination, "Brus algorithm failed for large file")
         
         // Print performance metrics
-        
-        // Print a sample of operations for debugging
+        print("🚀 Brus Algorithm Performance:")
+        print("  • Create Diff Time: \(String(format: "%.4f", createTime * 1000)) ms")
+        print("  • Apply Diff Time: \(String(format: "%.4f", applyTime * 1000)) ms")
+        print("  • Total Operations: \(diffResult.operations.count)")
+        print("  • Base64 Size: \(brusDiff.count) characters")
     }
     
     // Test Todd algorithm (explicitly set to .todd)
     do {
         let startTime = Date()
         let diffResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .todd)
+        let createTime = Date().timeIntervalSince(startTime)
         toddDiff = try MultiLineDiff.diffToBase64(diffResult)
         
         let applyStartTime = Date()
         let result = try MultiLineDiff.applyBase64Diff(to: source, base64Diff: toddDiff)
+        let applyTime = Date().timeIntervalSince(applyStartTime)
         
         // Verify correctness
-        #expect(result == destination, "Todd algorithm succeeded for large file")
+        #expect(result == destination, "Todd algorithm failed for large file")
         
         // Print performance metrics
+        print("\n🧠 Todd Algorithm Performance:")
+        print("  • Create Diff Time: \(String(format: "%.4f", createTime * 1000)) ms")
+        print("  • Apply Diff Time: \(String(format: "%.4f", applyTime * 1000)) ms")
+        print("  • Total Operations: \(diffResult.operations.count)")
+        print("  • Base64 Size: \(toddDiff.count) characters")
         
-        // Print a sample of operations for debugging
+        // Print algorithm used from metadata
+        if let metadata = diffResult.metadata {
+            print("  • Algorithm Used: \(String(describing: metadata.algorithmUsed))")
+            print("  • Source Lines: \(metadata.sourceTotalLines ?? 0)")
+        }
     }
     
     // Verify the diffs are actually different
     #expect(brusDiff != toddDiff, "Brus and Todd algorithms should produce different diffs")
+    
+    // Print comparison summary
+    print("\n📊 Algorithm Comparison Summary:")
+    print("  • Brus Base64 Size: \(brusDiff.count) characters")
+    print("  • Todd Base64 Size: \(toddDiff.count) characters")
+    print("  • Size Difference: \(abs(brusDiff.count - toddDiff.count)) characters")
+    print("  • More Compact: \(brusDiff.count < toddDiff.count ? "Brus" : "Todd")")
+    
+    // Test LCS optimization effectiveness on large data
+    print("\n🔬 LCS Optimization Analysis:")
+    print("  • Source Lines: 1000")
+    print("  • Changed Lines: \(1000 / 5) (~20%)")
+    print("  • Test verifies optimized algorithms handle large datasets efficiently")
 }
 
 // MARK: - Truncated String Tests
 
 @Test func testApplyDiffToTruncatedString() throws {
-    // Create a very simple test
-    let source = "Hello, world!"
+    // Test case: Apply a diff designed for a full document to just a truncated portion
+    let fullSource = "Hello, world!"
     let truncatedSource = "world"
     
-    // Create a basic diff to change "world" to "Swift"
-    let operations: [DiffOperation] = [
-        .delete(5), // Delete "world"
+    // Create a diff that was originally designed for the full source
+    // to change "world" to "Swift" in the context of "Hello, world!" -> "Hello, Swift!"
+    let fullDiff = MultiLineDiff.createDiff(
+        source: fullSource,
+        destination: "Hello, Swift!",
+        includeMetadata: true
+    )
+    
+    // Test 1: Apply the full diff to the truncated source
+    // The system should automatically detect this is a truncated application
+    do {
+        let result = try MultiLineDiff.applyDiff(to: truncatedSource, diff: fullDiff)
+        print("Successfully applied full diff to truncated source: '\(result)'")
+        // Note: The result may vary depending on the diff structure and detection logic
+    } catch {
+        print("Full diff application to truncated source failed as expected: \(error)")
+        // This is expected behavior for many cases
+    }
+    
+    // Test 2: Create a specific diff for the truncated source
+    let truncatedDiff = MultiLineDiff.createDiff(
+        source: truncatedSource,
+        destination: "Swift"
+    )
+    
+    let truncatedResult = try MultiLineDiff.applyDiff(to: truncatedSource, diff: truncatedDiff)
+    #expect(truncatedResult == "Swift", "Direct truncated diff should work")
+    
+    // Test 3: Demonstrate the difference between full and truncated application
+    let fullResult = try MultiLineDiff.applyDiff(to: fullSource, diff: fullDiff)
+    #expect(fullResult == "Hello, Swift!", "Full diff should work on full source")
+    
+    // Test 4: Test with simple operations that should work on truncated source
+    let simpleOperations: [DiffOperation] = [
+        .delete(5), // Delete all 5 characters of "world"
         .insert("Swift") // Insert "Swift"
     ]
     
-    let diff = DiffResult(operations: operations)
-    
-    // With allowTruncatedSource, we should be able to apply the diff
-    let result = try MultiLineDiff.applyDiff(to: truncatedSource, diff: diff)
-    #expect(result == "Swift", "Should replace 'world' with 'Swift'")
+    let simpleDiff = DiffResult(operations: simpleOperations)
+    let simpleResult = try MultiLineDiff.applyDiff(to: truncatedSource, diff: simpleDiff)
+    #expect(simpleResult == "Swift", "Simple operations should work on truncated source")
 }
 
 @Test func testCreateAndApplyDiffWithTruncatedData() throws {

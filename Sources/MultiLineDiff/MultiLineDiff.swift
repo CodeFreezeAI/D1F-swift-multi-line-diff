@@ -70,8 +70,8 @@ import CryptoKit
     ///     destination: destination
     /// )
     ///
-    /// // Intelligently apply diff (auto-detects full vs truncated source)
-    /// let result = try MultiLineDiff.applyDiffIntelligently(to: someSource, diff: diff)
+    /// // Apply diff (automatically detects full vs truncated source)
+    /// let result = try MultiLineDiff.applyDiff(to: someSource, diff: diff)
     /// ```
     ///
     /// - Parameters:
