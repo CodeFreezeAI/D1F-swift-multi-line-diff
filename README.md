@@ -747,7 +747,7 @@ Operation:    ====== ----- ++++++   // "Hello, " retained, "world" deleted, "Swi
 └─────────────────
 
 ┌─ Operations
-│ ==================================== {    // retain signature
+│ { ===    // retain signature
 │ ┌─ Delete old implementation and insert new implementation
 │ │ --- var total = 0.0
 │ │ --- for item in items {
@@ -756,7 +756,7 @@ Operation:    ====== ----- ++++++   // "Hello, " retained, "world" deleted, "Swi
 │ │ --- return total
 │ │ +++ return items.reduce(0.0) { $0 + $1.price }
 │ └─ 
-│ }====                                     // retain closing brace
+│ } ===                                     // retain closing brace
 └─────────────────
 ```
 
