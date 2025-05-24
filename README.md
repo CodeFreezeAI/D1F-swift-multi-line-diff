@@ -6,7 +6,7 @@
 [![GitHub stars](https://img.shields.io/github/stars/codefreezeai/swift-multi-line-diff.svg?style=social)](https://github.com/codefreezeai/swift-multi-line-diff/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/codefreezeai/swift-multi-line-diff.svg?style=social)](https://github.com/codefreezeai/swift-multi-line-diff/network)
 
-I created this library becuase I wanted an "online" verison of create and apply diff. I tried having and AI replace strings by starting and ending line numbers with very poor accuracy. Multi Line Diff fixes that and adds lot more features not found in any create and apply diff library.
+I created this library because I wanted an "online" verison of create and apply diff. I tried having and AI replace strings by starting and ending line numbers with very poor accuracy. Multi Line Diff fixes that and adds lot more features not found in any create and apply diff library.
 
 This is a Swift library for creating and applying diffs to multi-line text content. Supports Unicode/UTF-8 strings and handles multi-line content properly. Designed specifically for Vibe AI Coding integrity and safe code transformations.
 
