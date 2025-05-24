@@ -363,29 +363,7 @@ Operation:    ====== ----- ++++++   // "Hello, " retained, "world" deleted, "Swi
              Hello, world Swift
 ```
 
-### Multi-Line Example
-
-```swift
-┌─ Source
-│ func oldMethod() {
-│     print("Hello")
-│ }
-└─────────────────
-
-┌─ Destination
-│ func newMethod() {
-│     print("Hello, World!")
-│ }
-└─────────────────
-
-┌─ Operations
-│ func ==== ---- ++++ ====Method() {     // retain "func ", delete "old", insert "new", retain "Method() {"
-│     ---- +++++++++++++++++++++++++     // delete old print statement, insert new print statement
-│ } ====                                 // retain closing brace
-└─────────────────
-```
-
-### More Complex Example
+### Another Example
 
 ```swift
 ┌─ Source
@@ -517,17 +495,17 @@ func createUser(name: String, email: String, age: Int, avatar: UIImage? = nil) -
 
 ```
 ┌─ Todd Algorithm (.todd) - Semantic Diff
-│ ==== Preserve import statements
-│ ++++ Add UIKit import
-│ ==== Retain struct declaration
-│ ++++ Add avatar property
-│ ---- Remove basic initializer
-│ ++++ Add enhanced initializer
-│ ---- Remove basic greet method
-│ ++++ Add emoji-enhanced greet method
-│ ++++ Insert updateAvatar method
-│ ---- Remove basic email validation
-│ ++++ Add comprehensive email validation
+│ === Preserve import statements
+│ +++ Add UIKit import
+│ === Retain struct declaration
+│ +++ Add avatar property
+│ --- Remove basic initializer
+│ +++ Add enhanced initializer
+│ --- Remove basic greet method
+│ +++ Add emoji-enhanced greet method
+│ +++ Insert updateAvatar method
+│ --- Remove basic email validation
+│ +++ Add comprehensive email validation
 └─────────────────
 // Detailed Operations: ~12-15 semantic operations
 // Preserves code structure and intent
@@ -535,10 +513,10 @@ func createUser(name: String, email: String, age: Int, avatar: UIImage? = nil) -
 
 ```
 ┌─ Brus Algorithm (.brus) - Character-Level Diff
-│ ==== Retain common prefix
-│ ---- Bulk content removal
-│ ++++ Bulk content insertion
-│ ==== Retain common suffix
+│ === Retain common prefix
+│ --- Bulk content removal
+│ +++ Bulk content insertion
+│ === Retain common suffix
 └─────────────────
 // Simplified Operations: ~4-6 character replacements
 // Direct text transformation
