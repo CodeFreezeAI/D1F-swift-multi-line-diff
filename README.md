@@ -346,9 +346,9 @@ let decodedDiffOperations = decodeBase64Diff(base64Diff)
 
 | Symbol | Operation | Description |
 |--------|-----------|-------------|
-| `====` | Retain    | Keep text as is |
-| `----` | Delete    | Remove text |
-| `++++` | Insert    | Add new text |
+| `===` | Retain    | Keep text as is |
+| `---` | Delete    | Remove text |
+| `+++` | Insert    | Add new text |
 | `▼`    | Position  | Current operation point |
 | `┌─┐`  | Section   | Groups related changes |
 | `└─┘`  | Border    | Section boundary |
