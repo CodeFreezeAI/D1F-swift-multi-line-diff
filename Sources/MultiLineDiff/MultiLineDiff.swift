@@ -145,29 +145,51 @@ import CryptoKit
         )
         return try diffToBase64(diff)
     }
-    
-    /// Creates a base64 encoded SmartDiff between two strings with intelligent metadata storage
+        
+    /// Enhanced diff application using Swift 6.1 features
     /// - Parameters:
     ///   - source: The original string
-    ///   - destination: The modified string
-    ///   - algorithm: The diff algorithm to use (default: Todd with automatic fallback)
-    ///   - sourceStartLine: Optional starting line number for precise tracking
-    /// - Returns: A base64 encoded string representing the SmartDiff operations
-    /// - Throws: An error if encoding fails
-    public static func createBase64SmartDiff(
-        source: String,
-        destination: String,
-        algorithm: DiffAlgorithm = .todd,
-        sourceStartLine: Int? = nil
+    ///   - diff: The diff to apply
+    ///   - allowTruncatedSource: Whether to allow applying diff to truncated source string
+    /// - Returns: The resulting string after applying the diff
+    /// - Throws: An error if the diff cannot be applied correctly
+    public static func applyDiff(
+        to source: String,
+        diff: DiffResult
     ) throws -> String {
-        // Create SmartDiff with intelligent metadata storage
-        let diff = createDiff(
+        // Handle empty operations case explicitly
+        if diff.operations.isEmpty {
+            return source
+        }
+    
+        let allowTruncated = shouldAllowTruncatedSource(for: source, diff: diff)
+
+        // Use enhanced string processing for diff application
+        let result = try applyDiffWithEnhancedProcessing(
             source: source,
-            destination: destination,
-            algorithm: algorithm,
-            sourceStartLine: sourceStartLine
+            operations: diff.operations,
+            metadata: diff.metadata,
+            allowTruncatedSource: allowTruncated
         )
-        return try diffToBase64(diff)
+        
+        try performSmartVerification(source: source, result: result, diff: diff)
+        return result
+    }
+    
+    /// Applies a base64 encoded diff to a source string
+    /// - Parameters:
+    ///   - source: The original string
+    ///   - base64Diff: The base64 encoded diff to apply
+    ///   - allowTruncatedSource: Whether to allow applying diff to truncated source string
+    /// - Returns: The resulting string after applying the diff
+    /// - Throws: An error if decoding or applying the diff fails
+    public static func applyBase64Diff(
+        to source: String,
+        base64Diff: String,
+        allowTruncatedSource: Bool = false
+    ) throws -> String {
+        let diff = try diffFromBase64(base64Diff)
+        return try applyDiff(to: source, diff: diff)
     }
     
     /// Creates a diff in the specified encoding
@@ -210,36 +232,6 @@ import CryptoKit
             let jsonString = try encodeDiffToJSONString(diff)
             return jsonString.data(using: .utf8) ?? Data()
         }
-    }
-    
-    /// Enhanced diff application using Swift 6.1 features
-    /// - Parameters:
-    ///   - source: The original string
-    ///   - diff: The diff to apply
-    ///   - allowTruncatedSource: Whether to allow applying diff to truncated source string
-    /// - Returns: The resulting string after applying the diff
-    /// - Throws: An error if the diff cannot be applied correctly
-    public static func applyDiff(
-        to source: String,
-        diff: DiffResult
-    ) throws -> String {
-        // Handle empty operations case explicitly
-        if diff.operations.isEmpty {
-            return source
-        }
-    
-        let allowTruncated = shouldAllowTruncatedSource(for: source, diff: diff)
-
-        // Use enhanced string processing for diff application
-        let result = try applyDiffWithEnhancedProcessing(
-            source: source,
-            operations: diff.operations,
-            metadata: diff.metadata,
-            allowTruncatedSource: allowTruncated
-        )
-        
-        try performSmartVerification(source: source, result: result, diff: diff)
-        return result
     }
     
     /// Enhanced diff application with Swift 6.1 optimizations
@@ -302,22 +294,6 @@ import CryptoKit
             sectionRange: sectionRange,
             operations: operations
         )
-    }
-
-    /// Applies a base64 encoded diff to a source string
-    /// - Parameters:
-    ///   - source: The original string
-    ///   - base64Diff: The base64 encoded diff to apply
-    ///   - allowTruncatedSource: Whether to allow applying diff to truncated source string
-    /// - Returns: The resulting string after applying the diff
-    /// - Throws: An error if decoding or applying the diff fails
-    public static func applyBase64Diff(
-        to source: String,
-        base64Diff: String,
-        allowTruncatedSource: Bool = false
-    ) throws -> String {
-        let diff = try diffFromBase64(base64Diff)
-        return try applyDiff(to: source, diff: diff)
     }
     
     /// Applies an encoded diff to a source string

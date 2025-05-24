@@ -933,7 +933,7 @@ func main() throws {
         let destination = "Hello, Swift world!"
         
         // Test new createBase64SmartDiff method
-        let base64SmartDiff = try MultiLineDiff.createBase64SmartDiff(source: source, destination: destination)
+        let base64SmartDiff = try MultiLineDiff.createBase64Diff(source: source, destination: destination)
         
         // Test new applyBase64SmartDiffWithVerify method  
         let result = try MultiLineDiff.applyBase64Diff(to: source, base64Diff: base64SmartDiff)
