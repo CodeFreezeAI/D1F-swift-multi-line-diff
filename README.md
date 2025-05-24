@@ -503,29 +503,6 @@ func createUser(name: String, email: String, age: Int, avatar: UIImage? = nil) -
 
 ### Diff Operation Breakdown
 
-#### Todd Algorithm (`.todd`) Diff Analysis
-```
-Diff Operations Breakdown:
-1. Retain: Import statements
-2. Insert: New import (UIKit)
-3. Retain: Struct declaration
-4. Insert: New property (avatar: UIImage?)
-5. Modify: Initializer (add optional avatar parameter)
-6. Modify: Greet method (add emoji)
-7. Insert: New method (updateAvatar)
-8. Modify: Email validation function
-9. Modify: createUser function signature
-```
-
-#### Brus Algorithm (`.brus`) Diff Analysis
-```
-Simplified Diff Operations:
-1. Retain common prefix
-2. Delete entire content
-3. Insert entire new content
-4. Retain common suffix
-```
-
 ### Performance Comparison
 
 | Metric | Todd Algorithm | Brus Algorithm |
