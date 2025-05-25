@@ -923,25 +923,25 @@ func main() throws {
         return demonstrateTruncatedDiff()
     }
     
+    print("\n" + String(repeating: "=", count: 50))
+    print("Running test: Enhanced Truncated Diff with Dual Context")
     runTest("Enhanced Truncated Diff with Dual Context") {
-        return demonstrateEnhancedTruncatedDiff()
+        demonstrateEnhancedTruncatedDiff()
+        return true
     }
-    
-    // Test new SmartDiff Base64 methods
+
+    print("\n" + String(repeating: "=", count: 50))
+    print("Running test: SmartDiff Base64 Methods")
     runTest("SmartDiff Base64 Methods") {
-        let source = "Hello, world!"
-        let destination = "Hello, Swift world!"
-        
-        // Test new createBase64SmartDiff method
-        let base64SmartDiff = try MultiLineDiff.createBase64Diff(source: source, destination: destination)
-        
-        // Test new applyBase64SmartDiffWithVerify method  
-        let result = try MultiLineDiff.applyBase64Diff(to: source, base64Diff: base64SmartDiff)
-        
-        // Also test with applyBase64SmartDiff (existing method)
-        let result2 = try MultiLineDiff.applyBase64Diff(to: source, base64Diff: base64SmartDiff)
-        
-        return result == destination && result2 == destination
+        demonstrateSmartDiffBase64Methods()
+        return true
+    }
+
+    print("\n" + String(repeating: "=", count: 50))
+    print("Running test: README Example 3 Algorithm Verification")
+    runTest("README Example 3 Algorithm Verification") {
+        demonstrateReadmeExample3()
+        return true
     }
     
     let endTime = getCurrentTimeMs()

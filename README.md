@@ -43,7 +43,7 @@ print(result == destination) // true
 ## 🎯 Visual Diff Examples
 
 ### Example 1: Simple Text Changes
-```swift
+```
 Source:      "Hello, world!"
 Destination: "Hello, Swift!"
 
@@ -73,30 +73,67 @@ func calculate(a: Int, b: Int) -> Int {
 // OPERATIONS (Todd Algorithm - Line Granular)
 ┌──────────────────────────────────────────────────────────────┐
 │ RETAIN(40)           │ INSERT(31)              │ RETAIN(17)  │
-│ "func calculate(...  │ "    // Enhanced calc   │ "return..." │
-│  return "            │  let result = a + b\n"  │             │
+│  func calculate(...  │ // Enhanced calc        │ return...   │
+│  return "            │  let result = a + b\n   │             │
 └──────────────────────────────────────────────────────────────┘
 ```
 
-### Example 3: Algorithm Comparison
+### Example 3: Algorithm Comparison - Real Differences
 
-**Brus Algorithm (Bulk Operations)**
+**Multi-Line Source:**
+```swift
+func processUser() {
+    let user = getCurrentUser()
+    print("Processing user")
+    validateUser(user)
+    return user
+}
 ```
-Source: "Line 1\nLine 2\nLine 3"
-Dest:   "Line 1\nModified\nLine 3"
 
-Brus: [RETAIN(7), DELETE(6), INSERT(8), RETAIN(7)]
-      ↳ 4 operations, fast execution
+**Multi-Line Destination:**
+```swift
+func processUser() -> User {
+    let user = getCurrentUser()
+    print("Processing user data")
+    let validated = validateUser(user)
+    saveUserData(validated)
+    return validated
+}
 ```
 
-**Todd Algorithm (Granular Operations)**  
+**Brus Algorithm (4 Bulk Operations)**
 ```
-Source: "Line 1\nLine 2\nLine 3"
-Dest:   "Line 1\nModified\nLine 3"
+┌───────────────────────────────────────────────────────────────────---------------──┐
+│ 1. RETAIN(19)          │ 2. DELETE(101)         │ 3. INSERT(163)    │ 4. RETAIN(2) │
+│  func processUser() {  │ Delete original body   │ "-> User {\n      │    \n}       │
+│  \n    let user =      │ {\n    let user...     │     let user =... │              │
+│                        │ return user\n}"        │ return validated" │              │
+└──────────────────────────────────────────────────────────────────===============───┘
 
-Todd: [RETAIN(7), DELETE(6), INSERT(8), RETAIN(7)]
-      ↳ Line-aware, semantic processing
+🔥 Result: 4 operations, ultra-fast bulk replacement
 ```
+
+**Todd Algorithm (6 Line-Aware Operations)**  
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│ 1. DELETE(21)          │ 2. INSERT(29)          │ 3. RETAIN(32)     │
+│ func processUser() {   │  func processUser()    │ let user =        │
+│                        │ -> User {\n            │ getCurrentUser()  │
+│-------------------------------------------------------------------- │
+│ 4. DELETE(68)          │ 5. INSERT(122)         │ 6. RETAIN(1)      │
+│ \n    print(\Process   │ \n    print(\Process   │ \n                │
+│ ing user\)\n...return  │ ing user data\)...     │ return validated  │
+│ user"                  │ return validated"      │                   │
+└─────────────────────────────────────────────────────────────────────┘
+
+🧠 Result: 6 operations, line-by-line semantic processing
+```
+
+**Key Differences:**
+- **Brus**: Treats entire change as 4 bulk character operations
+- **Todd**: Processes with 6 semantic operations, more granular  
+- **Both**: Produce identical final code ✅
+- **Use Case**: Brus for speed, Todd for detailed change tracking
 
 ## 📊 Performance Comparison
 
@@ -264,38 +301,38 @@ print("Diff is valid: \(isValid)")
 
 ### Brus Algorithm - Bulk Operations
 ```
-┌─────────────────────────────────────────────────────────┐
-│                     BRUS ALGORITHM                      │
-│  ┌─────────┐    ┌─────────┐    ┌─────────┐             │
-│  │ PREFIX  │────│ MIDDLE  │────│ SUFFIX  │             │
-│  │ COMMON  │    │ CHANGES │    │ COMMON  │             │
-│  └─────────┘    └─────────┘    └─────────┘             │
-│                                                         │
-│  Fast bulk operations:                                  │
-│  • RETAIN(prefix_length)                               │
-│  • DELETE(removed_content)                             │ 
-│  • INSERT(new_content)                                 │
-│  • RETAIN(suffix_length)                               │
-└─────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────┐
+│                BRUS ALGORITHM               │
+│  ┌─────────┐    ┌─────────┐    ┌─────────┐  │
+│  │ PREFIX  │────│ MIDDLE  │────│ SUFFIX  │  │
+│  │ COMMON  │    │ CHANGES │    │ COMMON  │  │
+│  └─────────┘    └─────────┘    └─────────┘  │
+│                                             │
+│  Fast bulk operations:                      │
+│  • RETAIN(prefix_length)                    │
+│  • DELETE(removed_content)                  │ 
+│  • INSERT(new_content)                      │
+│  • RETAIN(suffix_length)                    │
+└─────────────────────────────────────────────┘
 ```
 
 ### Todd Algorithm - Line-Aware Processing
 ```
-┌─────────────────────────────────────────────────────────┐
-│                     TODD ALGORITHM                      │
-│                                                         │
-│  Line 1: ────────────────────── RETAIN                │
-│  Line 2: ─┬─ DELETE old line                           │
-│          └─ INSERT new line                            │
-│  Line 3: ────────────────────── RETAIN                │
-│  Line 4: ────────────────────── INSERT (new)          │
-│                                                         │
-│  Semantic line operations:                              │
-│  • Processes line-by-line                              │
-│  • Preserves formatting                                │
-│  • Granular operation history                          │
-│  • Perfect for code diffs                              │
-└─────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────┐
+│               TODD ALGORITHM                 │
+│                                              │
+│  Line 1: ────────────────────── RETAIN       │
+│  Line 2: ─┬─ DELETE old line                 │
+│          └─ INSERT new line                  │
+│  Line 3: ────────────────────── RETAIN       |
+│  Line 4: ────────────────────── INSERT (new) |
+│                                              │
+│  Semantic line operations:                   │
+│  • Processes line-by-line                    │
+│  • Preserves formatting                      │
+│  • Granular operation history                │
+│  • Perfect for code diffs                    │
+└──────────────────────────────────────────────┘
 ```
 
 ## 📝 Operation Types
