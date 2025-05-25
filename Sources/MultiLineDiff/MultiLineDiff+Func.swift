@@ -102,7 +102,7 @@ extension MultiLineDiff {
         }
         
         // Use optimized LCS for semantic line-by-line processing
-        let lcsOperations = generateOptimizedLCSOperations(sourceLines: sourceLines, destLines: destLines)
+        let lcsOperations = generateMyersLCS(sourceLines: sourceLines, destLines: destLines)
         var builder = DiffAlgorithmCore.OperationBuilder()
         
         // Convert line operations to character operations
@@ -148,114 +148,7 @@ extension MultiLineDiff {
         return DiffResult(operations: builder.build())
     }
     
-    /// Optimized LCS operations for semantic line-by-line processing
-    internal static func generateOptimizedLCSOperations(sourceLines: [Substring], destLines: [Substring]) -> [EnhancedLineOperation] {
-        // Handle empty cases
-        if sourceLines.isEmpty && destLines.isEmpty {
-            return []
-        }
-        if sourceLines.isEmpty {
-            return destLines.indices.map { .insert($0) }
-        }
-        if destLines.isEmpty {
-            return sourceLines.indices.map { .delete($0) }
-        }
-        
-        // Use traditional LCS table but with optimizations
-        return generateFastLCS(sourceLines: sourceLines, destLines: destLines)
-    }
-    
-    /// naive LCS implementation optimized for Swift 6.1
-    @_optimize(speed)
-    internal static func naiveLCS(sourceLines: [Substring], destLines: [Substring]) -> [EnhancedLineOperation] {
-        let srcCount = sourceLines.count
-        let dstCount = destLines.count
-        
-        // Use flat array for better cache locality
-        let tableSize = (srcCount + 1) * (dstCount + 1)
-        var table = Array(repeating: 0, count: tableSize)
-        
-        // Helper to convert 2D index to 1D
-        func tableIndex(i: Int, j: Int) -> Int {
-            return i * (dstCount + 1) + j
-        }
-        
-        // Build LCS table with optimized memory access
-        for i in 1...srcCount {
-            let sourceLine = sourceLines[i-1]
-            let currentRowStart = i * (dstCount + 1)
-            let prevRowStart = (i-1) * (dstCount + 1)
-            
-            for j in 1...dstCount {
-                let currentIdx = currentRowStart + j
-                if sourceLine == destLines[j-1] {
-                    table[currentIdx] = table[prevRowStart + j - 1] + 1
-                } else {
-                    table[currentIdx] = Swift.max(table[prevRowStart + j], table[currentRowStart + j - 1])
-                }
-            }
-        }
-        
-        // Fast backtracking
-        var operations: [EnhancedLineOperation] = []
-        operations.reserveCapacity(srcCount + dstCount)
-        
-        var i = srcCount
-        var j = dstCount
-        
-        while i > 0 || j > 0 {
-            if i > 0 && j > 0 && sourceLines[i-1] == destLines[j-1] {
-                operations.append(.retain(i-1))
-                i -= 1
-                j -= 1
-            } else if j > 0 && (i == 0 || table[tableIndex(i: i, j: j-1)] >= table[tableIndex(i: i-1, j: j)]) {
-                operations.append(.insert(j-1))
-                j -= 1
-            } else {
-                operations.append(.delete(i-1))
-                i -= 1
-            }
-        }
-        
-        return operations.reversed()
-    }
-    
-    /// Fast LCS implementation optimized for Swift 6.1 - AVOIDS NESTED LOOPS
-    @_optimize(speed)
-    internal static func generateFastLCS(sourceLines: [Substring], destLines: [Substring]) -> [EnhancedLineOperation] {
-        let srcCount = sourceLines.count
-        let dstCount = destLines.count
-        
-        if srcCount == 0 || dstCount == 0 {
-            return handleEmptyCases(srcCount: srcCount, dstCount: dstCount)
-        }
-        
-        // For small inputs, use optimized direct comparison (no nested loops)
-        if srcCount <= 3 && dstCount <= 3 {
-            return generateSmallInputLCS(sourceLines: sourceLines, destLines: destLines)
-        }
-        
-        // For very similar strings (>80% match), use fast linear scan
-        let similarity = calculateLineSimilarity(sourceLines: sourceLines, destLines: destLines)
-        
-        if similarity > 0.6 {
-            return generateLinearScanLCS(sourceLines: sourceLines, destLines: destLines)
-        }
-        
-        if similarity > 0.8 {
-            return naiveLCS(sourceLines: sourceLines, destLines: destLines)
-        }
-        
-        // For medium size with good locality, use Myers' algorithm (no nested loops)
-        if srcCount <= 200 && dstCount <= 200 {
-            return generateMyersLCS(sourceLines: sourceLines, destLines: destLines)
-        }
-        
-        // For large inputs, use patience sorting LCS (no nested loops)
-        return generatePatienceLCS(sourceLines: sourceLines, destLines: destLines)
-    }
-    
-    /// Myers' algorithm - O((M+N)D) complexity, avoids nested loops with diagonal sweeps
+    /// Swift built-in difference algorithm - uses optimized Myers implementation internally
     @_optimize(speed)
     internal static func generateMyersLCS(sourceLines: [Substring], destLines: [Substring]) -> [EnhancedLineOperation] {
         let M = sourceLines.count
@@ -266,95 +159,80 @@ extension MultiLineDiff {
             return handleEmptyCases(srcCount: M, dstCount: N)
         }
         
-        let MAX_D = M + N
+        // Use Swift's built-in optimized difference algorithm
+        let difference = destLines.difference(from: sourceLines)
         
-        // V array for the furthest reaching path in each diagonal
-        var V = Array(repeating: -1, count: 2 * MAX_D + 1)
-        var trace: [[Int]] = []
+        // Pre-allocate operations array for better performance
+        var operations: [EnhancedLineOperation] = []
+        operations.reserveCapacity(M + N)
         
-        V[MAX_D] = 0  // Initialize the center diagonal
-        
-        // Single loop over edit distance (no nested loops!)
-        for D in 0...MAX_D {
-            var currentV = V
-            
-            // Single loop over diagonals (not nested - independent of input size)
-            for k in stride(from: -D, through: D, by: 2) {
-                let kIndex = k + MAX_D
-                
-                // Ensure kIndex is within bounds
-                guard kIndex >= 0 && kIndex < currentV.count else { continue }
-                
-                var x: Int
-                if k == -D || (k != D && kIndex > 0 && kIndex < currentV.count - 1 && 
-                              currentV[kIndex - 1] < currentV[kIndex + 1]) {
-                    x = currentV[kIndex + 1]
-                } else if kIndex > 0 {
-                    x = currentV[kIndex - 1] + 1
-                } else {
-                    x = 0
-                }
-                
-                var y = x - k
-                
-                // Extend diagonal as far as possible (single while loop)
-                while x < M && y < N && x >= 0 && y >= 0 && sourceLines[x] == destLines[y] {
-                    x += 1
-                    y += 1
-                }
-                
-                currentV[kIndex] = x
-                
-                if x >= M && y >= N {
-                    // Found the solution - backtrack without nested loops
-                    trace.append(currentV)
-                    return backtrackMyersPath(trace: trace, sourceLines: sourceLines, destLines: destLines, maxD: MAX_D)
-                }
-            }
-            
-            V = currentV
-            trace.append(V)
+        // Process difference directly without creating intermediate sets
+        var sourceIndex = 0
+        var destIndex = 0
+        var changeIndex = 0
+        let sortedChanges = Array(difference).sorted { lhs, rhs in
+            let lhsOffset = getOffset(from: lhs)
+            let rhsOffset = getOffset(from: rhs)
+            return lhsOffset < rhsOffset
         }
         
-        // Fallback to simple diff if Myers fails
-        return generateSimpleDiff(sourceLines: sourceLines, destLines: destLines)
+        // Single pass through both arrays using sorted changes
+        while sourceIndex < M || destIndex < N {
+            // Check if there's a pending change at current position
+            var hasChange = false
+            
+            while changeIndex < sortedChanges.count {
+                let change = sortedChanges[changeIndex]
+                
+                switch change {
+                case .remove(let offset, _, _) where offset == sourceIndex:
+                    operations.append(.delete(sourceIndex))
+                    sourceIndex += 1
+                    changeIndex += 1
+                    hasChange = true
+                    continue
+                    
+                case .insert(let offset, _, _) where offset == destIndex:
+                    operations.append(.insert(destIndex))
+                    destIndex += 1
+                    changeIndex += 1
+                    hasChange = true
+                    continue
+                    
+                default:
+                    break
+                }
+                break
+            }
+            
+            // If no change, it's a retain (if both indices are valid)
+            if !hasChange {
+                if sourceIndex < M && destIndex < N {
+                    operations.append(.retain(sourceIndex))
+                    sourceIndex += 1
+                    destIndex += 1
+                } else if sourceIndex < M {
+                    // Remaining source (delete)
+                    operations.append(.delete(sourceIndex))
+                    sourceIndex += 1
+                } else {
+                    // Remaining dest (insert)
+                    operations.append(.insert(destIndex))
+                    destIndex += 1
+                }
+            }
+        }
+        
+        return operations
     }
     
-    /// Patience sorting based LCS - O(n log n) for many practical cases, no nested loops
+    /// Helper to extract offset from CollectionDifference.Change
     @_optimize(speed)
-    internal static func generatePatienceLCS(sourceLines: [Substring], destLines: [Substring]) -> [EnhancedLineOperation] {
-        // Handle edge cases
-        if sourceLines.isEmpty || destLines.isEmpty {
-            return handleEmptyCases(srcCount: sourceLines.count, dstCount: destLines.count)
+    private static func getOffset(from change: CollectionDifference<Substring>.Change) -> Int {
+        switch change {
+        case .remove(let offset, _, _), .insert(let offset, _, _):
+            return offset
         }
-        
-        // Create hash map of source lines for O(1) lookup (single loop)
-        var sourcePositions: [Substring: [Int]] = [:]
-        for (index, line) in sourceLines.enumerated() {
-            sourcePositions[line, default: []].append(index)
-        }
-        
-        // Build sequence of matching positions (single loop)
-        var matches: [(Int, Int)] = []
-        for (destIndex, destLine) in destLines.enumerated() {
-            if let positions = sourcePositions[destLine] {
-                // Add all matching positions (inner loop is over matches, not input size)
-                for srcIndex in positions {
-                    matches.append((srcIndex, destIndex))
-                }
-            }
-        }
-        
-        // Handle case with no matches
-        if matches.isEmpty {
-            return generateSimpleDiff(sourceLines: sourceLines, destLines: destLines)
-        }
-        
-        // Find LIS using patience sorting (single loop with binary search)
-        let lis = findLongestIncreasingSubsequence(matches)
-        
-        // Convert LIS back to operations (single loop)
-        return convertLISToOperations(lis: lis, sourceCount: sourceLines.count, destCount: destLines.count)
     }
     
     /// Linear scan for very similar texts - O(n) single pass, no nested loops
@@ -581,60 +459,6 @@ extension MultiLineDiff {
         } else {
             return (0..<srcCount).map { .delete($0) }
         }
-    }
-    
-    /// Myers' algorithm backtracking without nested loops
-    @_optimize(speed)
-    internal static func backtrackMyersPath(trace: [[Int]], sourceLines: [Substring], destLines: [Substring], maxD: Int) -> [EnhancedLineOperation] {
-        var operations: [EnhancedLineOperation] = []
-        var x = sourceLines.count
-        var y = destLines.count
-        
-        // Single backtrack loop
-        for d in (0..<trace.count).reversed() {
-            let V = trace[d]
-            let k = x - y
-            let kIndex = k + maxD
-            
-            // Ensure we're within bounds
-            guard kIndex >= 0 && kIndex < V.count else { continue }
-            
-            var prevK: Int
-            if k == -d || (k != d && kIndex > 0 && kIndex < V.count - 1 && V[kIndex - 1] < V[kIndex + 1]) {
-                prevK = k + 1
-            } else {
-                prevK = k - 1
-            }
-            
-            let prevKIndex = prevK + maxD
-            guard prevKIndex >= 0 && prevKIndex < V.count else { continue }
-            
-            let prevX = V[prevKIndex]
-            let prevY = prevX - prevK
-            
-            // Add diagonal moves (matches)
-            while x > prevX && y > prevY && x > 0 && y > 0 {
-                x -= 1
-                y -= 1
-                operations.append(.retain(x))
-            }
-            
-            if d > 0 {
-                if x > prevX {
-                    x -= 1
-                    if x >= 0 {
-                        operations.append(.delete(x))
-                    }
-                } else {
-                    y -= 1
-                    if y >= 0 {
-                        operations.append(.insert(y))
-                    }
-                }
-            }
-        }
-        
-        return operations.reversed()
     }
     
     /// Direct comparison for very small inputs
