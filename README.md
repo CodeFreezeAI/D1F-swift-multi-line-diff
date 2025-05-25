@@ -329,7 +329,7 @@ print("Diff is valid: \(isValid)")
 │                                              │
 │  Line 1: ────────────────────── RETAIN       │
 │  Line 2: ─┬─ DELETE old line                 │
-│          └─ INSERT new line                  │
+│           └─ INSERT new line                 │
 │  Line 1: ────────────────────── RETAIN       │
 │  Line 3: ────────────────────── RETAIN       │
 │  Line 4: ────────────────────── INSERT (new) │
