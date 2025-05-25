@@ -482,9 +482,9 @@ do {
 
 ### Memory Usage Comparison
 ```
-Small Files (< 1KB):   📱 ~50KB peak memory
-Medium Files (< 100KB): 📱 ~200KB peak memory  
-Large Files (< 10MB):   📱 ~2MB peak memory
+Small Files    (< 1KB):  📱 ~50KB peak memory
+Medium Files (< 100KB):  📱 ~200KB peak memory  
+Large Files   (< 10MB):  📱 ~2MB peak memory
 
 ✅ Crash-safe with comprehensive bounds checking
 ✅ Handles Unicode, special characters, extreme edge cases
