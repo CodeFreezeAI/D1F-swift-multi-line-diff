@@ -103,26 +103,51 @@ extension MultiLineDiff {
         
         // Use optimized LCS for semantic line-by-line processing
         let lcsOperations = DiffAlg(sourceLines: sourceLines, destLines: destLines)
+        
+        // OPTIMIZATION: Work directly with lines, no character conversion!
+        return createDiffFromLineOperations(
+            lcsOperations: lcsOperations,
+            sourceLines: sourceLines,
+            destLines: destLines
+        )
+    }
+    
+    /// Create diff directly from line operations (preserves line-by-line granularity)
+    @_optimize(speed)
+    internal static func createDiffFromLineOperations(
+        lcsOperations: [EnhancedLineOperation],
+        sourceLines: [Substring],
+        destLines: [Substring]
+    ) -> DiffResult {
         var builder = DiffAlgorithmCore.OperationBuilder()
         
-        // Convert line operations to character operations
+        // Convert each line operation individually (preserving granularity)
         for operation in lcsOperations {
             switch operation {
             case .retain(let i):
-                builder.addRetain(count: lineToCharCount(sourceLines[i], i, sourceLines.count))
+                // Convert single line to character count (efficient, no grouping)
+                let line = sourceLines[i]
+                let charCount = line.count + (i == sourceLines.count - 1 ? 0 : 1) // Add newline except for last line
+                builder.addRetain(count: charCount)
                 
             case .delete(let i):
-                builder.addDelete(count: lineToCharCount(sourceLines[i], i, sourceLines.count))
+                // Convert single line to character count (efficient, no grouping)
+                let line = sourceLines[i]
+                let charCount = line.count + (i == sourceLines.count - 1 ? 0 : 1) // Add newline except for last line
+                builder.addDelete(count: charCount)
                 
             case .insert(let i):
-                builder.addInsert(text: lineToText(destLines[i], i, destLines.count))
+                // Convert single line to text (efficient, no grouping)
+                let line = destLines[i]
+                let lineText = String(line) + (i == destLines.count - 1 ? "" : "\n") // Add newline except for last line
+                builder.addInsert(text: lineText)
             }
         }
         
         return DiffResult(operations: builder.build())
     }
     
-    /// Fast path for small line diffs
+    /// Fast path for small line diffs (preserves line-by-line granularity)
     @_optimize(speed)
     internal static func createSimpleLineDiff(sourceLines: [Substring], destLines: [Substring]) -> DiffResult {
         var builder = DiffAlgorithmCore.OperationBuilder()
@@ -130,17 +155,23 @@ extension MultiLineDiff {
         
         while srcIdx < sourceLines.count || dstIdx < destLines.count {
             if srcIdx < sourceLines.count && dstIdx < destLines.count && sourceLines[srcIdx] == destLines[dstIdx] {
-                // Lines match - retain
-                builder.addRetain(count: lineToCharCount(sourceLines[srcIdx], srcIdx, sourceLines.count))
+                // Lines match - retain (individual line)
+                let line = sourceLines[srcIdx]
+                let charCount = line.count + (srcIdx == sourceLines.count - 1 ? 0 : 1)
+                builder.addRetain(count: charCount)
                 srcIdx += 1
                 dstIdx += 1
             } else if srcIdx < sourceLines.count && (dstIdx >= destLines.count || sourceLines[srcIdx] != destLines[dstIdx]) {
-                // Delete source line
-                builder.addDelete(count: lineToCharCount(sourceLines[srcIdx], srcIdx, sourceLines.count))
+                // Delete source line (individual line)
+                let line = sourceLines[srcIdx]
+                let charCount = line.count + (srcIdx == sourceLines.count - 1 ? 0 : 1)
+                builder.addDelete(count: charCount)
                 srcIdx += 1
             } else if dstIdx < destLines.count {
-                // Insert destination line
-                builder.addInsert(text: lineToText(destLines[dstIdx], dstIdx, destLines.count))
+                // Insert destination line (individual line)
+                let line = destLines[dstIdx]
+                let lineText = String(line) + (dstIdx == destLines.count - 1 ? "" : "\n")
+                builder.addInsert(text: lineText)
                 dstIdx += 1
             }
         }
@@ -207,7 +238,6 @@ extension MultiLineDiff {
         return operations
     }
     
-
     /// Handle empty cases without any loops
     internal static func handleEmptyCases(srcCount: Int, dstCount: Int) -> [EnhancedLineOperation] {
         if srcCount == 0 && dstCount == 0 {
@@ -217,18 +247,6 @@ extension MultiLineDiff {
         } else {
             return (0..<srcCount).map { .delete($0) }
         }
-    }
- 
-    /// Helper to convert line to character count including newline handling
-    @_optimize(speed)
-    internal static func lineToCharCount(_ line: Substring, _ index: Int, _ total: Int) -> Int {
-        line.count + (index == total - 1 ? 0 : 1)
-    }
-    
-    /// Helper to convert line to text including newline handling
-    @_optimize(speed)
-    internal static func lineToText(_ line: Substring, _ index: Int, _ total: Int) -> String {
-        String(line) + (index == total - 1 ? "" : "\n")
     }
     
     /// Enhanced line operation for internal processing
