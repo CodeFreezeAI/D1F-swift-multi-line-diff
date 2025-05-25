@@ -151,7 +151,7 @@ Add to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/toddbruss/swift-multi-line-diff.git", from: "1.0.0")
+    .package(url: "https://github.com/toddbruss/swift-multi-line-diff.git", from: "1.3.2")
 ]
 ```
 
