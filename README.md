@@ -145,7 +145,7 @@ func processUser() -> User {
 
 | Algorithm | Speed (Small Files) | Speed (Large Files) | Operations | Use Case |
 |-----------|--------------------|--------------------|------------|----------|
-| **Brus** | ⚡ 0.11ms | ⚡ 17ms | 📦 Bulk (3-5) | Speed Critical |
+| **Brus** | ⚡ 0.11ms | ⚡ 17ms | 📦 Bulk (4) | Speed Critical |
 | **Todd** | 🏃 0.22ms | 🏃 45ms | 🔬 Granular (1000s) | Semantic Aware |
 
 Both algorithms guarantee **100% identical final results**.
