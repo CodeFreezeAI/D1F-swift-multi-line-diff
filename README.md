@@ -43,14 +43,14 @@ print(result == destination) // true
 ## 🎯 Visual Diff Examples
 
 ### Example 1: Simple Text Changes
-```
+```swift
 Source:      "Hello, world!"
 Destination: "Hello, Swift!"
 
 Operations:
 ┌─────────────────────────────────────┐
-│ RETAIN(7)  │ DELETE(5) │ INSERT(6) │
-│ "Hello, "  │ "world"   │ "Swift"   │
+│ RETAIN(7)  │ DELETE(5) │ INSERT(6)  │
+│ "Hello, "  │ "world"   │ "Swift"    │
 └─────────────────────────────────────┘
 
 Result: "Hello, Swift!"
