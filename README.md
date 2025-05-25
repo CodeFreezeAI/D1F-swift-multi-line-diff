@@ -138,7 +138,7 @@ func processUser() -> User {
 **Key Differences:**
 - **Brus**: Treats entire change as 4 bulk character operations
 - **Todd**: Processes with 6+ semantic operations, more granular  
-- **Both**: Produce identical final code ✅
+- **Both**: Produce identical final code, complete with line endings and leading whitespace ✅
 - **Use Case**: Brus for speed, Todd for detailed change tracking
 
 ## 📊 Performance Comparison
