@@ -1,5 +1,12 @@
 # 🔍 MultiLineDiff
 
+[![Swift 6.1](https://img.shields.io/badge/Swift-6.1-orange.svg)](https://swift.org)
+[![Website](https://img.shields.io/badge/website-xcf.ai-blue.svg)](https://xcf.ai)
+[![Version](https://img.shields.io/badge/version-1.3.2-green.svg)](https://github.com/codefreezeai/swift-multi-line-diff)
+[![GitHub stars](https://img.shields.io/github/stars/codefreezeai/swift-multi-line-diff.svg?style=social)](https://github.com/codefreezeai/swift-multi-line-diff)/stargazers)
+[![GitHub downloads](https://img.shields.io/github/downloads/codefreezeai/xcf/total.svg)](https://github.com/codefreezeai/swift-multi-line-diff/releases)
+[![GitHub forks](https://img.shields.io/github/forks/codefreezeai/swift-multi-line-diff.svg?style=social)](https://github.com/codefreezeai/swift-multi-line-diff/network)
+
 **Advanced multi-line string diffing with semantic-aware algorithms and intelligent application detection.**
 
 A powerful, performance-optimized Swift package that provides sophisticated multi-line string comparison and modification capabilities. Features dual-algorithm support with automatic source type detection, comprehensive metadata, and enterprise-grade reliability.
@@ -43,7 +50,7 @@ print(result == destination) // true
 ## 🎯 Visual Diff Examples
 
 ### Example 1: Simple Text Changes
-```
+```swift
 Source:      "Hello, world!"
 Destination: "Hello, Swift!"
 
