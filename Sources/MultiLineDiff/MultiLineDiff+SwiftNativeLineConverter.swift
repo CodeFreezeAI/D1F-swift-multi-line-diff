@@ -43,7 +43,7 @@ extension MultiLineDiff {
         let sourceMiddleLines = Array(sourceAfterPrefix.dropLast(commonSuffixCount))
         let destMiddleLines = Array(destAfterPrefix.dropLast(commonSuffixCount))
         
-        // Build operations based on lines - PROCESS EACH LINE INDIVIDUALLY
+        // Build operations based on lines - SIMPLE DELETE/INSERT APPROACH
         var operations: [DiffOperation] = []
         
         // Retain common prefix lines
@@ -52,13 +52,39 @@ extension MultiLineDiff {
             operations.append(.retain(prefixCharCount))
         }
         
-        // Process middle lines individually using line-by-line diff
+        // Handle middle section with simple but efficient approach
         if !sourceMiddleLines.isEmpty || !destMiddleLines.isEmpty {
-            let middleOperations = createLineByLineDiff(
-                sourceLines: sourceMiddleLines,
-                destLines: destMiddleLines
-            )
-            operations.append(contentsOf: middleOperations)
+            // Apply prefix/suffix optimization to the middle section as well
+            let middlePrefixCount = findCommonPrefixCount(sourceMiddleLines, destMiddleLines)
+            let sourceAfterMiddlePrefix = Array(sourceMiddleLines.dropFirst(middlePrefixCount))
+            let destAfterMiddlePrefix = Array(destMiddleLines.dropFirst(middlePrefixCount))
+            
+            let middleSuffixCount = findCommonSuffixCount(sourceAfterMiddlePrefix, destAfterMiddlePrefix)
+            let sourceCore = Array(sourceAfterMiddlePrefix.dropLast(middleSuffixCount))
+            let destCore = Array(destAfterMiddlePrefix.dropLast(middleSuffixCount))
+            
+            // Retain middle prefix
+            if middlePrefixCount > 0 {
+                let prefixCharCount = sourceMiddleLines.prefix(middlePrefixCount).map { $0.count }.reduce(0, +)
+                operations.append(.retain(prefixCharCount))
+            }
+            
+            // Handle core differences with bulk operations
+            if !sourceCore.isEmpty {
+                let deleteCount = sourceCore.map { $0.count }.reduce(0, +)
+                operations.append(.delete(deleteCount))
+            }
+            
+            if !destCore.isEmpty {
+                let insertText = destCore.map { String($0) }.joined()
+                operations.append(.insert(insertText))
+            }
+            
+            // Retain middle suffix
+            if middleSuffixCount > 0 {
+                let suffixCharCount = sourceAfterMiddlePrefix.suffix(middleSuffixCount).map { $0.count }.reduce(0, +)
+                operations.append(.retain(suffixCharCount))
+            }
         }
         
         // Retain common suffix lines
@@ -70,57 +96,98 @@ extension MultiLineDiff {
         return DiffResult(operations: consolidateLineOperations(operations))
     }
     
-    /// Create line-by-line diff for middle sections
+    /// Create intelligent line-by-line diff without using CollectionDifference
     @_optimize(speed)
-    private static func createLineByLineDiff(
+    private static func createIntelligentLineByLineDiff(
         sourceLines: [Substring],
         destLines: [Substring]
     ) -> [DiffOperation] {
         
-        // Use Swift's difference on the middle lines
-        let difference = destLines.difference(from: sourceLines)
+        // Handle empty cases
+        if sourceLines.isEmpty {
+            if destLines.isEmpty {
+                return []
+            } else {
+                let insertText = destLines.map { String($0) }.joined()
+                return [.insert(insertText)]
+            }
+        }
         
+        if destLines.isEmpty {
+            let deleteCount = sourceLines.map { $0.count }.reduce(0, +)
+            return [.delete(deleteCount)]
+        }
+        
+        // Use a simple but efficient line matching approach
         var operations: [DiffOperation] = []
         var sourceIndex = 0
         var destIndex = 0
         
-        // Create sets to track which lines are removed/inserted
-        var removedLines = Set<Int>()
-        var insertedLines = Set<Int>()
-        
-        for change in difference {
-            switch change {
-            case .remove(let offset, _, _):
-                removedLines.insert(offset)
-            case .insert(let offset, _, _):
-                insertedLines.insert(offset)
-            }
-        }
-        
-        // Process lines in order, creating individual operations for each line
+        // Process lines by finding exact matches and handling differences
         while sourceIndex < sourceLines.count || destIndex < destLines.count {
-            if sourceIndex < sourceLines.count && removedLines.contains(sourceIndex) {
-                // Delete this specific source line
-                operations.append(.delete(sourceLines[sourceIndex].count))
-                sourceIndex += 1
-            } else if destIndex < destLines.count && insertedLines.contains(destIndex) {
-                // Insert this specific destination line
-                operations.append(.insert(String(destLines[destIndex])))
-                destIndex += 1
-            } else if sourceIndex < sourceLines.count && destIndex < destLines.count {
-                // Retain this line (it's common between source and dest)
-                operations.append(.retain(sourceLines[sourceIndex].count))
-                sourceIndex += 1
-                destIndex += 1
-            } else if sourceIndex < sourceLines.count {
-                // Delete remaining source lines
-                operations.append(.delete(sourceLines[sourceIndex].count))
-                sourceIndex += 1
-            } else if destIndex < destLines.count {
-                // Insert remaining destination lines
-                operations.append(.insert(String(destLines[destIndex])))
-                destIndex += 1
+            
+            // If we've processed all source lines, insert remaining dest lines
+            if sourceIndex >= sourceLines.count {
+                let remainingDestText = destLines[destIndex...].map { String($0) }.joined()
+                operations.append(.insert(remainingDestText))
+                break
             }
+            
+            // If we've processed all dest lines, delete remaining source lines
+            if destIndex >= destLines.count {
+                let remainingSourceCount = sourceLines[sourceIndex...].map { $0.count }.reduce(0, +)
+                operations.append(.delete(remainingSourceCount))
+                break
+            }
+            
+            let sourceLine = sourceLines[sourceIndex]
+            let destLine = destLines[destIndex]
+            
+            // If lines match exactly, retain
+            if sourceLine == destLine {
+                operations.append(.retain(sourceLine.count))
+                sourceIndex += 1
+                destIndex += 1
+                continue
+            }
+            
+            // Lines don't match - look ahead to see if we can find a match
+            let lookAheadDistance = min(5, min(sourceLines.count - sourceIndex, destLines.count - destIndex))
+            var foundMatch = false
+            
+            // Look for the dest line in upcoming source lines (deletion case)
+            for i in 1..<lookAheadDistance {
+                if sourceIndex + i < sourceLines.count && sourceLines[sourceIndex + i] == destLine {
+                    // Delete the intervening source lines
+                    let deleteCount = sourceLines[sourceIndex..<sourceIndex + i].map { $0.count }.reduce(0, +)
+                    operations.append(.delete(deleteCount))
+                    sourceIndex += i
+                    foundMatch = true
+                    break
+                }
+            }
+            
+            if foundMatch { continue }
+            
+            // Look for the source line in upcoming dest lines (insertion case)
+            for i in 1..<lookAheadDistance {
+                if destIndex + i < destLines.count && destLines[destIndex + i] == sourceLine {
+                    // Insert the intervening dest lines
+                    let insertText = destLines[destIndex..<destIndex + i].map { String($0) }.joined()
+                    operations.append(.insert(insertText))
+                    destIndex += i
+                    foundMatch = true
+                    break
+                }
+            }
+            
+            if foundMatch { continue }
+            
+            // No match found in lookahead - treat as a replacement
+            operations.append(.delete(sourceLine.count))
+            operations.append(.insert(String(destLine)))
+            sourceIndex += 1
+            destIndex += 1
         }
         
         return operations
