@@ -129,7 +129,7 @@ func processUser() -> User {
 │ 4. DELETE(68)          │ 5. INSERT(122)         │ 6. RETAIN(1)      │
 │ \n    print(\Process   │ \n    print(\Process   │ \n                │
 │ ing user\)\n...return  │ ing user data\)...     │ return validated  │
-│ user                   │ return validated"      │                   │
+│ user                   │ return validated       │                   │
 └─────────────────────────────────────────────────────────────────────┘
 
 🧠 Result: 6 operations, line-by-line semantic processing
