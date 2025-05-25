@@ -11,6 +11,7 @@
     case invalidRetain(count: Int, remainingLength: Int)
     case invalidDelete(count: Int, remainingLength: Int)
     case incompleteApplication(unconsumedLength: Int)
+    case invalidDiff
     case encodingFailed
     case decodingFailed
     case verificationFailed(expected: String, actual: String)
@@ -23,6 +24,8 @@
             "Cannot delete \(count) characters, only \(remaining) remaining"
         case .incompleteApplication(let unconsumed):
             "Diff application did not consume entire source string (\(unconsumed) characters remaining)"
+        case .invalidDiff:
+            "Invalid diff: operation contains out-of-bounds indices or malformed data"
         case .encodingFailed:
             "Failed to encode diff to JSON"
         case .decodingFailed:

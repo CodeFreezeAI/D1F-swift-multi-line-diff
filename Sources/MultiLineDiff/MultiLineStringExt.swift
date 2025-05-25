@@ -62,15 +62,39 @@ public extension String {
     /// Memory-efficient character access using Swift 6.1 features
     @_optimize(speed)
     func characterAt(offset: Int) -> Character? {
+        // SAFETY: Comprehensive bounds checking to prevent crashes
         guard offset >= 0 && offset < count else { return nil }
-        return self[index(startIndex, offsetBy: offset)]
+        
+        // SAFETY: Additional safety check for index calculation
+        guard let targetIndex = index(startIndex, offsetBy: offset, limitedBy: endIndex) else {
+            return nil
+        }
+        
+        return self[targetIndex]
     }
     
     /// Swift 6.1 enhanced substring extraction
     @_optimize(speed)
     func substring(from: Int, length: Int) -> String {
-        let startIdx = index(startIndex, offsetBy: Swift.max(0, from))
-        let endIdx = index(startIdx, offsetBy: Swift.min(length, count - from), limitedBy: endIndex) ?? endIndex
+        // SAFETY: Comprehensive bounds checking to prevent crashes
+        guard from >= 0 && length >= 0 && from < count else { 
+            return "" 
+        }
+        
+        // SAFETY: Calculate safe indices with bounds checking
+        let safeFrom = Swift.max(0, from)
+        let safeTo = Swift.min(count, safeFrom + length)
+        let safeLength = Swift.max(0, safeTo - safeFrom)
+        
+        guard let startIdx = index(startIndex, offsetBy: safeFrom, limitedBy: endIndex) else {
+            return ""
+        }
+        
+        guard let endIdx = index(startIdx, offsetBy: safeLength, limitedBy: endIndex) else {
+            // If we can't get the exact length, return from start to end
+            return String(self[startIdx...])
+        }
+        
         return String(self[startIdx..<endIdx])
     }
 }

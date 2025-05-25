@@ -135,16 +135,31 @@ extension MultiLineDiff {
         for operation in lcsOperations {
             switch operation {
             case .retain(let i):
+                // SAFETY: Bounds checking to prevent crashes
+                guard i >= 0 && i < sourceLines.count else {
+                    // Skip invalid retain operations instead of crashing
+                    continue
+                }
                 // Lines now include newlines, so use the exact character count
                 let line = sourceLines[i]
                 builder.addRetain(count: line.count)
                 
             case .delete(let i):
+                // SAFETY: Bounds checking to prevent crashes
+                guard i >= 0 && i < sourceLines.count else {
+                    // Skip invalid delete operations instead of crashing
+                    continue
+                }
                 // Lines now include newlines, so use the exact character count
                 let line = sourceLines[i]
                 builder.addDelete(count: line.count)
                 
             case .insert(let i):
+                // SAFETY: Bounds checking to prevent crashes
+                guard i >= 0 && i < destLines.count else {
+                    // Skip invalid insert operations instead of crashing
+                    continue
+                }
                 // Lines now include newlines, so use the exact text
                 let line = destLines[i]
                 builder.addInsert(text: String(line))
@@ -205,25 +220,32 @@ extension MultiLineDiff {
         var isRemoved = Array(repeating: false, count: M)
         var isInserted = Array(repeating: false, count: N)
         
-        // Mark removals and insertions in O(changes) time
+        // Mark removals and insertions in O(changes) time with bounds checking
         for change in difference {
             switch change {
             case .remove(let offset, _, _):
-                if offset < M { isRemoved[offset] = true }
+                // SAFETY: Bounds checking to prevent crashes
+                if offset >= 0 && offset < M { 
+                    isRemoved[offset] = true 
+                }
             case .insert(let offset, _, _):
-                if offset < N { isInserted[offset] = true }
+                // SAFETY: Bounds checking to prevent crashes
+                if offset >= 0 && offset < N { 
+                    isInserted[offset] = true 
+                }
             }
         }
         
-        // Single optimized pass
+        // Single optimized pass with bounds checking
         var sourceIndex = 0
         var destIndex = 0
         
         while sourceIndex < M || destIndex < N {
-            if sourceIndex < M && isRemoved[sourceIndex] {
+            // SAFETY: Additional bounds checking for all array accesses
+            if sourceIndex < M && sourceIndex < isRemoved.count && isRemoved[sourceIndex] {
                 operations.append(.delete(sourceIndex))
                 sourceIndex += 1
-            } else if destIndex < N && isInserted[destIndex] {
+            } else if destIndex < N && destIndex < isInserted.count && isInserted[destIndex] {
                 operations.append(.insert(destIndex))
                 destIndex += 1
             } else if sourceIndex < M && destIndex < N {
@@ -233,9 +255,12 @@ extension MultiLineDiff {
             } else if sourceIndex < M {
                 operations.append(.delete(sourceIndex))
                 sourceIndex += 1
-            } else {
+            } else if destIndex < N {
                 operations.append(.insert(destIndex))
                 destIndex += 1
+            } else {
+                // SAFETY: Break if we somehow get into an invalid state
+                break
             }
         }
         

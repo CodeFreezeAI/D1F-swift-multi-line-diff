@@ -16,6 +16,11 @@ extension MultiLineDiff {
         result: inout String,
         allowTruncated: Bool
     ) throws {
+        // SAFETY: Validate count parameter
+        guard count >= 0 else {
+            throw DiffError.invalidDiff
+        }
+        
         guard currentIndex < source.endIndex else {
             if allowTruncated {
                 return // Skip retain if truncated source
@@ -24,9 +29,14 @@ extension MultiLineDiff {
             }
         }
         
-        // Enhanced index calculation using Swift 6.1 features
+        // Enhanced index calculation using Swift 6.1 features with extra safety
         let endIndex = source.index(currentIndex, offsetBy: count, limitedBy: source.endIndex) ?? source.endIndex
         let actualRetainLength = source.distance(from: currentIndex, to: endIndex)
+        
+        // SAFETY: Ensure actualRetainLength is not negative
+        guard actualRetainLength >= 0 else {
+            throw DiffError.invalidDiff
+        }
         
         if actualRetainLength != count && !allowTruncated {
             throw DiffError.invalidRetain(
@@ -35,7 +45,11 @@ extension MultiLineDiff {
             )
         }
         
-        // Efficient substring append
+        // Efficient substring append with bounds validation
+        guard currentIndex <= endIndex && endIndex <= source.endIndex else {
+            throw DiffError.invalidDiff
+        }
+        
         result.append(contentsOf: source[currentIndex..<endIndex])
         currentIndex = endIndex
     }
@@ -48,6 +62,11 @@ extension MultiLineDiff {
         count: Int,
         allowTruncated: Bool
     ) throws {
+        // SAFETY: Validate count parameter
+        guard count >= 0 else {
+            throw DiffError.invalidDiff
+        }
+        
         guard currentIndex < source.endIndex else {
             if allowTruncated {
                 return // Skip delete if truncated source
@@ -56,15 +75,25 @@ extension MultiLineDiff {
             }
         }
         
-        // Enhanced index calculation
+        // Enhanced index calculation with extra safety
         let endIndex = source.index(currentIndex, offsetBy: count, limitedBy: source.endIndex) ?? source.endIndex
         let actualDeleteLength = source.distance(from: currentIndex, to: endIndex)
+        
+        // SAFETY: Ensure actualDeleteLength is not negative
+        guard actualDeleteLength >= 0 else {
+            throw DiffError.invalidDiff
+        }
         
         if actualDeleteLength != count && !allowTruncated {
             throw DiffError.invalidDelete(
                 count: count,
                 remainingLength: source.distance(from: currentIndex, to: source.endIndex)
             )
+        }
+        
+        // SAFETY: Validate index bounds before assignment
+        guard endIndex <= source.endIndex else {
+            throw DiffError.invalidDiff
         }
         
         currentIndex = endIndex

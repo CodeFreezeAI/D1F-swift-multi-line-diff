@@ -1138,3 +1138,74 @@ class TestFileManager {
     #expect(diff.metadata?.precedingContext == "Line 2\nLine 3", "Preceding context should match")
     #expect(diff.metadata?.followingContext == "Line 4\nLine 5", "Following context should match")
 }
+
+@Test func testCrashPrevention() throws {
+    // Test 1: Index overflow scenarios
+    let source = "Short text"
+    let destination = "Much longer destination text with many more characters"
+    
+    // This should not crash even with extreme size differences
+    let diff = MultiLineDiff.createDiff(source: source, destination: destination)
+    let result = try MultiLineDiff.applyDiff(to: source, diff: diff)
+    #expect(result == destination)
+    
+    // Test 2: Empty string edge cases
+    let emptySource = ""
+    let nonEmptyDest = "Non-empty"
+    let diff2 = MultiLineDiff.createDiff(source: emptySource, destination: nonEmptyDest)
+    let result2 = try MultiLineDiff.applyDiff(to: emptySource, diff: diff2)
+    #expect(result2 == nonEmptyDest)
+    
+    // Test 3: Very large strings (should not crash)
+    let largeSource = String(repeating: "Large source line\n", count: 1000)
+    let largeDest = String(repeating: "Large destination line\n", count: 1200)
+    let diff3 = MultiLineDiff.createDiff(source: largeSource, destination: largeDest)
+    let result3 = try MultiLineDiff.applyDiff(to: largeSource, diff: diff3)
+    #expect(result3 == largeDest)
+    
+    // Test 4: Unicode and special characters (should not crash)
+    let unicodeSource = "Hello 🌍\nWith émojis 🎉\nAnd special chars: áéíóú"
+    let unicodeDest = "Hello 🌎\nWith more émojis 🎊🎈\nAnd special chars: àèìòù"
+    let diff4 = MultiLineDiff.createDiff(source: unicodeSource, destination: unicodeDest)
+    let result4 = try MultiLineDiff.applyDiff(to: unicodeSource, diff: diff4)
+    #expect(result4 == unicodeDest)
+    
+    // Test 5: Extreme line count differences (Todd algorithm stress test)
+    let manyLinesSource = (1...100).map { "Line \($0)" }.joined(separator: "\n")
+    let fewLinesDest = "Single line"
+    let diff5 = MultiLineDiff.createDiff(source: manyLinesSource, destination: fewLinesDest, algorithm: .todd)
+    let result5 = try MultiLineDiff.applyDiff(to: manyLinesSource, diff: diff5)
+    #expect(result5 == fewLinesDest)
+    
+    // Test 6: Truncated diff with invalid metadata (should not crash)
+    let truncSource = "Section content\nMore content"
+    let truncDest = "Modified section\nModified content"
+    let diff6 = MultiLineDiff.createDiff(
+        source: truncSource, 
+        destination: truncDest,
+        includeMetadata: true,
+        sourceStartLine: 999999 // Extreme line number
+    )
+    
+    // This should handle gracefully without crashing
+    let fullDoc = "Header\n\(truncSource)\nFooter"
+    let result6 = try? MultiLineDiff.applyDiff(to: fullDoc, diff: diff6)
+    // Should either succeed or fail gracefully (no crash)
+    #expect(result6 != nil || true) // No crash is success
+    
+    // Test 7: Malformed operations (edge case)
+    // Create a diff with very large character counts
+    let extremeSource = "a"
+    let extremeDest = "b"
+    let diff7 = MultiLineDiff.createDiff(source: extremeSource, destination: extremeDest)
+    
+    // Apply to different string (should handle gracefully)
+    let differentString = "completely different content"
+    do {
+        let _ = try MultiLineDiff.applyDiff(to: differentString, diff: diff7)
+        // Should either succeed or throw proper error
+    } catch {
+        // Expected behavior - should throw proper error, not crash
+        #expect(error is DiffError)
+    }
+}

@@ -21,11 +21,20 @@ extension MultiLineDiff {
         var bestMatchIndex: Int?
         var bestMatchConfidence = 0.0
         
+        // SAFETY: Ensure sourceLineCount is valid and reasonable
+        let safeSourceLineCount = Swift.max(1, Swift.min(sourceLineCount, fullLines.count))
+        
         // Search through the document looking for the best matching section
         for startIndex in 0..<fullLines.count {
-            let endIndex = Swift.min(fullLines.count, startIndex + sourceLineCount)
+            // SAFETY: Bounds checking for endIndex calculation
+            let endIndex = Swift.min(fullLines.count, startIndex + safeSourceLineCount)
             
-            // Extract potential section
+            // SAFETY: Ensure we have a valid range
+            guard startIndex < endIndex && endIndex <= fullLines.count else {
+                continue
+            }
+            
+            // Extract potential section with bounds checking
             let sectionLines = Array(fullLines[startIndex..<endIndex])
             
             // FIXED: Handle newline-preserving lines correctly
@@ -59,7 +68,8 @@ extension MultiLineDiff {
             return nil // Couldn't find a sufficiently confident match
         }
         
-        let endIndex = Swift.min(fullLines.count, startIndex + sourceLineCount)
+        // SAFETY: Bounds checking for final range calculation
+        let endIndex = Swift.min(fullLines.count, startIndex + safeSourceLineCount)
         
         // FIXED: Extend the range to include trailing blank lines that are part of section formatting
         var extendedEndIndex = endIndex
@@ -67,6 +77,11 @@ extension MultiLineDiff {
         while extendedEndIndex < fullLines.count && 
               fullLines[extendedEndIndex].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             extendedEndIndex += 1
+        }
+        
+        // SAFETY: Final bounds check
+        guard startIndex < extendedEndIndex && extendedEndIndex <= fullLines.count else {
+            return startIndex..<endIndex // Return safe range
         }
         
         return startIndex..<extendedEndIndex
@@ -78,7 +93,14 @@ extension MultiLineDiff {
         sectionRange: Range<Int>,
         operations: [DiffOperation]
     ) throws -> String {
-        // Extract the section to be modified
+        // SAFETY: Validate section range bounds
+        guard sectionRange.lowerBound >= 0 && 
+              sectionRange.upperBound <= fullLines.count &&
+              sectionRange.lowerBound < sectionRange.upperBound else {
+            throw DiffError.invalidDiff // Return error for invalid ranges instead of crashing
+        }
+        
+        // Extract the section to be modified with bounds checking
         let sectionLines = Array(fullLines[sectionRange])
         
         // FIXED: Handle newline-preserving lines correctly
@@ -130,8 +152,16 @@ extension MultiLineDiff {
             modifiedLines = tempLines
         }
         
-        // Replace the original section lines with modified lines
-        resultLines.replaceSubrange(sectionRange, with: modifiedLines)
+        // SAFETY: Replace the original section lines with modified lines using safe bounds
+        guard sectionRange.lowerBound < resultLines.count else {
+            throw DiffError.invalidDiff // Prevent crash if range is invalid
+        }
+        
+        // Ensure we don't go beyond array bounds
+        let safeUpperBound = Swift.min(sectionRange.upperBound, resultLines.count)
+        let safeRange = sectionRange.lowerBound..<safeUpperBound
+        
+        resultLines.replaceSubrange(safeRange, with: modifiedLines)
         
         // FIXED: Join without separator since lines already include newlines
         return resultLines.map(String.init).joined()
