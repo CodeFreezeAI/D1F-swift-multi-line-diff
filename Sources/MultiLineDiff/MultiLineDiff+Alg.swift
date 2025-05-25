@@ -23,7 +23,7 @@ extension MultiLineDiff {
 //        switch algorithm {
 //        case .zoom:
 //            return (createEnhancedBrusDiff(source: source, destination: destination), .zoom)
-//        case .todd:
+//        case .megatron:
 //            return executeEnhancedToddWithFallback(source: source, destination: destination)
 //        }
 //    }
@@ -40,7 +40,7 @@ extension MultiLineDiff {
 //        do {
 //            let appliedResult = try applyDiff(to: source, diff: toddResult)
 //            if appliedResult == destination {
-//                return (toddResult, .todd)
+//                return (toddResult, .megatron)
 //            } else {
 //                print("Todd similarity: \(DiffAlgorithmCore.AlgorithmSelector.calculateSimilarity(source: appliedResult, destination: destination)) < 0.98, falling back to Brus")
 //                // Fallback to enhanced Brus

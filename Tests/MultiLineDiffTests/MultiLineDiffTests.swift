@@ -279,7 +279,7 @@ import Foundation
     
     // Create diffs with both algorithms
     let brusDiff = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .zoom)
-    let toddDiff = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .todd)
+    let toddDiff = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .megatron)
     
     // Apply both diffs
     let brusResult = try MultiLineDiff.applyDiff(to: source, diff: brusDiff)
@@ -621,7 +621,7 @@ public func generateDiffStats(_ diff: DiffResult) -> (insertedLines: Int, delete
     """
     
     // Create diff with more granular Todd algorithm
-    let diff = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .todd)
+    let diff = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .megatron)
     
     // Apply diff
     let applied = try MultiLineDiff.applyDiff(to: source, diff: diff)
@@ -692,7 +692,7 @@ public func generateDiffStats(_ diff: DiffResult) -> (insertedLines: Int, delete
     """
     
     // Create diff with Todd algorithm
-    let diff = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .todd)
+    let diff = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .megatron)
     
     // Apply diff
     let applied = try MultiLineDiff.applyDiff(to: source, diff: diff)
@@ -838,7 +838,7 @@ class TestFileManager {
     let base64DiffTodd = try MultiLineDiff.createBase64Diff(
         source: source, 
         destination: destination, 
-        algorithm: .todd
+        algorithm: .megatron
     )
     let resultTodd = try MultiLineDiff.applyBase64Diff(to: source, base64Diff: base64DiffTodd)
     #expect(resultTodd == destination, "Todd base64 diff should correctly transform source to destination")
@@ -877,7 +877,7 @@ class TestFileManager {
     let base64DiffTodd = try MultiLineDiff.createBase64Diff(
         source: source, 
         destination: destination, 
-        algorithm: .todd
+        algorithm: .megatron
     )
     let resultTodd = try MultiLineDiff.applyBase64Diff(to: source, base64Diff: base64DiffTodd)
     #expect(resultTodd == destination, "Todd base64 diff should handle complex content with whitespace")
@@ -921,7 +921,7 @@ class TestFileManager {
         let base64Diff = try MultiLineDiff.createBase64Diff(
             source: source, 
             destination: destination, 
-            algorithm: useTodd ? .todd : .zoom
+            algorithm: useTodd ? .megatron : .zoom
         )
         let result = try MultiLineDiff.applyBase64Diff(to: source, base64Diff: base64Diff)
         
@@ -1023,10 +1023,10 @@ class TestFileManager {
         print("  • Base64 Size: \(brusDiff.count) characters")
     }
     
-    // Test Todd algorithm (explicitly set to .todd)
+    // Test Todd algorithm (explicitly set to .megatron)
     do {
         let startTime = Date()
-        let diffResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .todd)
+        let diffResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .megatron)
         let createTime = Date().timeIntervalSince(startTime)
         toddDiff = try MultiLineDiff.diffToBase64(diffResult)
         
@@ -1158,7 +1158,7 @@ class TestFileManager {
     // Test 5: Extreme line count differences (Todd algorithm stress test)
     let manyLinesSource = (1...100).map { "Line \($0)" }.joined(separator: "\n")
     let fewLinesDest = "Single line"
-    let diff5 = MultiLineDiff.createDiff(source: manyLinesSource, destination: fewLinesDest, algorithm: .todd)
+    let diff5 = MultiLineDiff.createDiff(source: manyLinesSource, destination: fewLinesDest, algorithm: .megatron)
     let result5 = try MultiLineDiff.applyDiff(to: manyLinesSource, diff: diff5)
     #expect(result5 == fewLinesDest)
     

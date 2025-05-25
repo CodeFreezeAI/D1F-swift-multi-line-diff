@@ -54,10 +54,10 @@ struct ThreeWayComparisonTests {
             print("     \(i): \(op.description)")
         }
         
-        let toddResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .todd)
+        let toddResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .megatron)
         print("\n🟩 Todd Algorithm (Line-based, O(n log n)):")
         print("   Operations count: \(toddResult.operations.count)")
-        print("   Algorithm used: \(toddResult.metadata?.algorithmUsed ?? .todd)")
+        print("   Algorithm used: \(toddResult.metadata?.algorithmUsed ?? .megatron)")
         print("   Operations:")
         for (i, op) in toddResult.operations.enumerated() {
             print("     \(i): \(op.description)")
@@ -72,19 +72,19 @@ struct ThreeWayComparisonTests {
             print("     \(i): \(op.description)")
         }
         
-        let lineResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .arrow)
+        let lineResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .starscream)
         print("\n📏 Line Algorithm (Swift Lines-based):")
         print("   Operations count: \(lineResult.operations.count)")
-        print("   Algorithm used: \(lineResult.metadata?.algorithmUsed ?? .arrow)")
+        print("   Algorithm used: \(lineResult.metadata?.algorithmUsed ?? .starscream)")
         print("   Operations:")
         for (i, op) in lineResult.operations.enumerated() {
             print("     \(i): \(op.description)")
         }
         
-        let drewResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .drew)
+        let drewResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .optimus)
         print("\n🎨 Drew Algorithm (Swift Lines+Diff):")
         print("   Operations count: \(drewResult.operations.count)")
-        print("   Algorithm used: \(drewResult.metadata?.algorithmUsed ?? .drew)")
+        print("   Algorithm used: \(drewResult.metadata?.algorithmUsed ?? .optimus)")
         print("   Operations:")
         for (i, op) in drewResult.operations.enumerated() {
             print("     \(i): \(op.description)")
@@ -118,7 +118,7 @@ struct ThreeWayComparisonTests {
         // Todd performance
         let toddStart = Date()
         for _ in 0..<iterations {
-            _ = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .todd)
+            _ = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .megatron)
         }
         let toddTime = Date().timeIntervalSince(toddStart)
         
@@ -132,14 +132,14 @@ struct ThreeWayComparisonTests {
         // Line performance
         let lineStart = Date()
         for _ in 0..<iterations {
-            _ = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .arrow)
+            _ = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .starscream)
         }
         let lineTime = Date().timeIntervalSince(lineStart)
         
         // Drew performance
         let drewStart = Date()
         for _ in 0..<iterations {
-            _ = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .drew)
+            _ = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .optimus)
         }
         let drewTime = Date().timeIntervalSince(drewStart)
         
@@ -178,7 +178,7 @@ struct ThreeWayComparisonTests {
         print()
         
         let brusResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .zoom)
-        let toddResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .todd)
+        let toddResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .megatron)
         
         print("🟦 Brus: \(formatOperations(brusResult))")
         print("🟩 Todd: \(formatOperations(toddResult))")
@@ -248,7 +248,7 @@ struct ThreeWayComparisonTests {
         
         let toddStart = Date()
         for _ in 0..<iterations {
-            _ = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .todd)
+            _ = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .megatron)
         }
         let toddTime = Date().timeIntervalSince(toddStart)
         
@@ -257,7 +257,7 @@ struct ThreeWayComparisonTests {
         print("   Todd:  \(String(format: "%.1f", toddTime * 1000))ms (\(String(format: "%.1f", (toddTime * 1000) / Double(iterations)))ms per op)")
         
         // Test one result for correctness
-        let testResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .todd)
+        let testResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .megatron)
         let applied = try MultiLineDiff.applyDiff(to: source, diff: testResult)
         #expect(applied == destination, "Large string diff should be correct")
         

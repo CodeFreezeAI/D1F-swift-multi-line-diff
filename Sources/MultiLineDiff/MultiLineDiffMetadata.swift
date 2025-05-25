@@ -98,7 +98,7 @@ public struct DiffMetadata: Equatable, Codable {
     }
     
     // Convenience factory methods
-    public static func forSection(startLine: Int, lineCount: Int, context: String? = nil, sourceContent: String? = nil, destinationContent: String? = nil, algorithm: DiffAlgorithm = .todd) -> DiffMetadata {
+    public static func forSection(startLine: Int, lineCount: Int, context: String? = nil, sourceContent: String? = nil, destinationContent: String? = nil, algorithm: DiffAlgorithm = .megatron) -> DiffMetadata {
         return DiffMetadata(
             sourceStartLine: startLine,
             sourceTotalLines: lineCount,
@@ -111,7 +111,7 @@ public struct DiffMetadata: Equatable, Codable {
         )
     }
     
-    public static func basic(sourceContent: String? = nil, destinationContent: String? = nil, algorithm: DiffAlgorithm = .todd) -> DiffMetadata {
+    public static func basic(sourceContent: String? = nil, destinationContent: String? = nil, algorithm: DiffAlgorithm = .megatron) -> DiffMetadata {
         return DiffMetadata(
             sourceContent: sourceContent,
             destinationContent: destinationContent,
@@ -216,7 +216,7 @@ public struct DiffMetadata: Equatable, Codable {
         let undoResult = MultiLineDiff.createDiff(
             source: destination,
             destination: source,
-            algorithm: metadata.algorithmUsed ?? .todd,
+            algorithm: metadata.algorithmUsed ?? .megatron,
             includeMetadata: true
         )
         

@@ -27,125 +27,23 @@ extension MultiLineDiff {
             return DiffResult(operations: [.delete(source.count)])
         }
         
-        // Split into lines (preserving line endings)
+        // Split into lines (preserving line endings) - optimized for speed
         let sourceLines = source.efficientLines
         let destLines = destination.efficientLines
         
-        // Find common prefix lines
-        let commonPrefixCount = findCommonPrefixCount(sourceLines, destLines)
-        let sourceAfterPrefix = Array(sourceLines.dropFirst(commonPrefixCount))
-        let destAfterPrefix = Array(destLines.dropFirst(commonPrefixCount))
-        
-        // Find common suffix lines
-        let commonSuffixCount = findCommonSuffixCount(sourceAfterPrefix, destAfterPrefix)
-        
-        // Calculate middle sections
-        let sourceMiddleLines = Array(sourceAfterPrefix.dropLast(commonSuffixCount))
-        let destMiddleLines = Array(destAfterPrefix.dropLast(commonSuffixCount))
-        
-        // Build operations based on lines - SIMPLE DELETE/INSERT APPROACH
-        var operations: [DiffOperation] = []
-        
-        // Retain common prefix lines
-        if commonPrefixCount > 0 {
-            let prefixCharCount = sourceLines.prefix(commonPrefixCount).map { $0.count }.reduce(0, +)
-            operations.append(.retain(prefixCharCount))
-        }
-        
-        // Handle middle section with smart line-by-line operations
-        if !sourceMiddleLines.isEmpty || !destMiddleLines.isEmpty {
-            // Use a simple line matching approach that creates reasonable operation counts
-            let middleOperations = createSmartLineOperations(
-                sourceLines: sourceMiddleLines,
-                destLines: destMiddleLines
-            )
-            operations.append(contentsOf: middleOperations)
-        }
-        
-        // Retain common suffix lines
-        if commonSuffixCount > 0 {
-            let suffixCharCount = sourceAfterPrefix.suffix(commonSuffixCount).map { $0.count }.reduce(0, +)
-            operations.append(.retain(suffixCharCount))
-        }
-        
-        return DiffResult(operations: consolidateLineOperations(operations))
-    }
-    
-    /// Create smart line operations that match Todd's line-by-line granularity
-    @_optimize(speed)
-    private static func createSmartLineOperations(
-        sourceLines: [Substring],
-        destLines: [Substring]
-    ) -> [DiffOperation] {
-        
-        // Handle empty cases
-        if sourceLines.isEmpty {
-            if destLines.isEmpty {
-                return []
-            } else {
-                let insertText = destLines.map { String($0) }.joined()
-                return [.insert(insertText)]
-            }
-        }
-        
-        if destLines.isEmpty {
-            let deleteCount = sourceLines.map { $0.count }.reduce(0, +)
-            return [.delete(deleteCount)]
-        }
-        
-        // Use CollectionDifference like Todd algorithm for same operation count
+        // Use CollectionDifference directly like Todd for same operation count
         let difference = destLines.difference(from: sourceLines)
         
-        // Create removal and insertion tracking arrays
-        var isRemoved = Array(repeating: false, count: sourceLines.count)
-        var isInserted = Array(repeating: false, count: destLines.count)
-        
-        // Mark removals and insertions
-        for change in difference {
-            switch change {
-            case .remove(let offset, _, _):
-                if offset >= 0 && offset < sourceLines.count {
-                    isRemoved[offset] = true
-                }
-            case .insert(let offset, _, _):
-                if offset >= 0 && offset < destLines.count {
-                    isInserted[offset] = true
-                }
-            }
+        if difference.isEmpty {
+            let totalChars = sourceLines.reduce(0) { $0 + $1.count }
+            return DiffResult(operations: [.retain(totalChars)])
         }
         
-        // Process line by line to match Todd's granularity
-        var operations: [DiffOperation] = []
-        var sourceIndex = 0
-        var destIndex = 0
-        
-        while sourceIndex < sourceLines.count || destIndex < destLines.count {
-            if sourceIndex < sourceLines.count && isRemoved[sourceIndex] {
-                // Delete this source line
-                operations.append(.delete(sourceLines[sourceIndex].count))
-                sourceIndex += 1
-            } else if destIndex < destLines.count && isInserted[destIndex] {
-                // Insert this destination line
-                operations.append(.insert(String(destLines[destIndex])))
-                destIndex += 1
-            } else if sourceIndex < sourceLines.count && destIndex < destLines.count {
-                // Retain this line (it's common)
-                operations.append(.retain(sourceLines[sourceIndex].count))
-                sourceIndex += 1
-                destIndex += 1
-            } else if sourceIndex < sourceLines.count {
-                // Delete remaining source lines
-                operations.append(.delete(sourceLines[sourceIndex].count))
-                sourceIndex += 1
-            } else if destIndex < destLines.count {
-                // Insert remaining destination lines
-                operations.append(.insert(String(destLines[destIndex])))
-                destIndex += 1
-            }
-        }
-        
-        return operations
+        // Convert to operations using the same approach as Todd but optimized
+        return convertLineDifferenceToOperationsOptimized(difference, sourceLines: Array(sourceLines), destLines: Array(destLines))
     }
+    
+
     
     /// Fast and detailed line-based approach with fine-grained operations
     @_optimize(speed)
@@ -167,162 +65,68 @@ extension MultiLineDiff {
             return DiffResult(operations: [.delete(source.count)])
         }
         
-        // Split into lines (preserving line endings)
+        // Split into lines (preserving line endings) - optimized for speed
         let sourceLines = source.efficientLines
         let destLines = destination.efficientLines
         
-        // Find common prefix lines (like .arrow algorithm)
-        let commonPrefixCount = findCommonPrefixCount(sourceLines, destLines)
-        let sourceAfterPrefix = Array(sourceLines.dropFirst(commonPrefixCount))
-        let destAfterPrefix = Array(destLines.dropFirst(commonPrefixCount))
-        
-        // Find common suffix lines
-        let commonSuffixCount = findCommonSuffixCount(sourceAfterPrefix, destAfterPrefix)
-        
-        // Calculate middle sections
-        let sourceMiddleLines = Array(sourceAfterPrefix.dropLast(commonSuffixCount))
-        let destMiddleLines = Array(destAfterPrefix.dropLast(commonSuffixCount))
-        
-        // Build operations with detailed line-by-line processing
-        var operations: [DiffOperation] = []
-        
-        // Retain common prefix lines
-        if commonPrefixCount > 0 {
-            let prefixCharCount = sourceLines.prefix(commonPrefixCount).map { $0.count }.reduce(0, +)
-            operations.append(.retain(prefixCharCount))
-        }
-        
-        // Handle middle section with detailed line operations
-        if !sourceMiddleLines.isEmpty || !destMiddleLines.isEmpty {
-            let middleOperations = createDetailedLineOperations(
-                sourceLines: sourceMiddleLines,
-                destLines: destMiddleLines
-            )
-            operations.append(contentsOf: middleOperations)
-        }
-        
-        // Retain common suffix lines
-        if commonSuffixCount > 0 {
-            let suffixCharCount = sourceAfterPrefix.suffix(commonSuffixCount).map { $0.count }.reduce(0, +)
-            operations.append(.retain(suffixCharCount))
-        }
-        
-        return DiffResult(operations: consolidateLineOperations(operations))
-    }
-    
-    /// Create detailed line operations that match Todd's line-by-line granularity
-    @_optimize(speed)
-    private static func createDetailedLineOperations(
-        sourceLines: [Substring],
-        destLines: [Substring]
-    ) -> [DiffOperation] {
-        
-        // Handle empty cases
-        if sourceLines.isEmpty {
-            if destLines.isEmpty {
-                return []
-            } else {
-                let insertText = destLines.map { String($0) }.joined()
-                return [.insert(insertText)]
-            }
-        }
-        
-        if destLines.isEmpty {
-            let deleteCount = sourceLines.map { $0.count }.reduce(0, +)
-            return [.delete(deleteCount)]
-        }
-        
-        // Use CollectionDifference like Todd algorithm for same operation count
+        // Use CollectionDifference directly like Todd for same operation count
         let difference = destLines.difference(from: sourceLines)
         
-        // Create removal and insertion tracking arrays
-        var isRemoved = Array(repeating: false, count: sourceLines.count)
-        var isInserted = Array(repeating: false, count: destLines.count)
-        
-        // Mark removals and insertions
-        for change in difference {
-            switch change {
-            case .remove(let offset, _, _):
-                if offset >= 0 && offset < sourceLines.count {
-                    isRemoved[offset] = true
-                }
-            case .insert(let offset, _, _):
-                if offset >= 0 && offset < destLines.count {
-                    isInserted[offset] = true
-                }
-            }
+        if difference.isEmpty {
+            let totalChars = sourceLines.reduce(0) { $0 + $1.count }
+            return DiffResult(operations: [.retain(totalChars)])
         }
         
-        // Process line by line to match Todd's granularity
-        var operations: [DiffOperation] = []
-        var sourceIndex = 0
-        var destIndex = 0
-        
-        while sourceIndex < sourceLines.count || destIndex < destLines.count {
-            if sourceIndex < sourceLines.count && isRemoved[sourceIndex] {
-                // Delete this source line
-                operations.append(.delete(sourceLines[sourceIndex].count))
-                sourceIndex += 1
-            } else if destIndex < destLines.count && isInserted[destIndex] {
-                // Insert this destination line
-                operations.append(.insert(String(destLines[destIndex])))
-                destIndex += 1
-            } else if sourceIndex < sourceLines.count && destIndex < destLines.count {
-                // Retain this line (it's common)
-                operations.append(.retain(sourceLines[sourceIndex].count))
-                sourceIndex += 1
-                destIndex += 1
-            } else if sourceIndex < sourceLines.count {
-                // Delete remaining source lines
-                operations.append(.delete(sourceLines[sourceIndex].count))
-                sourceIndex += 1
-            } else if destIndex < destLines.count {
-                // Insert remaining destination lines
-                operations.append(.insert(String(destLines[destIndex])))
-                destIndex += 1
-            }
-        }
-        
-        return operations
+        // Convert to operations using the same approach as Todd but optimized
+        return convertLineDifferenceToOperationsOptimized(difference, sourceLines: Array(sourceLines), destLines: Array(destLines))
     }
     
-    /// Convert line-based CollectionDifference to character-based DiffOperations
+
+    
+    /// Convert line-based CollectionDifference to character-based DiffOperations (optimized)
     @_optimize(speed)
-    private static func convertLineDifferenceToOperations(
+    private static func convertLineDifferenceToOperationsOptimized(
         _ difference: CollectionDifference<Substring>,
         sourceLines: [Substring],
         destLines: [Substring]
     ) -> DiffResult {
         
         if difference.isEmpty {
-            let totalChars = sourceLines.map { $0.count }.reduce(0, +)
+            let totalChars = sourceLines.reduce(0) { $0 + $1.count }
             return DiffResult(operations: [.retain(totalChars)])
         }
         
-        var operations: [DiffOperation] = []
-        var sourceIndex = 0
-        var destIndex = 0
+        // Pre-allocate arrays for better performance
+        var removedLines = Array(repeating: false, count: sourceLines.count)
+        var insertedLines = Array(repeating: false, count: destLines.count)
         
-        // Create arrays to track which lines are removed/inserted
-        var removedLines = Set<Int>()
-        var insertedLines = Set<Int>()
-        
+        // Mark removed and inserted lines in one pass
         for change in difference {
             switch change {
             case .remove(let offset, _, _):
-                removedLines.insert(offset)
+                if offset < removedLines.count {
+                    removedLines[offset] = true
+                }
             case .insert(let offset, _, _):
-                insertedLines.insert(offset)
+                if offset < insertedLines.count {
+                    insertedLines[offset] = true
+                }
             }
         }
         
-        // Process lines in order
+        // Process lines efficiently with pre-allocated operations array
+        var operations: [DiffOperation] = []
+        operations.reserveCapacity(sourceLines.count + destLines.count) // Pre-allocate
+        
+        var sourceIndex = 0
+        var destIndex = 0
+        
         while sourceIndex < sourceLines.count || destIndex < destLines.count {
-            if sourceIndex < sourceLines.count && removedLines.contains(sourceIndex) {
+            if sourceIndex < sourceLines.count && removedLines[sourceIndex] {
                 // Delete this source line
                 operations.append(.delete(sourceLines[sourceIndex].count))
                 sourceIndex += 1
-            } else if destIndex < destLines.count && insertedLines.contains(destIndex) {
+            } else if destIndex < destLines.count && insertedLines[destIndex] {
                 // Insert this destination line
                 operations.append(.insert(String(destLines[destIndex])))
                 destIndex += 1
@@ -346,42 +150,7 @@ extension MultiLineDiff {
         return DiffResult(operations: consolidateLineOperations(operations))
     }
     
-    /// Find common prefix count between two line arrays
-    @_optimize(speed)
-    private static func findCommonPrefixCount<T: Equatable>(_ array1: [T], _ array2: [T]) -> Int {
-        let minCount = min(array1.count, array2.count)
-        var commonCount = 0
-        
-        for i in 0..<minCount {
-            if array1[i] == array2[i] {
-                commonCount += 1
-            } else {
-                break
-            }
-        }
-        
-        return commonCount
-    }
-    
-    /// Find common suffix count between two line arrays
-    @_optimize(speed)
-    private static func findCommonSuffixCount<T: Equatable>(_ array1: [T], _ array2: [T]) -> Int {
-        let minCount = min(array1.count, array2.count)
-        var commonCount = 0
-        
-        for i in 1...minCount {
-            let index1 = array1.count - i
-            let index2 = array2.count - i
-            
-            if array1[index1] == array2[index2] {
-                commonCount += 1
-            } else {
-                break
-            }
-        }
-        
-        return commonCount
-    }
+
     
     /// Consolidate consecutive operations for line-based processing
     @_optimize(speed)

@@ -34,13 +34,13 @@ import Foundation
         iterations: iterations
     )
     
-    print("\n🧠 Testing \(AlgorithmNames.todd) Algorithm (\(iterations) iterations)...")
+    print("\n🧠 Testing \(AlgorithmNames.megatron) Algorithm (\(iterations) iterations)...")
     let toddResults = testSixWayAlgorithmPerformance(
         source: originalContent,
         destination: modifiedContent,
-        algorithmName: AlgorithmNames.todd,
+        algorithmName: AlgorithmNames.megatron,
         testFunction: { source, dest in
-            MultiLineDiff.createDiff(source: source, destination: dest, algorithm: .todd)
+            MultiLineDiff.createDiff(source: source, destination: dest, algorithm: .megatron)
         },
         iterations: iterations
     )
@@ -58,24 +58,24 @@ import Foundation
         iterations: iterations
     )
     
-    print("\n📏 Testing \(AlgorithmNames.arrow) Algorithm (\(iterations) iterations)...")
+    print("\n📏 Testing \(AlgorithmNames.starscream) Algorithm (\(iterations) iterations)...")
     let lineResults = testSixWayAlgorithmPerformance(
         source: originalContent,
         destination: modifiedContent,
-        algorithmName: AlgorithmNames.arrow,
+        algorithmName: AlgorithmNames.starscream,
         testFunction: { source, dest in
-            MultiLineDiff.createDiff(source: source, destination: dest, algorithm: .arrow)
+            MultiLineDiff.createDiff(source: source, destination: dest, algorithm: .starscream)
         },
         iterations: iterations
     )
     
-    print("\n🎨 Testing \(AlgorithmNames.drew) Algorithm (\(iterations) iterations)...")
+    print("\n🎨 Testing \(AlgorithmNames.optimus) Algorithm (\(iterations) iterations)...")
     let drewResults = testSixWayAlgorithmPerformance(
         source: originalContent,
         destination: modifiedContent,
-        algorithmName: AlgorithmNames.drew,
+        algorithmName: AlgorithmNames.optimus,
         testFunction: { source, dest in
-            MultiLineDiff.createDiff(source: source, destination: dest, algorithm: .drew)
+            MultiLineDiff.createDiff(source: source, destination: dest, algorithm: .optimus)
         },
         iterations: iterations
     )
@@ -92,10 +92,10 @@ import Foundation
     
     // Verify all algorithms produce correct results
     #expect(brusResults.finalResult == modifiedContent, "\(AlgorithmNames.zoom) algorithm should produce correct result")
-    #expect(toddResults.finalResult == modifiedContent, "\(AlgorithmNames.todd) algorithm should produce correct result")
+    #expect(toddResults.finalResult == modifiedContent, "\(AlgorithmNames.megatron) algorithm should produce correct result")
     #expect(sodaResults.finalResult == modifiedContent, "\(AlgorithmNames.flash) algorithm should produce correct result")
-    #expect(lineResults.finalResult == modifiedContent, "\(AlgorithmNames.arrow) algorithm should produce correct result")
-    #expect(drewResults.finalResult == modifiedContent, "\(AlgorithmNames.drew) algorithm should produce correct result")
+    #expect(lineResults.finalResult == modifiedContent, "\(AlgorithmNames.starscream) algorithm should produce correct result")
+    #expect(drewResults.finalResult == modifiedContent, "\(AlgorithmNames.optimus) algorithm should produce correct result")
     
     print("\n✅ All algorithms produce correct results!")
 }
@@ -408,10 +408,10 @@ private func printFiveWayAlgorithmResults(
     
     let sampleResults = [
         (AlgorithmNames.zoom, MultiLineDiff.createDiff(source: sampleSource, destination: sampleDest, algorithm: .zoom)),
-        (AlgorithmNames.todd, MultiLineDiff.createDiff(source: sampleSource, destination: sampleDest, algorithm: .todd)),
+        (AlgorithmNames.megatron, MultiLineDiff.createDiff(source: sampleSource, destination: sampleDest, algorithm: .megatron)),
         (AlgorithmNames.flash, MultiLineDiff.createDiff(source: sampleSource, destination: sampleDest, algorithm: .flash)),
-        (AlgorithmNames.arrow, MultiLineDiff.createDiff(source: sampleSource, destination: sampleDest, algorithm: .arrow)),
-        (AlgorithmNames.drew, MultiLineDiff.createDiff(source: sampleSource, destination: sampleDest, algorithm: .drew))
+        (AlgorithmNames.starscream, MultiLineDiff.createDiff(source: sampleSource, destination: sampleDest, algorithm: .starscream)),
+        (AlgorithmNames.optimus, MultiLineDiff.createDiff(source: sampleSource, destination: sampleDest, algorithm: .optimus))
     ]
     
     for (name, result) in sampleResults {

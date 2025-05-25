@@ -51,7 +51,7 @@ func demonstrateEnhancedTruncatedDiff() -> Bool {
     let diff = MultiLineDiff.createDiff(
         source: truncatedOriginal,
         destination: truncatedModified,
-        algorithm: .todd,
+        algorithm: .megatron,
         sourceStartLine: 5  // Approximate line number
     )
 

@@ -37,7 +37,7 @@ import Foundation
     let toddResults = try testAlgorithmPerformance(
         source: originalContent,
         destination: modifiedContent,
-        algorithm: .todd,
+        algorithm: .megatron,
         iterations: iterations,
         testFiles: testFiles
     )

@@ -34,7 +34,7 @@ import Foundation
     #expect(brusResult == destination, "Brus should produce correct result")
     
     print("\n🧠 Testing Todd Algorithm...")
-    let toddDiff = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .todd)
+    let toddDiff = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .megatron)
     let toddResult = try MultiLineDiff.applyDiff(to: source, diff: toddDiff)
     print("  Operations: \(toddDiff.operations.count)")
     #expect(toddResult == destination, "Todd should produce correct result")
@@ -46,13 +46,13 @@ import Foundation
     #expect(sodaResult == destination, "Soda should produce correct result")
     
     print("\n📏 Testing Line Algorithm...")
-    let lineDiff = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .arrow)
+    let lineDiff = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .starscream)
     let lineResult = try MultiLineDiff.applyDiff(to: source, diff: lineDiff)
     print("  Operations: \(lineDiff.operations.count)")
     #expect(lineResult == destination, "Line should produce correct result")
     
     print("\n🎨 Testing Drew Algorithm...")
-    let drewDiff = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .drew)
+    let drewDiff = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .optimus)
     let drewResult = try MultiLineDiff.applyDiff(to: source, diff: drewDiff)
     print("  Operations: \(drewDiff.operations.count)")
     #expect(drewResult == destination, "Drew should produce correct result")
@@ -78,10 +78,10 @@ import Foundation
     // Test each algorithm and show their characteristics
     let algorithms: [(DiffAlgorithm, String)] = [
         (.zoom, "Brus (Fast & Simple)"),
-        (.todd, "Todd (Semantic)"),
+        (.megatron, "Todd (Semantic)"),
         (.flash, "Soda (Swift Prefix)"),
-        (.arrow, "Line (Swift Lines)"),
-        (.drew, "Drew (Swift Todd)")
+        (.starscream, "Line (Swift Lines)"),
+        (.optimus, "Drew (Swift Todd)")
     ]
     
     for (algorithm, name) in algorithms {

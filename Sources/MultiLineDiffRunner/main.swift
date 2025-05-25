@@ -80,7 +80,7 @@ runTest("Multi-Line Changes") {
    Line 42
    """
    
-    let result = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .todd, sourceStartLine: 0)
+    let result = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .megatron, sourceStartLine: 0)
    let applied = try MultiLineDiff.applyDiff(to: source, diff: result)
    
    return applied == destination
@@ -607,10 +607,10 @@ func demonstrateAlgorithmComparison() -> Bool {
        // Measure performance for all 5 algorithms
        let runs = 1000
        let brusMeasurement = measurePerformance(algorithm: .zoom, runs: runs)
-       let toddMeasurement = measurePerformance(algorithm: .todd, runs: runs)
+       let toddMeasurement = measurePerformance(algorithm: .megatron, runs: runs)
        let sodaMeasurement = measurePerformance(algorithm: .flash, runs: runs)
-       let lineMeasurement = measurePerformance(algorithm: .arrow, runs: runs)
-       let drewMeasurement = measurePerformance(algorithm: .drew, runs: runs)
+       let lineMeasurement = measurePerformance(algorithm: .starscream, runs: runs)
+       let drewMeasurement = measurePerformance(algorithm: .optimus, runs: runs)
        
        // Analyze operations
        func analyzeOperations(_ diff: DiffResult) -> (
@@ -695,7 +695,7 @@ func demonstrateAlgorithmComparison() -> Bool {
        print("  - Apply Diff Time: \(String(format: "%.4f", brusMeasurement.applyDiffTime)) ms")
        print("  - Total Time: \(String(format: "%.4f", brusMeasurement.totalTime)) ms")
        
-       print("\n--- \(AlgorithmNames.todd) Algorithm ---")
+       print("\n--- \(AlgorithmNames.megatron) Algorithm ---")
        print("Total Operations: \(toddStat.totalOperations)")
        print("  - Retain Operations: \(toddStat.retainCount) (\(toddStat.retainChars) chars)")
        print("  - Insert Operations: \(toddStat.insertCount) (\(toddStat.insertChars) chars)")
@@ -713,7 +713,7 @@ func demonstrateAlgorithmComparison() -> Bool {
        print("  - Apply Diff Time: \(String(format: "%.4f", sodaMeasurement.applyDiffTime)) ms")
        print("  - Total Time: \(String(format: "%.4f", sodaMeasurement.totalTime)) ms")
        
-       print("\n--- \(AlgorithmNames.arrow) Algorithm ---")
+       print("\n--- \(AlgorithmNames.starscream) Algorithm ---")
        print("Total Operations: \(lineStat.totalOperations)")
        print("  - Retain Operations: \(lineStat.retainCount) (\(lineStat.retainChars) chars)")
        print("  - Insert Operations: \(lineStat.insertCount) (\(lineStat.insertChars) chars)")
@@ -722,7 +722,7 @@ func demonstrateAlgorithmComparison() -> Bool {
        print("  - Apply Diff Time: \(String(format: "%.4f", lineMeasurement.applyDiffTime)) ms")
        print("  - Total Time: \(String(format: "%.4f", lineMeasurement.totalTime)) ms")
        
-       print("\n--- \(AlgorithmNames.drew) Algorithm ---")
+       print("\n--- \(AlgorithmNames.optimus) Algorithm ---")
        print("Total Operations: \(drewStat.totalOperations)")
        print("  - Retain Operations: \(drewStat.retainCount) (\(drewStat.retainChars) chars)")
        print("  - Insert Operations: \(drewStat.insertCount) (\(drewStat.insertChars) chars)")
@@ -734,10 +734,10 @@ func demonstrateAlgorithmComparison() -> Bool {
        // Performance comparison across all algorithms
        let measurements = [
            (AlgorithmNames.zoom, brusMeasurement),
-           (AlgorithmNames.todd, toddMeasurement),
+           (AlgorithmNames.megatron, toddMeasurement),
            (AlgorithmNames.flash, sodaMeasurement),
-           (AlgorithmNames.arrow, lineMeasurement),
-           (AlgorithmNames.drew, drewMeasurement)
+           (AlgorithmNames.starscream, lineMeasurement),
+           (AlgorithmNames.optimus, drewMeasurement)
        ]
        
        let fastestCreateDiff = measurements.min { $0.1.createDiffTime < $1.1.createDiffTime }!
@@ -927,7 +927,7 @@ func demonstrateTruncatedDiff() -> Bool {
         let truncatedDiff = MultiLineDiff.createDiff(
             source: truncatedContent,
             destination: truncatedModifiedContent,
-            algorithm: .todd,
+            algorithm: .megatron,
             includeMetadata: true
         )
         

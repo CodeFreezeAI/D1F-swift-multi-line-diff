@@ -155,7 +155,7 @@ struct PerformanceBenchmarkTests {
         
         start = Date()
         for _ in 0..<iterations {
-            _ = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .todd)
+            _ = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .megatron)
         }
         let toddTime = Date().timeIntervalSince(start)
         
@@ -167,13 +167,13 @@ struct PerformanceBenchmarkTests {
         
         start = Date()
         for _ in 0..<iterations {
-            _ = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .arrow)
+            _ = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .starscream)
         }
         let lineTime = Date().timeIntervalSince(start)
         
         start = Date()
         for _ in 0..<iterations {
-            _ = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .drew)
+            _ = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .optimus)
         }
         let drewTime = Date().timeIntervalSince(start)
         
@@ -195,10 +195,10 @@ struct PerformanceBenchmarkTests {
         
         // Verify all produce correct results
         let result1 = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .zoom)
-        let result2 = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .todd)
+        let result2 = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .megatron)
         let result3 = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .flash)
-        let result4 = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .arrow)
-        let result5 = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .drew)
+        let result4 = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .starscream)
+        let result5 = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .optimus)
         
         let applied1 = try MultiLineDiff.applyDiff(to: source, diff: result1)
         let applied2 = try MultiLineDiff.applyDiff(to: source, diff: result2)

@@ -50,10 +50,10 @@ func processUser() -> User {
     print()
 
     // Test Todd Algorithm
-    let toddDiff = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .todd)
+    let toddDiff = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .megatron)
     let toddResult = try! MultiLineDiff.applyDiff(to: source, diff: toddDiff)
 
-    print("🧠 \(AlgorithmNames.todd) Algorithm - Line-Aware Operations:")
+    print("🧠 \(AlgorithmNames.megatron) Algorithm - Line-Aware Operations:")
     print("Total Operations: \(toddDiff.operations.count)")
     for (i, op) in toddDiff.operations.enumerated() {
         switch op {
@@ -71,8 +71,8 @@ func processUser() -> User {
     print("📊 Algorithm Comparison:")
     print("• Both produce identical final results: \(brusResult == toddResult)")
     print("• \(AlgorithmNames.zoom) operations: \(brusDiff.operations.count) (bulk approach)")
-    print("• \(AlgorithmNames.todd) operations: \(toddDiff.operations.count) (line-aware approach)")
-    print("• Operation difference: \(toddDiff.operations.count - brusDiff.operations.count) more operations in \(AlgorithmNames.todd)")
+    print("• \(AlgorithmNames.megatron) operations: \(toddDiff.operations.count) (line-aware approach)")
+    print("• Operation difference: \(toddDiff.operations.count - brusDiff.operations.count) more operations in \(AlgorithmNames.megatron)")
     
     // Count operation types
     let brusRetains = brusDiff.operations.filter { if case .retain = $0 { return true }; return false }.count
@@ -85,7 +85,7 @@ func processUser() -> User {
     
     print("\n📈 Operation Breakdown:")
     print("• \(AlgorithmNames.zoom): \(brusRetains) retains, \(brusDeletes) deletes, \(brusInserts) inserts")
-    print("• \(AlgorithmNames.todd): \(toddRetains) retains, \(toddDeletes) deletes, \(toddInserts) inserts")
+    print("• \(AlgorithmNames.megatron): \(toddRetains) retains, \(toddDeletes) deletes, \(toddInserts) inserts")
     print("\n✅ README Example 3 verification complete!")
 }
 

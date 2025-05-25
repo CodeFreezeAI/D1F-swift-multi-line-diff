@@ -48,7 +48,7 @@ import CryptoKit
     ///   - Best for minimal text modifications
     ///   - O(n) time complexity
     ///
-    /// - `.todd`: Semantic diff with deeper analysis
+    /// - `.megatron`: Semantic diff with deeper analysis
     ///   - More intelligent change detection
     ///   - Preserves structural context
     ///   - O(n log n) time complexity
@@ -64,7 +64,7 @@ import CryptoKit
     /// let source = "Hello, world!"
     /// let destination = "Hello, Swift!"
     ///
-    /// // Default Todd algorithm with source verification
+            /// // Default Megatron algorithm with source verification
     /// let diff = MultiLineDiff.createDiff(
     ///     source: source,
     ///     destination: destination
@@ -77,7 +77,7 @@ import CryptoKit
     /// - Parameters:
     ///   - source: The original text to transform from
     ///   - destination: The target text to transform to
-    ///   - algorithm: Diff generation strategy (defaults to semantic Todd algorithm)
+    ///   - algorithm: Diff generation strategy (defaults to semantic Megatron algorithm)
     ///   - includeMetadata: Whether to generate additional context information
     ///   - sourceStartLine: Optional starting line number for precise tracking
     ///   - destStartLine: Optional destination starting line number
@@ -86,7 +86,7 @@ import CryptoKit
     public static func createDiff(
         source: String,
         destination: String,
-        algorithm: DiffAlgorithm = .todd,
+        algorithm: DiffAlgorithm = .megatron,
         includeMetadata: Bool = true,
         sourceStartLine: Int? = nil,
         destStartLine: Int? = nil
@@ -95,15 +95,15 @@ import CryptoKit
         let result : DiffResult
         
         switch algorithm {
-        case .todd:
+        case .megatron:
             result = createEnhancedToddDiff(source: source, destination: destination)
         case .zoom:
             result = createEnhancedBrusDiff(source: source, destination: destination)
         case .flash:
             result = createDiffUsingSwiftNativeMethods(source: source, destination: destination)
-        case .arrow:
+        case .starscream:
             result = createDiffUsingSwiftNativeLinesMethods(source: source, destination: destination)
-        case .drew:
+        case .optimus:
             result = createDiffUsingSwiftNativeLinesWithDifferenceMethods(source: source, destination: destination)
         }
 
@@ -129,7 +129,7 @@ import CryptoKit
     /// - Parameters:
     ///   - source: The original string
     ///   - destination: The modified string
-    ///   - algorithm: The diff algorithm to use (default: Todd)
+    ///   - algorithm: The diff algorithm to use (default: Megatron)
     ///   - includeMetadata: Whether to include metadata in the diff result
     ///   - sourceStartLine: The line number where the source string starts (0-indexed)
     ///   - destStartLine: The line number where the destination string starts (0-indexed)
@@ -138,7 +138,7 @@ import CryptoKit
     public static func createBase64Diff(
         source: String,
         destination: String,
-        algorithm: DiffAlgorithm = .todd,
+        algorithm: DiffAlgorithm = .megatron,
         includeMetadata: Bool = true,
         sourceStartLine: Int? = nil,
         destStartLine: Int? = nil
@@ -205,7 +205,7 @@ import CryptoKit
     /// - Parameters:
     ///   - source: The original text
     ///   - destination: The modified text
-    ///   - algorithm: Diff generation strategy (defaults to semantic Todd algorithm)
+    ///   - algorithm: Diff generation strategy (defaults to semantic Megatron algorithm)
     ///   - encoding: The desired encoding format for the diff
     ///   - includeMetadata: Whether to generate additional context information
     ///   - sourceStartLine: Optional starting line number for precise tracking
@@ -215,7 +215,7 @@ import CryptoKit
     public static func createEncodedDiff(
         source: String,
         destination: String,
-        algorithm: DiffAlgorithm = .todd,
+        algorithm: DiffAlgorithm = .megatron,
         encoding: DiffEncoding = .base64,
         includeMetadata: Bool = true,
         sourceStartLine: Int? = nil,

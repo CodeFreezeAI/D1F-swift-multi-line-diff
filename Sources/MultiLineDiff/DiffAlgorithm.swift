@@ -8,16 +8,19 @@
 /// Global algorithm names to eliminate hardcoded strings throughout the project
 public struct AlgorithmNames {
     public static let zoom = "Zoom"
-    public static let todd = "Todd"
+    public static let megatron = "Megatron"
     public static let flash = "Flash"
-    public static let arrow = "Arrow"
-    public static let drew = "Drew"
+    public static let starscream = "Starscream"
+    public static let optimus = "Optimus"
     
     /// Legacy names for backward compatibility
     public struct Legacy {
         public static let brus = "Brus"
         public static let soda = "Soda"
         public static let line = "Line"
+        public static let todd = "Todd"
+        public static let drew = "Drew"
+        public static let arrow = "Arrow"
     }
 }
 
@@ -26,22 +29,22 @@ public struct AlgorithmNames {
     /// Simple, fast diff algorithm with O(n) time complexity
     case zoom
     /// Detailed, semantic diff algorithm with O(n log n) time complexity
-    case todd
+    case megatron
     /// Swift native prefix/suffix algorithm - fastest for most cases
     case flash
     /// Swift native line-aware algorithm - fast with detailed line operations
-    case arrow
+    case starscream
     /// Swift native line-aware with CollectionDifference - Todd-compatible but faster
-    case drew
+    case optimus
     
     /// Display name for the algorithm
     public var displayName: String {
         switch self {
         case .zoom: return AlgorithmNames.zoom
-        case .todd: return AlgorithmNames.todd
+        case .megatron: return AlgorithmNames.megatron
         case .flash: return AlgorithmNames.flash
-        case .arrow: return AlgorithmNames.arrow
-        case .drew: return AlgorithmNames.drew
+        case .starscream: return AlgorithmNames.starscream
+        case .optimus: return AlgorithmNames.optimus
         }
     }
     
@@ -50,9 +53,9 @@ public struct AlgorithmNames {
         switch legacy.lowercased() {
         case "brus": return .zoom
         case "soda": return .flash
-        case "line": return .arrow
-        case "todd": return .todd
-        case "drew": return .drew
+        case "line": return .starscream
+        case "todd": return .megatron
+        case "drew": return .optimus
         default: return nil
         }
     }

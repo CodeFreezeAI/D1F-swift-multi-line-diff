@@ -179,7 +179,7 @@ struct CollectionDifferenceConverterTests {
         
         // Test existing Todd algorithm
         let start2 = Date()
-        let result2 = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .todd)
+        let result2 = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .megatron)
         let time2 = Date().timeIntervalSince(start2)
         
         print("\n🧪 Test: Performance Comparison")

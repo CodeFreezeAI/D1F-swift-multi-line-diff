@@ -45,11 +45,11 @@ struct AlgorithmVerificationTests {
         print("   Algorithm used: \(brusResult.metadata?.algorithmUsed ?? .zoom)")
         
         // Explicitly test Todd algorithm
-        let toddResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .todd)
+        let toddResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .megatron)
         print("\n🔍 Todd Algorithm:")
         print("   Operations count: \(toddResult.operations.count)")
         print("   Operations: \(formatOperations(toddResult))")
-        print("   Algorithm used: \(toddResult.metadata?.algorithmUsed ?? .todd)")
+        print("   Algorithm used: \(toddResult.metadata?.algorithmUsed ?? .megatron)")
         
         // Explicitly test Soda algorithm
         let sodaResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .flash)
@@ -59,18 +59,18 @@ struct AlgorithmVerificationTests {
         print("   Algorithm used: \(sodaResult.metadata?.algorithmUsed ?? .flash)")
         
         // Explicitly test Line algorithm
-        let lineResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .arrow)
+        let lineResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .starscream)
         print("\n📏 Line Algorithm:")
         print("   Operations count: \(lineResult.operations.count)")
         print("   Operations: \(formatOperations(lineResult))")
-        print("   Algorithm used: \(lineResult.metadata?.algorithmUsed ?? .arrow)")
+        print("   Algorithm used: \(lineResult.metadata?.algorithmUsed ?? .starscream)")
         
         // Explicitly test Drew algorithm
-        let drewResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .drew)
+        let drewResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .optimus)
         print("\n🎨 Drew Algorithm:")
         print("   Operations count: \(drewResult.operations.count)")
         print("   Operations: \(formatOperations(drewResult))")
-        print("   Algorithm used: \(drewResult.metadata?.algorithmUsed ?? .drew)")
+        print("   Algorithm used: \(drewResult.metadata?.algorithmUsed ?? .optimus)")
         
         // Test default algorithm selection
         let defaultResult = MultiLineDiff.createDiff(source: source, destination: destination)

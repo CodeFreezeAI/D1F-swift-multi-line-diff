@@ -34,13 +34,13 @@ import Foundation
         iterations: iterations
     )
     
-    print("\n🧠 Testing \(AlgorithmNames.todd) Algorithm (\(iterations) iterations)...")
+    print("\n🧠 Testing \(AlgorithmNames.megatron) Algorithm (\(iterations) iterations)...")
     let toddResults = testComprehensiveAlgorithmPerformance(
         source: originalContent,
         destination: modifiedContent,
-        algorithmName: AlgorithmNames.todd,
+        algorithmName: AlgorithmNames.megatron,
         testFunction: { source, dest in
-            MultiLineDiff.createDiff(source: source, destination: dest, algorithm: .todd)
+            MultiLineDiff.createDiff(source: source, destination: dest, algorithm: .megatron)
         },
         iterations: iterations
     )
@@ -58,24 +58,24 @@ import Foundation
         iterations: iterations
     )
     
-    print("\n🟦 Testing \(AlgorithmNames.arrow) Algorithm (\(iterations) iterations)...")
+    print("\n🟦 Testing \(AlgorithmNames.starscream) Algorithm (\(iterations) iterations)...")
     let lineResults = testComprehensiveAlgorithmPerformance(
         source: originalContent,
         destination: modifiedContent,
-        algorithmName: AlgorithmNames.arrow,
+        algorithmName: AlgorithmNames.starscream,
         testFunction: { source, dest in
-            MultiLineDiff.createDiff(source: source, destination: dest, algorithm: .arrow)
+            MultiLineDiff.createDiff(source: source, destination: dest, algorithm: .starscream)
         },
         iterations: iterations
     )
     
-    print("\n🟩 Testing \(AlgorithmNames.drew) Algorithm (\(iterations) iterations)...")
+    print("\n🟩 Testing \(AlgorithmNames.optimus) Algorithm (\(iterations) iterations)...")
     let drewResults = testComprehensiveAlgorithmPerformance(
         source: originalContent,
         destination: modifiedContent,
-        algorithmName: AlgorithmNames.drew,
+        algorithmName: AlgorithmNames.optimus,
         testFunction: { source, dest in
-            MultiLineDiff.createDiff(source: source, destination: dest, algorithm: .drew)
+            MultiLineDiff.createDiff(source: source, destination: dest, algorithm: .optimus)
         },
         iterations: iterations
     )
