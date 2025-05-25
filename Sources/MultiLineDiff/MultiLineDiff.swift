@@ -338,4 +338,108 @@ import CryptoKit
         let diff = try decodeEncodedDiff(encodedDiff: encodedDiff, encoding: encoding)
         return try applyDiff(to: source, diff: diff)
     }
+    
+    // MARK: - Display and Formatting Methods
+    
+    /// Display format options for diff output
+    public enum DiffDisplayFormat {
+        case terminal    // Colored terminal output with ANSI codes
+        case ai          // Plain ASCII output suitable for AI models
+    }
+    
+    /// Displays a diff result in the specified format
+    /// 
+    /// This method provides a convenient way to format diff results for different
+    /// output contexts. Terminal format includes ANSI color codes for visual
+    /// distinction, while AI format provides clean ASCII output suitable for
+    /// sending to AI models or plain text environments.
+    ///
+    /// # Format Examples
+    /// 
+         /// **Terminal Format:**
+     /// ```swift
+     /// = class UserManager {
+     /// -     private var users: [String: User] = [:]
+     /// +     private var users: [String: User] = [:]
+     /// +     private var userCount: Int = 0
+     /// ```
+    /// 
+         /// **AI Format:**
+     /// ```swift
+     /// = class UserManager {
+     /// -     private var users: [String: User] = [:]
+     /// +     private var users: [String: User] = [:]
+     /// +     private var userCount: Int = 0
+     /// ```
+    ///
+    /// - Parameters:
+    ///   - diff: The diff result to display
+    ///   - source: The original source string
+    ///   - format: The display format (.terminal or .ai)
+    /// - Returns: A formatted string representation of the diff
+    public static func displayDiff(
+        diff: DiffResult,
+        source: String,
+        format: DiffDisplayFormat
+    ) -> String {
+        switch format {
+        case .terminal:
+            return TerminalDiffFormatter.generateColoredTerminalDiff(from: diff, sourceText: source)
+        case .ai:
+            return TerminalDiffFormatter.generateASCIIDiff(from: diff, sourceText: source)
+        }
+    }
+    
+    /// Creates and displays a diff between two strings in one convenient call
+    /// 
+    /// This is a convenience method that combines `createDiff` and `displayDiff`
+    /// into a single operation. Perfect for quick diff generation and display.
+    ///
+    /// # Usage Examples
+    /// 
+    /// **For AI models:**
+    /// ```swift
+    /// let diffOutput = MultiLineDiff.createAndDisplayDiff(
+    ///     source: oldCode,
+    ///     destination: newCode,
+    ///     format: .ai
+    /// )
+    /// // Send diffOutput to AI model
+    /// ```
+    /// 
+    /// **For terminal display:**
+    /// ```swift
+    /// let coloredDiff = MultiLineDiff.createAndDisplayDiff(
+    ///     source: oldCode,
+    ///     destination: newCode,
+    ///     format: .terminal
+    /// )
+    /// print(coloredDiff)
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - source: The original text to transform from
+    ///   - destination: The target text to transform to
+    ///   - format: The display format (.terminal or .ai)
+    ///   - algorithm: Diff generation strategy (defaults to semantic Megatron algorithm)
+    /// - Returns: A formatted string representation of the diff
+    public static func createAndDisplayDiff(
+        source: String,
+        destination: String,
+        format: DiffDisplayFormat,
+        algorithm: DiffAlgorithm = .megatron
+    ) -> String {
+        let diff = createDiff(
+            source: source,
+            destination: destination,
+            algorithm: algorithm,
+            includeMetadata: false  // Display doesn't need metadata
+        )
+        
+        return displayDiff(
+            diff: diff,
+            source: source,
+            format: format
+        )
+    }
 }

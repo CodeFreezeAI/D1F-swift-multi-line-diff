@@ -947,6 +947,140 @@ func demonstrateTruncatedDiff() -> Bool {
     }
 }
 
+func demonstrateTerminalDiffOutput() {
+    print("\n" + String(repeating: "=", count: 60))
+    print("🖥️  TERMINAL DIFF OUTPUT DEMONSTRATION")
+    print(String(repeating: "=", count: 60))
+    
+    let sourceCode = """
+    class UserManager {
+        private var users: [String: User] = [:]
+        
+        func addUser(name: String, email: String) -> Bool {
+            guard !name.isEmpty && !email.isEmpty else {
+                return false
+            }
+            
+            let user = User(name: name, email: email)
+            users[email] = user
+            return true
+        }
+        
+        func getUser(by email: String) -> User? {
+            return users[email]
+        }
+        
+        func removeUser(email: String) {
+            users.removeValue(forKey: email)
+        }
+        
+        func getAllUsers() -> [User] {
+            return Array(users.values)
+        }
+    }
+    
+    struct User {
+        let name: String
+        let email: String
+    }
+    """
+    
+    let destinationCode = """
+    class UserManager {
+        private var users: [String: User] = [:]
+        private var userCount: Int = 0
+        
+        func addUser(name: String, email: String, age: Int = 0) -> Result<User, UserError> {
+            guard !name.isEmpty && !email.isEmpty else {
+                return .failure(.invalidInput)
+            }
+            
+            guard !users.keys.contains(email) else {
+                return .failure(.userAlreadyExists)
+            }
+            
+            let user = User(id: UUID(), name: name, email: email, age: age)
+            users[email] = user
+            userCount += 1
+            return .success(user)
+        }
+        
+        func getUser(by email: String) -> User? {
+            return users[email]
+        }
+        
+        func removeUser(email: String) -> Bool {
+            guard users[email] != nil else { return false }
+            users.removeValue(forKey: email)
+            userCount -= 1
+            return true
+        }
+        
+        func getAllUsers() -> [User] {
+            return Array(users.values).sorted { $0.name < $1.name }
+        }
+        
+        var count: Int {
+            return userCount
+        }
+    }
+    
+    struct User {
+        let id: UUID
+        let name: String
+        let email: String
+        let age: Int
+    }
+    
+    enum UserError: Error {
+        case invalidInput
+        case userAlreadyExists
+    }
+    """
+    
+    print("\n📝 ASCII DIFF OUTPUT:")
+    print(String(repeating: "-", count: 40))
+    let asciiDiff = MultiLineDiff.generateASCIIDiff(
+        source: sourceCode,
+        destination: destinationCode,
+        algorithm: .megatron
+    )
+    print(asciiDiff)
+    
+    print("\n🌈 COLORED TERMINAL DIFF OUTPUT:")
+    print(String(repeating: "-", count: 40))
+    let coloredDiff = MultiLineDiff.generateColoredTerminalDiff(
+        source: sourceCode,
+        destination: destinationCode,
+        algorithm: .megatron
+    )
+    print(coloredDiff)
+    
+    print("\n✨ HIGHLIGHTED TERMINAL DIFF OUTPUT:")
+    print(String(repeating: "-", count: 40))
+    let highlightedDiff = MultiLineDiff.generateHighlightedTerminalDiff(
+        source: sourceCode,
+        destination: destinationCode,
+        algorithm: .megatron
+    )
+    print(highlightedDiff)
+    
+    print("\n📊 DIFF SUMMARY:")
+    print(String(repeating: "-", count: 40))
+    let summary = MultiLineDiff.generateDiffSummary(
+        source: sourceCode,
+        destination: destinationCode,
+        algorithm: .megatron
+    )
+    print(summary)
+    
+    print("\n🤖 AI-FRIENDLY ASCII DIFF (for sending to AI models):")
+    print(String(repeating: "-", count: 40))
+    print("```swift")
+    print(asciiDiff.trimmingCharacters(in: .whitespacesAndNewlines))
+    print("```")
+}
+
 // Update the main function to call the new demonstration
 func main() throws {
     let startTime = getCurrentTimeMs()
@@ -992,7 +1126,7 @@ func main() throws {
         return demonstrateTruncatedDiff()
     }
     
-    print("\n" + String(repeating: "=", count: 50))
+        print("\n" + String(repeating: "=", count: 50))
     print("Running test: Enhanced Truncated Diff with Dual Context")
     runTest("Enhanced Truncated Diff with Dual Context") {
         return demonstrateEnhancedTruncatedDiff()
@@ -1011,6 +1145,131 @@ func main() throws {
         demonstrateReadmeExample3()
         return true
     }
+    
+    print("\n" + String(repeating: "=", count: 50))
+    print("Running test: Terminal Diff Output Demonstration")
+    demonstrateTerminalDiffOutput()
+    
+    print("\n" + String(repeating: "=", count: 60))
+    print("🎯 FINAL OUTPUT DEMONSTRATION FOR AI AND TERMINAL")
+    print(String(repeating: "=", count: 60))
+    
+    let simpleSource = """
+    class UserManager {
+        private var users: [String: User] = [:]
+        
+        func addUser(name: String, email: String) -> Bool {
+            guard !name.isEmpty && !email.isEmpty else {
+                return false
+            }
+            
+            let user = User(name: name, email: email)
+            users[email] = user
+            return true
+        }
+    }
+    """
+    
+    let simpleDestination = """
+    class UserManager {
+        private var users: [String: User] = [:]
+        private var userCount: Int = 0
+        
+        func addUser(name: String, email: String, age: Int = 0) -> Result<User, UserError> {
+            guard !name.isEmpty && !email.isEmpty else {
+                return .failure(.invalidInput)
+            }
+            
+            let user = User(id: UUID(), name: name, email: email, age: age)
+            users[email] = user
+            userCount += 1
+            return .success(user)
+        }
+    }
+    """
+    
+    print("\n🤖 WHAT AI MODELS WILL RECEIVE (ASCII):")
+    print("```swift")
+    let aiOutput = MultiLineDiff.generateASCIIDiff(
+        source: simpleSource,
+        destination: simpleDestination,
+        algorithm: .megatron
+    )
+    print(aiOutput)
+    print("```")
+    
+    print("\n🖥️  WHAT TERMINAL USERS WILL SEE (COLORED):")
+    print("Legend: \u{001B}[34m= retain (blue)\u{001B}[0m | \u{001B}[32m+ insert (green)\u{001B}[0m | \u{001B}[31m- delete (red)\u{001B}[0m")
+    print(String(repeating: "-", count: 50))
+    let terminalOutput = MultiLineDiff.generateColoredTerminalDiff(
+        source: simpleSource,
+        destination: simpleDestination,
+        algorithm: .megatron
+    )
+    print(terminalOutput)
+    
+    print("\n" + String(repeating: "=", count: 60))
+    print("🆕 NEW DISPLAY METHODS DEMONSTRATION")
+    print(String(repeating: "=", count: 60))
+    
+    // Demonstrate the new displayDiff method
+    print("\n📋 Using displayDiff method:")
+    let diff = MultiLineDiff.createDiff(
+        source: simpleSource,
+        destination: simpleDestination,
+        algorithm: .flash
+    )
+    
+    print("\n🤖 AI Format (using displayDiff):")
+    let aiDisplayOutput = MultiLineDiff.displayDiff(
+        diff: diff,
+        source: simpleSource,
+        format: .ai
+    )
+    print("```swift")
+    print(aiDisplayOutput)
+    print("```")
+    
+    print("\n🖥️ Terminal Format (using displayDiff):")
+    let terminalDisplayOutput = MultiLineDiff.displayDiff(
+        diff: diff,
+        source: simpleSource,
+        format: .terminal
+    )
+    print(terminalDisplayOutput)
+    
+    // Demonstrate the new createAndDisplayDiff convenience method
+    print("\n🚀 Using createAndDisplayDiff convenience method:")
+    
+    print("\n🤖 AI Format (one-liner):")
+    let aiConvenienceOutput = MultiLineDiff.createAndDisplayDiff(
+        source: simpleSource,
+        destination: simpleDestination,
+        format: .ai,
+        algorithm: .starscream
+    )
+    print("```swift")
+    print(aiConvenienceOutput)
+    print("```")
+    
+    print("\n🖥️ Terminal Format (one-liner):")
+    let terminalConvenienceOutput = MultiLineDiff.createAndDisplayDiff(
+        source: simpleSource,
+        destination: simpleDestination,
+        format: .terminal,
+        algorithm: .starscream
+    )
+    print(terminalConvenienceOutput)
+    
+    print("\n💡 Usage Examples:")
+    print("   // For AI models:")
+    print("   let aiDiff = MultiLineDiff.createAndDisplayDiff(")
+    print("       source: oldCode, destination: newCode, format: .ai)")
+    print("   ")
+    print("   // For terminal display:")
+    print("   let coloredDiff = MultiLineDiff.createAndDisplayDiff(")
+    print("       source: oldCode, destination: newCode, format: .terminal)")
+    print("   print(coloredDiff)")
     
     let endTime = getCurrentTimeMs()
     let totalExecutionTime = Double(endTime - startTime) / 1000.0
