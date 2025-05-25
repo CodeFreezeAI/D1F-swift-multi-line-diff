@@ -96,9 +96,13 @@ extension MultiLineDiff {
         let sourceLines = source.efficientLines
         let destLines = destination.efficientLines
         
+        // Detect if original strings end with newlines - this is crucial for proper character counting
+        let sourceEndsWithNewline = source.hasSuffix("\n")
+        let destEndsWithNewline = destination.hasSuffix("\n")
+        
         // Only use simple diff for very tiny content (1-2 lines each)
         if sourceLines.count <= 1 && destLines.count <= 1 {
-            return createSimpleLineDiff(sourceLines: sourceLines, destLines: destLines)
+            return createSimpleLineDiff(sourceLines: sourceLines, destLines: destLines, sourceEndsWithNewline: sourceEndsWithNewline, destEndsWithNewline: destEndsWithNewline)
         }
         
         // Use optimized LCS for semantic line-by-line processing
@@ -108,7 +112,9 @@ extension MultiLineDiff {
         return createDiffFromLineOperations(
             lcsOperations: lcsOperations,
             sourceLines: sourceLines,
-            destLines: destLines
+            destLines: destLines,
+            sourceEndsWithNewline: sourceEndsWithNewline,
+            destEndsWithNewline: destEndsWithNewline
         )
     }
     
@@ -117,7 +123,9 @@ extension MultiLineDiff {
     internal static func createDiffFromLineOperations(
         lcsOperations: [EnhancedLineOperation],
         sourceLines: [Substring],
-        destLines: [Substring]
+        destLines: [Substring],
+        sourceEndsWithNewline: Bool,
+        destEndsWithNewline: Bool
     ) -> DiffResult {
         var builder = DiffAlgorithmCore.OperationBuilder()
         
@@ -125,21 +133,27 @@ extension MultiLineDiff {
         for operation in lcsOperations {
             switch operation {
             case .retain(let i):
-                // Convert single line to character count (efficient, no grouping)
+                // Properly handle newlines based on original source string
                 let line = sourceLines[i]
-                let charCount = line.count + (i == sourceLines.count - 1 ? 0 : 1) // Add newline except for last line
+                let isLastLine = (i == sourceLines.count - 1)
+                let shouldAddNewline = !isLastLine || (isLastLine && sourceEndsWithNewline)
+                let charCount = line.count + (shouldAddNewline ? 1 : 0)
                 builder.addRetain(count: charCount)
                 
             case .delete(let i):
-                // Convert single line to character count (efficient, no grouping)
+                // Properly handle newlines based on original source string
                 let line = sourceLines[i]
-                let charCount = line.count + (i == sourceLines.count - 1 ? 0 : 1) // Add newline except for last line
+                let isLastLine = (i == sourceLines.count - 1)
+                let shouldAddNewline = !isLastLine || (isLastLine && sourceEndsWithNewline)
+                let charCount = line.count + (shouldAddNewline ? 1 : 0)
                 builder.addDelete(count: charCount)
                 
             case .insert(let i):
-                // Convert single line to text (efficient, no grouping)
+                // Properly handle newlines based on original destination string
                 let line = destLines[i]
-                let lineText = String(line) + (i == destLines.count - 1 ? "" : "\n") // Add newline except for last line
+                let isLastLine = (i == destLines.count - 1)
+                let shouldAddNewline = !isLastLine || (isLastLine && destEndsWithNewline)
+                let lineText = String(line) + (shouldAddNewline ? "\n" : "")
                 builder.addInsert(text: lineText)
             }
         }
@@ -149,7 +163,7 @@ extension MultiLineDiff {
     
     /// Fast path for small line diffs (preserves line-by-line granularity)
     @_optimize(speed)
-    internal static func createSimpleLineDiff(sourceLines: [Substring], destLines: [Substring]) -> DiffResult {
+    internal static func createSimpleLineDiff(sourceLines: [Substring], destLines: [Substring], sourceEndsWithNewline: Bool, destEndsWithNewline: Bool) -> DiffResult {
         var builder = DiffAlgorithmCore.OperationBuilder()
         var srcIdx = 0, dstIdx = 0
         
@@ -157,20 +171,26 @@ extension MultiLineDiff {
             if srcIdx < sourceLines.count && dstIdx < destLines.count && sourceLines[srcIdx] == destLines[dstIdx] {
                 // Lines match - retain (individual line)
                 let line = sourceLines[srcIdx]
-                let charCount = line.count + (srcIdx == sourceLines.count - 1 ? 0 : 1)
+                let isLastLine = (srcIdx == sourceLines.count - 1)
+                let shouldAddNewline = !isLastLine || (isLastLine && sourceEndsWithNewline)
+                let charCount = line.count + (shouldAddNewline ? 1 : 0)
                 builder.addRetain(count: charCount)
                 srcIdx += 1
                 dstIdx += 1
             } else if srcIdx < sourceLines.count && (dstIdx >= destLines.count || sourceLines[srcIdx] != destLines[dstIdx]) {
                 // Delete source line (individual line)
                 let line = sourceLines[srcIdx]
-                let charCount = line.count + (srcIdx == sourceLines.count - 1 ? 0 : 1)
+                let isLastLine = (srcIdx == sourceLines.count - 1)
+                let shouldAddNewline = !isLastLine || (isLastLine && sourceEndsWithNewline)
+                let charCount = line.count + (shouldAddNewline ? 1 : 0)
                 builder.addDelete(count: charCount)
                 srcIdx += 1
             } else if dstIdx < destLines.count {
                 // Insert destination line (individual line)
                 let line = destLines[dstIdx]
-                let lineText = String(line) + (dstIdx == destLines.count - 1 ? "" : "\n")
+                let isLastLine = (dstIdx == destLines.count - 1)
+                let shouldAddNewline = !isLastLine || (isLastLine && destEndsWithNewline)
+                let lineText = String(line) + (shouldAddNewline ? "\n" : "")
                 builder.addInsert(text: lineText)
                 dstIdx += 1
             }

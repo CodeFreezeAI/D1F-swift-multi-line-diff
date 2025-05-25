@@ -91,25 +91,14 @@ import CryptoKit
         sourceStartLine: Int? = nil,
         destStartLine: Int? = nil
     ) -> DiffResult {
-        // Execute the requested algorithm directly - no override
-        
-        
-//        let sourceSet = Set(source)
-//        let destSet = Set(destination)
-//        let commonLines = sourceSet.intersection(destSet).count
-//        let totalLines = sourceSet.count + destSet.count
-//        
-//        let similarityScore = Double(commonLines) / Double(totalLines)
-        
-//        if similarityScore >= 0.9 {
-//            alg = .brus
-//        }
         
         let (result, actualAlgorithmUsed) = executeEnhancedAlgorithm(
             algorithm: algorithm,
             source: source,
             destination: destination
         )
+        
+        print(actualAlgorithmUsed.rawValue)
         
         // If metadata isn't needed, return the result as is
         guard includeMetadata else {
