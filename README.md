@@ -257,7 +257,7 @@ let diff = MultiLineDiff.createDiff(
     source: section2,
     destination: modifiedSection,
     includeMetadata: true,
-    sourceStartLine: 3 // Section starts at line 3
+    sourceStartLine: 3 // Section starts at line 3 (optional)
 )
 
 // Apply to full document (automatically handles section matching)
