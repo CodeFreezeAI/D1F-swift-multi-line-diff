@@ -12,7 +12,7 @@ A powerful, performance-optimized Swift package that provides sophisticated mult
 
 ## ✨ Key Features
 
-- **🔥 Dual Algorithm Support**: Choose between performance-optimized Brus and semantic-aware Todd algorithms
+- **🔥 Five Algorithm Support**: Choose between Brus, Todd, Soda, Line, and Drew algorithms for different use cases
 - **🎯 Guaranteed Accuracy**: Both algorithms produce 100% identical results with different granularities  
 - **🧠 Intelligent Source Detection**: Automatically detects full vs truncated sources
 - **📊 Rich Metadata**: Comprehensive diff context and verification information
@@ -145,10 +145,13 @@ func processUser() -> User {
 
 | Algorithm | Speed (Small Files) | Speed (Large Files) | Operations | Use Case |
 |-----------|--------------------|--------------------|------------|----------|
-| **Brus** | ⚡ 0.11ms | ⚡ 17ms | 📦 Bulk (4) | Speed Critical |
-| **Todd** | 🏃 0.22ms | 🏃 45ms | 🔬 Granular (1000s) | Semantic Aware |
+| **Soda** | ⚡ 0.026ms | ⚡ 1.0ms | 📦 Optimal (3) | Maximum Speed |
+| **Brus** | ⚡ 0.81ms | ⚡ 22.7ms | 📦 Bulk (3) | Speed Critical |
+| **Line** | 🏃 0.26ms | 🏃 35.2ms | 🔬 Detailed (1256) | Fast + Line-Aware |
+| **Drew** | 🏃 0.26ms | 🏃 35.5ms | 🔬 Granular (1256) | Todd-Compatible |
+| **Todd** | 🏃 0.84ms | 🏃 50.7ms | 🔬 Semantic (1256) | Original Line-Aware |
 
-Both algorithms guarantee **100% identical final results**.
+All algorithms guarantee **100% identical final results**.
 
 ## 🔧 Installation
 
@@ -188,24 +191,46 @@ print(result) // "Hello, Swift!"
 ### Algorithm Selection
 
 ```swift
-// Use high-performance Brus algorithm
+// Use high-performance Brus algorithm (simple, fast)
 let brusDiff = MultiLineDiff.createDiff(
     source: source, 
     destination: destination,
     algorithm: .brus
 )
 
-// Use semantic-aware Todd algorithm  
+// Use semantic-aware Todd algorithm (detailed, line-aware)
 let toddDiff = MultiLineDiff.createDiff(
     source: source,
     destination: destination, 
     algorithm: .todd
 )
 
-// Both produce identical final results
+// Use Soda algorithm (Swift native prefix/suffix - fastest)
+let sodaDiff = MultiLineDiff.createDiff(
+    source: source,
+    destination: destination,
+    algorithm: .soda
+)
+
+// Use Line algorithm (Swift native line-aware - fast with detail)
+let lineDiff = MultiLineDiff.createDiff(
+    source: source,
+    destination: destination,
+    algorithm: .line
+)
+
+// Use Drew algorithm (Swift native Todd-compatible - faster Todd)
+let drewDiff = MultiLineDiff.createDiff(
+    source: source,
+    destination: destination,
+    algorithm: .drew
+)
+
+// All algorithms produce identical final results
 let brusResult = try MultiLineDiff.applyDiff(to: source, diff: brusDiff)
 let toddResult = try MultiLineDiff.applyDiff(to: source, diff: toddDiff)
-print(brusResult == toddResult) // true
+let sodaResult = try MultiLineDiff.applyDiff(to: source, diff: sodaDiff)
+print(brusResult == toddResult && toddResult == sodaResult) // true
 ```
 
 ### Working with Files

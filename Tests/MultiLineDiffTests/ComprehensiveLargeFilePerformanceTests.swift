@@ -10,7 +10,7 @@ import Foundation
 @testable import MultiLineDiff
 
 @Test func testComprehensiveLargeFilePerformanceComparison() throws {
-    print("\n🚀 Comprehensive Large File Performance Test - All 6 Algorithms")
+    print("\n🚀 Comprehensive Large File Performance Test - All 5 Algorithms")
     print("=" * 80)
     
     // Generate large Swift file content (same as original test)
@@ -45,46 +45,37 @@ import Foundation
         iterations: iterations
     )
     
-    print("\n🟨 Testing Myers Algorithm (\(iterations) iterations)...")
-    let myersResults = testComprehensiveAlgorithmPerformance(
+
+    
+    print("\n🟪 Testing Soda Algorithm (\(iterations) iterations)...")
+    let sodaResults = testComprehensiveAlgorithmPerformance(
         source: originalContent,
         destination: modifiedContent,
-        algorithmName: "Myers",
+        algorithmName: "Soda",
         testFunction: { source, dest in
-            MultiLineDiff.createDiffFromCollectionDifference(source: source, destination: dest)
+            MultiLineDiff.createDiff(source: source, destination: dest, algorithm: .soda)
         },
         iterations: iterations
     )
     
-    print("\n🟪 Testing Swift Prefix Algorithm (\(iterations) iterations)...")
-    let swiftPrefixResults = testComprehensiveAlgorithmPerformance(
+    print("\n🟦 Testing Line Algorithm (\(iterations) iterations)...")
+    let lineResults = testComprehensiveAlgorithmPerformance(
         source: originalContent,
         destination: modifiedContent,
-        algorithmName: "Swift Prefix",
+        algorithmName: "Line",
         testFunction: { source, dest in
-            MultiLineDiff.createDiffUsingSwiftNativeMethods(source: source, destination: dest)
+            MultiLineDiff.createDiff(source: source, destination: dest, algorithm: .line)
         },
         iterations: iterations
     )
     
-    print("\n🟦 Testing Swift Lines Algorithm (\(iterations) iterations)...")
-    let swiftLinesResults = testComprehensiveAlgorithmPerformance(
+    print("\n🟩 Testing Drew Algorithm (\(iterations) iterations)...")
+    let drewResults = testComprehensiveAlgorithmPerformance(
         source: originalContent,
         destination: modifiedContent,
-        algorithmName: "Swift Lines",
+        algorithmName: "Drew",
         testFunction: { source, dest in
-            MultiLineDiff.createDiffUsingSwiftNativeLinesMethods(source: source, destination: dest)
-        },
-        iterations: iterations
-    )
-    
-    print("\n🟩 Testing Swift Todd Algorithm (\(iterations) iterations)...")
-    let swiftToddResults = testComprehensiveAlgorithmPerformance(
-        source: originalContent,
-        destination: modifiedContent,
-        algorithmName: "Swift Todd",
-        testFunction: { source, dest in
-            MultiLineDiff.createDiffUsingSwiftNativeLinesWithDifferenceMethods(source: source, destination: dest)
+            MultiLineDiff.createDiff(source: source, destination: dest, algorithm: .drew)
         },
         iterations: iterations
     )
@@ -93,20 +84,18 @@ import Foundation
     printComprehensiveResults(
         brusResults: brusResults,
         toddResults: toddResults,
-        myersResults: myersResults,
-        swiftPrefixResults: swiftPrefixResults,
-        swiftLinesResults: swiftLinesResults,
-        swiftToddResults: swiftToddResults,
+        sodaResults: sodaResults,
+        lineResults: lineResults,
+        drewResults: drewResults,
         iterations: iterations
     )
     
     // Verify all algorithms produce correct results
     #expect(brusResults.finalResult == modifiedContent, "Brus algorithm should produce correct result")
     #expect(toddResults.finalResult == modifiedContent, "Todd algorithm should produce correct result")
-    #expect(myersResults.finalResult == modifiedContent, "Myers algorithm should produce correct result")
-    #expect(swiftPrefixResults.finalResult == modifiedContent, "Swift Prefix algorithm should produce correct result")
-    #expect(swiftLinesResults.finalResult == modifiedContent, "Swift Lines algorithm should produce correct result")
-    #expect(swiftToddResults.finalResult == modifiedContent, "Swift Todd algorithm should produce correct result")
+    #expect(sodaResults.finalResult == modifiedContent, "Soda algorithm should produce correct result")
+    #expect(lineResults.finalResult == modifiedContent, "Line algorithm should produce correct result")
+    #expect(drewResults.finalResult == modifiedContent, "Drew algorithm should produce correct result")
     
     print("\n✅ All algorithms produce correct results!")
 }
@@ -637,13 +626,12 @@ private func testComprehensiveAlgorithmPerformance(
 private func printComprehensiveResults(
     brusResults: ComprehensiveAlgorithmResults,
     toddResults: ComprehensiveAlgorithmResults,
-    myersResults: ComprehensiveAlgorithmResults,
-    swiftPrefixResults: ComprehensiveAlgorithmResults,
-    swiftLinesResults: ComprehensiveAlgorithmResults,
-    swiftToddResults: ComprehensiveAlgorithmResults,
+    sodaResults: ComprehensiveAlgorithmResults,
+    lineResults: ComprehensiveAlgorithmResults,
+    drewResults: ComprehensiveAlgorithmResults,
     iterations: Int
 ) {
-    print("\n📊 COMPREHENSIVE PERFORMANCE RESULTS - ALL 6 ALGORITHMS (\(iterations) iterations)")
+    print("\n📊 COMPREHENSIVE PERFORMANCE RESULTS - ALL 5 ALGORITHMS (\(iterations) iterations)")
     print("=" * 90)
     
     // Algorithm comparison table
@@ -652,7 +640,7 @@ private func printComprehensiveResults(
     print("│ Algorithm       │ Create (ms) │ Apply (ms)  │ Total (ms)  │ Operations  │")
     print("├─────────────────┼─────────────┼─────────────┼─────────────┼─────────────┤")
     
-    let algorithms = [brusResults, toddResults, myersResults, swiftPrefixResults, swiftLinesResults, swiftToddResults]
+    let algorithms = [brusResults, toddResults, sodaResults, lineResults, drewResults]
     
     for result in algorithms {
         let createMs = String(format: "%.1f", result.averageCreateTime * 1000)

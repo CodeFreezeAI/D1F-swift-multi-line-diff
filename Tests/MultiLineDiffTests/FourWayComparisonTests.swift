@@ -11,7 +11,7 @@ import Foundation
 
 struct FourWayComparisonTests {
     
-    @Test("Brus vs Todd vs Myers vs Swift Native - Ultimate Comparison")
+    @Test("Brus vs Todd vs Swift Native - Three-Way Comparison")
     func compareAllFourAlgorithms() throws {
         let source = """
         struct User {
@@ -37,32 +37,28 @@ struct FourWayComparisonTests {
         }
         """
         
-        print("🔬 Four-Way Algorithm Comparison")
+        print("🔬 Three-Way Algorithm Comparison")
         print("Source length: \(source.count) characters")
         print("Destination length: \(destination.count) characters")
         print()
         
-        // Test all four algorithms
+        // Test all three algorithms
         let brusResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .brus)
         let toddResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .todd)
-        let myersResult = MultiLineDiff.createDiffFromCollectionDifference(source: source, destination: destination)
         let swiftNativeResult = MultiLineDiff.createDiffUsingSwiftNativeMethods(source: source, destination: destination)
         
         print("🟦 Brus: \(brusResult.operations.count) operations")
         print("🟩 Todd: \(toddResult.operations.count) operations")
-        print("🟨 Myers: \(myersResult.operations.count) operations")
         print("🟪 Swift Native: \(swiftNativeResult.operations.count) operations")
         print()
         
         // Verify all produce correct results
         let appliedBrus = try MultiLineDiff.applyDiff(to: source, diff: brusResult)
         let appliedTodd = try MultiLineDiff.applyDiff(to: source, diff: toddResult)
-        let appliedMyers = try MultiLineDiff.applyDiff(to: source, diff: myersResult)
         let appliedSwiftNative = try MultiLineDiff.applyDiff(to: source, diff: swiftNativeResult)
         
         #expect(appliedBrus == destination, "Brus should produce correct result")
         #expect(appliedTodd == destination, "Todd should produce correct result")
-        #expect(appliedMyers == destination, "Myers should produce correct result")
         #expect(appliedSwiftNative == destination, "Swift Native should produce correct result")
         
         print("✅ All algorithms produce correct results!")
@@ -85,13 +81,6 @@ struct FourWayComparisonTests {
         }
         let toddTime = Date().timeIntervalSince(toddStart)
         
-        // Myers performance
-        let myersStart = Date()
-        for _ in 0..<iterations {
-            _ = MultiLineDiff.createDiffFromCollectionDifference(source: source, destination: destination)
-        }
-        let myersTime = Date().timeIntervalSince(myersStart)
-        
         // Swift Native performance
         let swiftNativeStart = Date()
         for _ in 0..<iterations {
@@ -102,28 +91,24 @@ struct FourWayComparisonTests {
         print("🏁 Performance Comparison (\(iterations) iterations):")
         print("   Brus:        \(String(format: "%6.2f", brusTime * 1000))ms (\(String(format: "%.4f", (brusTime * 1000) / Double(iterations)))ms per op)")
         print("   Todd:        \(String(format: "%6.2f", toddTime * 1000))ms (\(String(format: "%.4f", (toddTime * 1000) / Double(iterations)))ms per op)")
-        print("   Myers:       \(String(format: "%6.2f", myersTime * 1000))ms (\(String(format: "%.4f", (myersTime * 1000) / Double(iterations)))ms per op)")
         print("   Swift Native:\(String(format: "%6.2f", swiftNativeTime * 1000))ms (\(String(format: "%.4f", (swiftNativeTime * 1000) / Double(iterations)))ms per op)")
         
         // Calculate relative speeds
-        let fastest = min(brusTime, toddTime, myersTime, swiftNativeTime)
+        let fastest = min(brusTime, toddTime, swiftNativeTime)
         print("\n📊 Relative Speed (1.0 = fastest):")
         print("   Brus:        \(String(format: "%.2f", brusTime / fastest))x")
         print("   Todd:        \(String(format: "%.2f", toddTime / fastest))x")
-        print("   Myers:       \(String(format: "%.2f", myersTime / fastest))x")
         print("   Swift Native:\(String(format: "%.2f", swiftNativeTime / fastest))x")
         
         print("\n📈 Operation Count Comparison:")
         print("   Brus:        \(brusResult.operations.count) operations")
         print("   Todd:        \(toddResult.operations.count) operations")
-        print("   Myers:       \(myersResult.operations.count) operations")
         print("   Swift Native:\(swiftNativeResult.operations.count) operations")
         
         // Show the actual operations for comparison
         print("\n🔍 Operation Details:")
         print("🟦 Brus: \(brusResult.operations)")
         print("🟩 Todd: \(toddResult.operations)")
-        print("🟨 Myers: \(myersResult.operations)")
         print("🟪 Swift Native: \(swiftNativeResult.operations)")
     }
     
@@ -139,23 +124,19 @@ struct FourWayComparisonTests {
         
         let brusResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .brus)
         let toddResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .todd)
-        let myersResult = MultiLineDiff.createDiffFromCollectionDifference(source: source, destination: destination)
         let swiftNativeResult = MultiLineDiff.createDiffUsingSwiftNativeMethods(source: source, destination: destination)
         
         print("🟦 Brus:        \(brusResult.operations)")
         print("🟩 Todd:        \(toddResult.operations)")
-        print("🟨 Myers:       \(myersResult.operations)")
         print("🟪 Swift Native:\(swiftNativeResult.operations)")
         
         // Verify correctness
         let appliedBrus = try MultiLineDiff.applyDiff(to: source, diff: brusResult)
         let appliedTodd = try MultiLineDiff.applyDiff(to: source, diff: toddResult)
-        let appliedMyers = try MultiLineDiff.applyDiff(to: source, diff: myersResult)
         let appliedSwiftNative = try MultiLineDiff.applyDiff(to: source, diff: swiftNativeResult)
         
         #expect(appliedBrus == destination, "Brus should work")
         #expect(appliedTodd == destination, "Todd should work")
-        #expect(appliedMyers == destination, "Myers should work")
         #expect(appliedSwiftNative == destination, "Swift Native should work")
         
         print("✅ All correct!")
@@ -180,7 +161,6 @@ struct FourWayComparisonTests {
         let algorithms: [(name: String, test: () -> DiffResult)] = [
             ("Brus", { MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .brus) }),
             ("Todd", { MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .todd) }),
-            ("Myers", { MultiLineDiff.createDiffFromCollectionDifference(source: source, destination: destination) }),
             ("Swift Native", { MultiLineDiff.createDiffUsingSwiftNativeMethods(source: source, destination: destination) })
         ]
         

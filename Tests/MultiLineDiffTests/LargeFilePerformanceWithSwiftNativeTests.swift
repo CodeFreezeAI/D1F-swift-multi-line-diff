@@ -10,7 +10,7 @@ import Foundation
 @testable import MultiLineDiff
 
 @Test func testLargeFilePerformanceWithSwiftNative() throws {
-    print("\n🚀 Large File Performance Test - All 4 Algorithms")
+    print("\n🚀 Large File Performance Test - All 3 Algorithms")
     print("=" * 70)
     
     // Generate large Swift file content (smaller for faster testing)
@@ -22,7 +22,7 @@ import Foundation
     
     let iterations = 50  // Reduced for faster testing
     
-    // Test all four algorithms
+    // Test all three algorithms
     print("\n🔥 Testing Brus Algorithm (\(iterations) iterations)...")
     let brusResults = testAlgorithmPerformanceSwiftNative(
         source: originalContent,
@@ -45,16 +45,7 @@ import Foundation
         iterations: iterations
     )
     
-    print("\n🟨 Testing Myers Algorithm (\(iterations) iterations)...")
-    let myersResults = testAlgorithmPerformanceSwiftNative(
-        source: originalContent,
-        destination: modifiedContent,
-        algorithmName: "Myers",
-        testFunction: { source, dest in
-            MultiLineDiff.createDiffFromCollectionDifference(source: source, destination: dest)
-        },
-        iterations: iterations
-    )
+
     
     print("\n🟪 Testing Swift Native Algorithm (\(iterations) iterations)...")
     let swiftNativeResults = testAlgorithmPerformanceSwiftNative(
@@ -68,10 +59,9 @@ import Foundation
     )
     
     // Print comprehensive results
-    printAllFourAlgorithmResults(
+    printAllThreeAlgorithmResults(
         brusResults: brusResults,
         toddResults: toddResults,
-        myersResults: myersResults,
         swiftNativeResults: swiftNativeResults,
         iterations: iterations
     )
@@ -79,7 +69,6 @@ import Foundation
     // Verify all algorithms produce correct results
     #expect(brusResults.finalResult == modifiedContent, "Brus algorithm should produce correct result")
     #expect(toddResults.finalResult == modifiedContent, "Todd algorithm should produce correct result")
-    #expect(myersResults.finalResult == modifiedContent, "Myers algorithm should produce correct result")
     #expect(swiftNativeResults.finalResult == modifiedContent, "Swift Native algorithm should produce correct result")
     
     print("\n✅ All algorithms produce correct results!")
@@ -343,14 +332,13 @@ private func testAlgorithmPerformanceSwiftNative(
     )
 }
 
-private func printAllFourAlgorithmResults(
+private func printAllThreeAlgorithmResults(
     brusResults: AlgorithmPerformanceResultsSwiftNative,
     toddResults: AlgorithmPerformanceResultsSwiftNative,
-    myersResults: AlgorithmPerformanceResultsSwiftNative,
     swiftNativeResults: AlgorithmPerformanceResultsSwiftNative,
     iterations: Int
 ) {
-    print("\n📊 PERFORMANCE RESULTS - ALL 4 ALGORITHMS (\(iterations) iterations)")
+    print("\n📊 PERFORMANCE RESULTS - ALL 3 ALGORITHMS (\(iterations) iterations)")
     print("=" * 80)
     
     // Algorithm comparison table
@@ -359,7 +347,7 @@ private func printAllFourAlgorithmResults(
     print("│ Algorithm   │ Create (ms) │ Apply (ms)  │ Total (ms)  │ Operations  │")
     print("├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤")
     
-    let algorithms = [brusResults, toddResults, myersResults, swiftNativeResults]
+    let algorithms = [brusResults, toddResults, swiftNativeResults]
     
     for result in algorithms {
         let createMs = String(format: "%.3f", result.averageCreateTime * 1000)

@@ -94,10 +94,17 @@ import CryptoKit
         
         let result : DiffResult
         
-        if algorithm == .todd {
+        switch algorithm {
+        case .todd:
             result = createEnhancedToddDiff(source: source, destination: destination)
-        } else {
+        case .brus:
             result = createEnhancedBrusDiff(source: source, destination: destination)
+        case .soda:
+            result = createDiffUsingSwiftNativeMethods(source: source, destination: destination)
+        case .line:
+            result = createDiffUsingSwiftNativeLinesMethods(source: source, destination: destination)
+        case .drew:
+            result = createDiffUsingSwiftNativeLinesWithDifferenceMethods(source: source, destination: destination)
         }
 
         // If metadata isn't needed, return the result as is

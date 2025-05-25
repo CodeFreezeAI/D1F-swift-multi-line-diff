@@ -9,8 +9,8 @@ import Testing
 import Foundation
 @testable import MultiLineDiff
 
-@Test func testSixWayAlgorithmComparison() throws {
-    print("\n🚀 Six-Way Algorithm Comparison - All Approaches")
+@Test func testFiveWayAlgorithmComparison() throws {
+    print("\n🚀 Five-Way Algorithm Comparison - All Approaches")
     print("=" * 80)
     
     // Generate test content
@@ -45,16 +45,7 @@ import Foundation
         iterations: iterations
     )
     
-    print("\n🟨 Testing Myers Algorithm (\(iterations) iterations)...")
-    let myersResults = testSixWayAlgorithmPerformance(
-        source: originalContent,
-        destination: modifiedContent,
-        algorithmName: "Myers",
-        testFunction: { source, dest in
-            MultiLineDiff.createDiffFromCollectionDifference(source: source, destination: dest)
-        },
-        iterations: iterations
-    )
+
     
     print("\n🟪 Testing Swift Native (Char) Algorithm (\(iterations) iterations)...")
     let swiftNativeCharResults = testSixWayAlgorithmPerformance(
@@ -90,10 +81,9 @@ import Foundation
     )
     
     // Print comprehensive results
-    printSixWayAlgorithmResults(
+    printFiveWayAlgorithmResults(
         brusResults: brusResults,
         toddResults: toddResults,
-        myersResults: myersResults,
         swiftNativeCharResults: swiftNativeCharResults,
         swiftNativeLinesResults: swiftNativeLinesResults,
         swiftNativeLinesDiffResults: swiftNativeLinesDiffResults,
@@ -103,7 +93,6 @@ import Foundation
     // Verify all algorithms produce correct results
     #expect(brusResults.finalResult == modifiedContent, "Brus algorithm should produce correct result")
     #expect(toddResults.finalResult == modifiedContent, "Todd algorithm should produce correct result")
-    #expect(myersResults.finalResult == modifiedContent, "Myers algorithm should produce correct result")
     #expect(swiftNativeCharResults.finalResult == modifiedContent, "Swift Native (Char) algorithm should produce correct result")
     #expect(swiftNativeLinesResults.finalResult == modifiedContent, "Swift Native (Lines) algorithm should produce correct result")
     #expect(swiftNativeLinesDiffResults.finalResult == modifiedContent, "Swift Native (Lines+Diff) algorithm should produce correct result")
@@ -343,16 +332,15 @@ private func testSixWayAlgorithmPerformance(
     )
 }
 
-private func printSixWayAlgorithmResults(
+private func printFiveWayAlgorithmResults(
     brusResults: SixWayAlgorithmResults,
     toddResults: SixWayAlgorithmResults,
-    myersResults: SixWayAlgorithmResults,
     swiftNativeCharResults: SixWayAlgorithmResults,
     swiftNativeLinesResults: SixWayAlgorithmResults,
     swiftNativeLinesDiffResults: SixWayAlgorithmResults,
     iterations: Int
 ) {
-    print("\n📊 PERFORMANCE RESULTS - ALL 6 ALGORITHMS (\(iterations) iterations)")
+    print("\n📊 PERFORMANCE RESULTS - ALL 5 ALGORITHMS (\(iterations) iterations)")
     print("=" * 90)
     
     // Algorithm comparison table
@@ -361,7 +349,7 @@ private func printSixWayAlgorithmResults(
     print("│ Algorithm               │ Create (ms) │ Apply (ms)  │ Total (ms)  │ Operations  │")
     print("├─────────────────────────┼─────────────┼─────────────┼─────────────┼─────────────┤")
     
-    let algorithms = [brusResults, toddResults, myersResults, swiftNativeCharResults, swiftNativeLinesResults, swiftNativeLinesDiffResults]
+    let algorithms = [brusResults, toddResults, swiftNativeCharResults, swiftNativeLinesResults, swiftNativeLinesDiffResults]
     
     for result in algorithms {
         let createMs = String(format: "%.3f", result.averageCreateTime * 1000)
@@ -421,7 +409,6 @@ private func printSixWayAlgorithmResults(
     let sampleResults = [
         ("Brus", MultiLineDiff.createDiff(source: sampleSource, destination: sampleDest, algorithm: .brus)),
         ("Todd", MultiLineDiff.createDiff(source: sampleSource, destination: sampleDest, algorithm: .todd)),
-        ("Myers", MultiLineDiff.createDiffFromCollectionDifference(source: sampleSource, destination: sampleDest)),
         ("Swift Native (Char)", MultiLineDiff.createDiffUsingSwiftNativeMethods(source: sampleSource, destination: sampleDest)),
         ("Swift Native (Lines)", MultiLineDiff.createDiffUsingSwiftNativeLinesMethods(source: sampleSource, destination: sampleDest)),
         ("Swift Native (Lines+Diff)", MultiLineDiff.createDiffUsingSwiftNativeLinesWithDifferenceMethods(source: sampleSource, destination: sampleDest))

@@ -11,7 +11,7 @@ import Foundation
 
 struct ThreeWayComparisonTests {
     
-    @Test("Brus vs Todd vs Myers - Comprehensive Comparison")
+    @Test("Brus vs Todd - Two-Way Comparison")
     func compareAllThreeAlgorithms() throws {
         let source = """
         struct User {
@@ -37,7 +37,7 @@ struct ThreeWayComparisonTests {
         }
         """
         
-        print("🔬 Three-Way Algorithm Comparison")
+        print("🔬 Two-Way Algorithm Comparison")
         print("Source length: \(source.count) characters")
         print("Destination length: \(destination.count) characters")
         print("Source lines: \(source.split(separator: "\n").count)")
@@ -64,23 +64,12 @@ struct ThreeWayComparisonTests {
             print("     \(i): \(op.description)")
         }
         
-        // Test Myers (CollectionDifference) Algorithm
-        let myersResult = MultiLineDiff.createDiffFromCollectionDifference(source: source, destination: destination)
-        print("\n🟨 Myers Algorithm (Character-based CollectionDifference):")
-        print("   Operations count: \(myersResult.operations.count)")
-        print("   Operations:")
-        for (i, op) in myersResult.operations.enumerated() {
-            print("     \(i): \(op.description)")
-        }
-        
         // Verify all produce correct results
         let appliedBrus = try MultiLineDiff.applyDiff(to: source, diff: brusResult)
         let appliedTodd = try MultiLineDiff.applyDiff(to: source, diff: toddResult)
-        let appliedMyers = try MultiLineDiff.applyDiff(to: source, diff: myersResult)
         
         #expect(appliedBrus == destination, "Brus should produce correct result")
         #expect(appliedTodd == destination, "Todd should produce correct result")
-        #expect(appliedMyers == destination, "Myers should produce correct result")
         
         print("\n✅ All algorithms produce correct results!")
         
@@ -101,29 +90,19 @@ struct ThreeWayComparisonTests {
         }
         let toddTime = Date().timeIntervalSince(toddStart)
         
-        // Myers performance
-        let myersStart = Date()
-        for _ in 0..<iterations {
-            _ = MultiLineDiff.createDiffFromCollectionDifference(source: source, destination: destination)
-        }
-        let myersTime = Date().timeIntervalSince(myersStart)
-        
         print("\n🏁 Performance Comparison (\(iterations) iterations):")
         print("   Brus:  \(String(format: "%.2f", brusTime * 1000))ms total (\(String(format: "%.3f", (brusTime * 1000) / Double(iterations)))ms per op)")
         print("   Todd:  \(String(format: "%.2f", toddTime * 1000))ms total (\(String(format: "%.3f", (toddTime * 1000) / Double(iterations)))ms per op)")
-        print("   Myers: \(String(format: "%.2f", myersTime * 1000))ms total (\(String(format: "%.3f", (myersTime * 1000) / Double(iterations)))ms per op)")
         
         // Calculate relative speeds
-        let fastest = min(brusTime, toddTime, myersTime)
+        let fastest = min(brusTime, toddTime)
         print("\n📊 Relative Speed (1.0 = fastest):")
         print("   Brus:  \(String(format: "%.2f", brusTime / fastest))x")
         print("   Todd:  \(String(format: "%.2f", toddTime / fastest))x")
-        print("   Myers: \(String(format: "%.2f", myersTime / fastest))x")
         
         print("\n📈 Operation Count Comparison:")
         print("   Brus:  \(brusResult.operations.count) operations")
         print("   Todd:  \(toddResult.operations.count) operations")
-        print("   Myers: \(myersResult.operations.count) operations")
     }
     
     @Test("Small string comparison")
@@ -138,20 +117,16 @@ struct ThreeWayComparisonTests {
         
         let brusResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .brus)
         let toddResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .todd)
-        let myersResult = MultiLineDiff.createDiffFromCollectionDifference(source: source, destination: destination)
         
         print("🟦 Brus: \(brusResult.operations)")
         print("🟩 Todd: \(toddResult.operations)")
-        print("🟨 Myers: \(myersResult.operations)")
         
         // Verify correctness
         let appliedBrus = try MultiLineDiff.applyDiff(to: source, diff: brusResult)
         let appliedTodd = try MultiLineDiff.applyDiff(to: source, diff: toddResult)
-        let appliedMyers = try MultiLineDiff.applyDiff(to: source, diff: myersResult)
         
         #expect(appliedBrus == destination, "Brus should work on small strings")
         #expect(appliedTodd == destination, "Todd should work on small strings")
-        #expect(appliedMyers == destination, "Myers should work on small strings")
         
         print("✅ All correct!")
     }
@@ -215,16 +190,9 @@ struct ThreeWayComparisonTests {
         }
         let toddTime = Date().timeIntervalSince(toddStart)
         
-        let myersStart = Date()
-        for _ in 0..<iterations {
-            _ = MultiLineDiff.createDiffFromCollectionDifference(source: source, destination: destination)
-        }
-        let myersTime = Date().timeIntervalSince(myersStart)
-        
         print("🏁 Large String Performance (\(iterations) iterations):")
         print("   Brus:  \(String(format: "%.1f", brusTime * 1000))ms (\(String(format: "%.1f", (brusTime * 1000) / Double(iterations)))ms per op)")
         print("   Todd:  \(String(format: "%.1f", toddTime * 1000))ms (\(String(format: "%.1f", (toddTime * 1000) / Double(iterations)))ms per op)")
-        print("   Myers: \(String(format: "%.1f", myersTime * 1000))ms (\(String(format: "%.1f", (myersTime * 1000) / Double(iterations)))ms per op)")
         
         // Test one result for correctness
         let testResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .todd)
