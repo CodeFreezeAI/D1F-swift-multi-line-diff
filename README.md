@@ -79,8 +79,8 @@ func calculate(a: Int, b: Int) -> Int {
 // OPERATIONS (Todd Algorithm - Line Granular)
 ┌──────────────────────────────────────────────────────────────┐
 │ RETAIN(40)           │ INSERT(31)              │ RETAIN(17)  │
-│  func calculate(...  │ // Enhanced calc        │ return...   │
-│  return "            │  let result = a + b\n   │             │
+│  func calculate(...  │  // Enhanced calc       │ return...   │
+│  return              │  let result = a + b\n   │             │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -111,7 +111,7 @@ func processUser() -> User {
 ```
 ┌───────────────────────────────────────────────────────────────────---------------──┐
 │ 1. RETAIN(19)          │ 2. DELETE(101)         │ 3. INSERT(163)    │ 4. RETAIN(2) │
-│  func processUser() {  │ Delete original body   │ "-> User {\n      │    \n}       │
+│  func processUser() {  │ Delete original body   │  -> User {\n      │    \n}       │
 │  \n    let user =      │ {\n    let user...     │     let user =... │              │
 │                        │ return user\n}"        │ return validated" │              │
 └──────────────────────────────────────────────────────────────────===============───┘
