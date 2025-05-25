@@ -420,7 +420,7 @@ let diff = MultiLineDiff.createDiff(
     source: "## Old Section\nOld content",
     destination: updatedSection,
     includeMetadata: true,
-    sourceStartLine: 42
+    sourceStartLine: 42 // Optional, uses metadata diff to locate section
 )
 
 // Apply to full README
