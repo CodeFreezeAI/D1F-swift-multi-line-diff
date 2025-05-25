@@ -11,8 +11,8 @@ import Foundation
 
 struct ThreeWayComparisonTests {
     
-    @Test("Brus vs Todd - Two-Way Comparison")
-    func compareAllThreeAlgorithms() throws {
+    @Test("All Five Algorithms - Five-Way Comparison")
+    func compareAllFiveAlgorithms() throws {
         let source = """
         struct User {
             let id: Int
@@ -37,14 +37,14 @@ struct ThreeWayComparisonTests {
         }
         """
         
-        print("🔬 Two-Way Algorithm Comparison")
+        print("🔬 Five-Way Algorithm Comparison")
         print("Source length: \(source.count) characters")
         print("Destination length: \(destination.count) characters")
         print("Source lines: \(source.split(separator: "\n").count)")
         print("Destination lines: \(destination.split(separator: "\n").count)")
         print()
         
-        // Test Brus Algorithm
+        // Test all five algorithms
         let brusResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .brus)
         print("🟦 Brus Algorithm (Character-based, O(n)):")
         print("   Operations count: \(brusResult.operations.count)")
@@ -54,7 +54,6 @@ struct ThreeWayComparisonTests {
             print("     \(i): \(op.description)")
         }
         
-        // Test Todd Algorithm  
         let toddResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .todd)
         print("\n🟩 Todd Algorithm (Line-based, O(n log n)):")
         print("   Operations count: \(toddResult.operations.count)")
@@ -64,12 +63,45 @@ struct ThreeWayComparisonTests {
             print("     \(i): \(op.description)")
         }
         
+        let sodaResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .soda)
+        print("\n🥤 Soda Algorithm (Swift Prefix-based):")
+        print("   Operations count: \(sodaResult.operations.count)")
+        print("   Algorithm used: \(sodaResult.metadata?.algorithmUsed ?? .soda)")
+        print("   Operations:")
+        for (i, op) in sodaResult.operations.enumerated() {
+            print("     \(i): \(op.description)")
+        }
+        
+        let lineResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .line)
+        print("\n📏 Line Algorithm (Swift Lines-based):")
+        print("   Operations count: \(lineResult.operations.count)")
+        print("   Algorithm used: \(lineResult.metadata?.algorithmUsed ?? .line)")
+        print("   Operations:")
+        for (i, op) in lineResult.operations.enumerated() {
+            print("     \(i): \(op.description)")
+        }
+        
+        let drewResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .drew)
+        print("\n🎨 Drew Algorithm (Swift Lines+Diff):")
+        print("   Operations count: \(drewResult.operations.count)")
+        print("   Algorithm used: \(drewResult.metadata?.algorithmUsed ?? .drew)")
+        print("   Operations:")
+        for (i, op) in drewResult.operations.enumerated() {
+            print("     \(i): \(op.description)")
+        }
+        
         // Verify all produce correct results
         let appliedBrus = try MultiLineDiff.applyDiff(to: source, diff: brusResult)
         let appliedTodd = try MultiLineDiff.applyDiff(to: source, diff: toddResult)
+        let appliedSoda = try MultiLineDiff.applyDiff(to: source, diff: sodaResult)
+        let appliedLine = try MultiLineDiff.applyDiff(to: source, diff: lineResult)
+        let appliedDrew = try MultiLineDiff.applyDiff(to: source, diff: drewResult)
         
         #expect(appliedBrus == destination, "Brus should produce correct result")
         #expect(appliedTodd == destination, "Todd should produce correct result")
+        #expect(appliedSoda == destination, "Soda should produce correct result")
+        #expect(appliedLine == destination, "Line should produce correct result")
+        #expect(appliedDrew == destination, "Drew should produce correct result")
         
         print("\n✅ All algorithms produce correct results!")
         
@@ -90,19 +122,49 @@ struct ThreeWayComparisonTests {
         }
         let toddTime = Date().timeIntervalSince(toddStart)
         
+        // Soda performance
+        let sodaStart = Date()
+        for _ in 0..<iterations {
+            _ = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .soda)
+        }
+        let sodaTime = Date().timeIntervalSince(sodaStart)
+        
+        // Line performance
+        let lineStart = Date()
+        for _ in 0..<iterations {
+            _ = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .line)
+        }
+        let lineTime = Date().timeIntervalSince(lineStart)
+        
+        // Drew performance
+        let drewStart = Date()
+        for _ in 0..<iterations {
+            _ = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .drew)
+        }
+        let drewTime = Date().timeIntervalSince(drewStart)
+        
         print("\n🏁 Performance Comparison (\(iterations) iterations):")
-        print("   Brus:  \(String(format: "%.2f", brusTime * 1000))ms total (\(String(format: "%.3f", (brusTime * 1000) / Double(iterations)))ms per op)")
-        print("   Todd:  \(String(format: "%.2f", toddTime * 1000))ms total (\(String(format: "%.3f", (toddTime * 1000) / Double(iterations)))ms per op)")
+        print("   Brus: \(String(format: "%.2f", brusTime * 1000))ms total (\(String(format: "%.3f", (brusTime * 1000) / Double(iterations)))ms per op)")
+        print("   Todd: \(String(format: "%.2f", toddTime * 1000))ms total (\(String(format: "%.3f", (toddTime * 1000) / Double(iterations)))ms per op)")
+        print("   Soda: \(String(format: "%.2f", sodaTime * 1000))ms total (\(String(format: "%.3f", (sodaTime * 1000) / Double(iterations)))ms per op)")
+        print("   Line: \(String(format: "%.2f", lineTime * 1000))ms total (\(String(format: "%.3f", (lineTime * 1000) / Double(iterations)))ms per op)")
+        print("   Drew: \(String(format: "%.2f", drewTime * 1000))ms total (\(String(format: "%.3f", (drewTime * 1000) / Double(iterations)))ms per op)")
         
         // Calculate relative speeds
-        let fastest = min(brusTime, toddTime)
+        let fastest = min(brusTime, toddTime, sodaTime, lineTime, drewTime)
         print("\n📊 Relative Speed (1.0 = fastest):")
-        print("   Brus:  \(String(format: "%.2f", brusTime / fastest))x")
-        print("   Todd:  \(String(format: "%.2f", toddTime / fastest))x")
+        print("   Brus: \(String(format: "%.2f", brusTime / fastest))x")
+        print("   Todd: \(String(format: "%.2f", toddTime / fastest))x")
+        print("   Soda: \(String(format: "%.2f", sodaTime / fastest))x")
+        print("   Line: \(String(format: "%.2f", lineTime / fastest))x")
+        print("   Drew: \(String(format: "%.2f", drewTime / fastest))x")
         
         print("\n📈 Operation Count Comparison:")
-        print("   Brus:  \(brusResult.operations.count) operations")
-        print("   Todd:  \(toddResult.operations.count) operations")
+        print("   Brus: \(brusResult.operations.count) operations")
+        print("   Todd: \(toddResult.operations.count) operations")
+        print("   Soda: \(sodaResult.operations.count) operations")
+        print("   Line: \(lineResult.operations.count) operations")
+        print("   Drew: \(drewResult.operations.count) operations")
     }
     
     @Test("Small string comparison")
@@ -118,8 +180,8 @@ struct ThreeWayComparisonTests {
         let brusResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .brus)
         let toddResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .todd)
         
-        print("🟦 Brus: \(brusResult.operations)")
-        print("🟩 Todd: \(toddResult.operations)")
+        print("🟦 Brus: \(formatOperations(brusResult))")
+        print("🟩 Todd: \(formatOperations(toddResult))")
         
         // Verify correctness
         let appliedBrus = try MultiLineDiff.applyDiff(to: source, diff: brusResult)

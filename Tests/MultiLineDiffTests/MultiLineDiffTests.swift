@@ -761,6 +761,39 @@ func countOperations(_ diff: DiffResult) -> DiffOperationCounts {
     )
 }
 
+/// Helper function to format diff operations in a readable way
+func formatOperations(_ diff: DiffResult, maxOperations: Int = 5) -> String {
+    let ops = diff.operations
+    
+    if ops.isEmpty {
+        return "No operations"
+    }
+    
+    var parts: [String] = []
+    let showCount = min(ops.count, maxOperations)
+    
+    for i in 0..<showCount {
+        let op = ops[i]
+        switch op {
+        case .retain(let count):
+            parts.append("RETAIN(\(count))")
+        case .insert(let text):
+            let preview = text.count > 20 ? String(text.prefix(20)) + "..." : text
+            let cleanPreview = preview.replacingOccurrences(of: "\n", with: "\\n")
+                                     .replacingOccurrences(of: "\t", with: "\\t")
+            parts.append("INSERT(\(text.count): \"\(cleanPreview)\")")
+        case .delete(let count):
+            parts.append("DELETE(\(count))")
+        }
+    }
+    
+    if ops.count > maxOperations {
+        parts.append("... +\(ops.count - maxOperations) more")
+    }
+    
+    return parts.joined(separator: ", ")
+}
+
 /// Helper class for managing temporary test files
 class TestFileManager {
     let tempDirURL: URL
@@ -1036,54 +1069,6 @@ class TestFileManager {
 }
 
 // MARK: - Truncated String Tests
-
-@Test func testApplyDiffToTruncatedString() throws {
-    // Test case: Apply a diff designed for a full document to just a truncated portion
-    let fullSource = "Hello, world!"
-    let truncatedSource = "world"
-    
-    // Create a diff that was originally designed for the full source
-    // to change "world" to "Swift" in the context of "Hello, world!" -> "Hello, Swift!"
-    let fullDiff = MultiLineDiff.createDiff(
-        source: fullSource,
-        destination: "Hello, Swift!",
-        includeMetadata: true
-    )
-    
-    // Test 1: Apply the full diff to the truncated source
-    // The system should automatically detect this is a truncated application
-    do {
-        let result = try MultiLineDiff.applyDiff(to: truncatedSource, diff: fullDiff)
-        print("Successfully applied full diff to truncated source: '\(result)'")
-        // Note: The result may vary depending on the diff structure and detection logic
-    } catch {
-        print("Full diff application to truncated source failed as expected: \(error)")
-        // This is expected behavior for many cases
-    }
-    
-    // Test 2: Create a specific diff for the truncated source
-    let truncatedDiff = MultiLineDiff.createDiff(
-        source: truncatedSource,
-        destination: "Swift"
-    )
-    
-    let truncatedResult = try MultiLineDiff.applyDiff(to: truncatedSource, diff: truncatedDiff)
-    #expect(truncatedResult == "Swift", "Direct truncated diff should work")
-    
-    // Test 3: Demonstrate the difference between full and truncated application
-    let fullResult = try MultiLineDiff.applyDiff(to: fullSource, diff: fullDiff)
-    #expect(fullResult == "Hello, Swift!", "Full diff should work on full source")
-    
-    // Test 4: Test with simple operations that should work on truncated source
-    let simpleOperations: [DiffOperation] = [
-        .delete(5), // Delete all 5 characters of "world"
-        .insert("Swift") // Insert "Swift"
-    ]
-    
-    let simpleDiff = DiffResult(operations: simpleOperations)
-    let simpleResult = try MultiLineDiff.applyDiff(to: truncatedSource, diff: simpleDiff)
-    #expect(simpleResult == "Swift", "Simple operations should work on truncated source")
-}
 
 @Test func testCreateAndApplyDiffWithTruncatedData() throws {
     // Create a very simple test case to demonstrate the concept

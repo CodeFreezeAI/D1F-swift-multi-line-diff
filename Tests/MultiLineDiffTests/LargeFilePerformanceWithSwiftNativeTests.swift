@@ -10,7 +10,7 @@ import Foundation
 @testable import MultiLineDiff
 
 @Test func testLargeFilePerformanceWithSwiftNative() throws {
-    print("\n🚀 Large File Performance Test - All 3 Algorithms")
+    print("\n🚀 Large File Performance Test - All 5 Algorithms")
     print("=" * 70)
     
     // Generate large Swift file content (smaller for faster testing)
@@ -22,7 +22,7 @@ import Foundation
     
     let iterations = 50  // Reduced for faster testing
     
-    // Test all three algorithms
+    // Test all five algorithms
     print("\n🔥 Testing Brus Algorithm (\(iterations) iterations)...")
     let brusResults = testAlgorithmPerformanceSwiftNative(
         source: originalContent,
@@ -45,31 +45,55 @@ import Foundation
         iterations: iterations
     )
     
-
-    
-    print("\n🟪 Testing Swift Native Algorithm (\(iterations) iterations)...")
-    let swiftNativeResults = testAlgorithmPerformanceSwiftNative(
+    print("\n🥤 Testing Soda Algorithm (\(iterations) iterations)...")
+    let sodaResults = testAlgorithmPerformanceSwiftNative(
         source: originalContent,
         destination: modifiedContent,
-        algorithmName: "Swift Native",
+        algorithmName: "Soda",
         testFunction: { source, dest in
-            MultiLineDiff.createDiffUsingSwiftNativeMethods(source: source, destination: dest)
+            MultiLineDiff.createDiff(source: source, destination: dest, algorithm: .soda)
+        },
+        iterations: iterations
+    )
+    
+    print("\n📏 Testing Line Algorithm (\(iterations) iterations)...")
+    let lineResults = testAlgorithmPerformanceSwiftNative(
+        source: originalContent,
+        destination: modifiedContent,
+        algorithmName: "Line",
+        testFunction: { source, dest in
+            MultiLineDiff.createDiff(source: source, destination: dest, algorithm: .line)
+        },
+        iterations: iterations
+    )
+    
+    print("\n🎨 Testing Drew Algorithm (\(iterations) iterations)...")
+    let drewResults = testAlgorithmPerformanceSwiftNative(
+        source: originalContent,
+        destination: modifiedContent,
+        algorithmName: "Drew",
+        testFunction: { source, dest in
+            MultiLineDiff.createDiff(source: source, destination: dest, algorithm: .drew)
         },
         iterations: iterations
     )
     
     // Print comprehensive results
-    printAllThreeAlgorithmResults(
+    printAllFiveAlgorithmResults(
         brusResults: brusResults,
         toddResults: toddResults,
-        swiftNativeResults: swiftNativeResults,
+        sodaResults: sodaResults,
+        lineResults: lineResults,
+        drewResults: drewResults,
         iterations: iterations
     )
     
     // Verify all algorithms produce correct results
     #expect(brusResults.finalResult == modifiedContent, "Brus algorithm should produce correct result")
     #expect(toddResults.finalResult == modifiedContent, "Todd algorithm should produce correct result")
-    #expect(swiftNativeResults.finalResult == modifiedContent, "Swift Native algorithm should produce correct result")
+    #expect(sodaResults.finalResult == modifiedContent, "Soda algorithm should produce correct result")
+    #expect(lineResults.finalResult == modifiedContent, "Line algorithm should produce correct result")
+    #expect(drewResults.finalResult == modifiedContent, "Drew algorithm should produce correct result")
     
     print("\n✅ All algorithms produce correct results!")
 }
@@ -332,13 +356,15 @@ private func testAlgorithmPerformanceSwiftNative(
     )
 }
 
-private func printAllThreeAlgorithmResults(
+private func printAllFiveAlgorithmResults(
     brusResults: AlgorithmPerformanceResultsSwiftNative,
     toddResults: AlgorithmPerformanceResultsSwiftNative,
-    swiftNativeResults: AlgorithmPerformanceResultsSwiftNative,
+    sodaResults: AlgorithmPerformanceResultsSwiftNative,
+    lineResults: AlgorithmPerformanceResultsSwiftNative,
+    drewResults: AlgorithmPerformanceResultsSwiftNative,
     iterations: Int
 ) {
-    print("\n📊 PERFORMANCE RESULTS - ALL 3 ALGORITHMS (\(iterations) iterations)")
+    print("\n📊 PERFORMANCE RESULTS - ALL 5 ALGORITHMS (\(iterations) iterations)")
     print("=" * 80)
     
     // Algorithm comparison table
@@ -347,7 +373,7 @@ private func printAllThreeAlgorithmResults(
     print("│ Algorithm   │ Create (ms) │ Apply (ms)  │ Total (ms)  │ Operations  │")
     print("├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤")
     
-    let algorithms = [brusResults, toddResults, swiftNativeResults]
+    let algorithms = [brusResults, toddResults, sodaResults, lineResults, drewResults]
     
     for result in algorithms {
         let createMs = String(format: "%.3f", result.averageCreateTime * 1000)

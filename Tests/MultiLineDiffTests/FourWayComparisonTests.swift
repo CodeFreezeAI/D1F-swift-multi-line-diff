@@ -11,8 +11,8 @@ import Foundation
 
 struct FourWayComparisonTests {
     
-    @Test("Brus vs Todd vs Swift Native - Three-Way Comparison")
-    func compareAllFourAlgorithms() throws {
+    @Test("All Five Algorithms - Five-Way Comparison")
+    func compareAllFiveAlgorithms() throws {
         let source = """
         struct User {
             let id: Int
@@ -37,29 +37,37 @@ struct FourWayComparisonTests {
         }
         """
         
-        print("🔬 Three-Way Algorithm Comparison")
+        print("🔬 Five-Way Algorithm Comparison")
         print("Source length: \(source.count) characters")
         print("Destination length: \(destination.count) characters")
         print()
         
-        // Test all three algorithms
+        // Test all five algorithms
         let brusResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .brus)
         let toddResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .todd)
-        let swiftNativeResult = MultiLineDiff.createDiffUsingSwiftNativeMethods(source: source, destination: destination)
+        let sodaResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .soda)
+        let lineResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .line)
+        let drewResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .drew)
         
         print("🟦 Brus: \(brusResult.operations.count) operations")
         print("🟩 Todd: \(toddResult.operations.count) operations")
-        print("🟪 Swift Native: \(swiftNativeResult.operations.count) operations")
+        print("🥤 Soda: \(sodaResult.operations.count) operations")
+        print("📏 Line: \(lineResult.operations.count) operations")
+        print("🎨 Drew: \(drewResult.operations.count) operations")
         print()
         
         // Verify all produce correct results
         let appliedBrus = try MultiLineDiff.applyDiff(to: source, diff: brusResult)
         let appliedTodd = try MultiLineDiff.applyDiff(to: source, diff: toddResult)
-        let appliedSwiftNative = try MultiLineDiff.applyDiff(to: source, diff: swiftNativeResult)
+        let appliedSoda = try MultiLineDiff.applyDiff(to: source, diff: sodaResult)
+        let appliedLine = try MultiLineDiff.applyDiff(to: source, diff: lineResult)
+        let appliedDrew = try MultiLineDiff.applyDiff(to: source, diff: drewResult)
         
         #expect(appliedBrus == destination, "Brus should produce correct result")
         #expect(appliedTodd == destination, "Todd should produce correct result")
-        #expect(appliedSwiftNative == destination, "Swift Native should produce correct result")
+        #expect(appliedSoda == destination, "Soda should produce correct result")
+        #expect(appliedLine == destination, "Line should produce correct result")
+        #expect(appliedDrew == destination, "Drew should produce correct result")
         
         print("✅ All algorithms produce correct results!")
         print()
@@ -81,35 +89,57 @@ struct FourWayComparisonTests {
         }
         let toddTime = Date().timeIntervalSince(toddStart)
         
-        // Swift Native performance
-        let swiftNativeStart = Date()
+        // Soda performance
+        let sodaStart = Date()
         for _ in 0..<iterations {
-            _ = MultiLineDiff.createDiffUsingSwiftNativeMethods(source: source, destination: destination)
+            _ = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .soda)
         }
-        let swiftNativeTime = Date().timeIntervalSince(swiftNativeStart)
+        let sodaTime = Date().timeIntervalSince(sodaStart)
+        
+        // Line performance
+        let lineStart = Date()
+        for _ in 0..<iterations {
+            _ = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .line)
+        }
+        let lineTime = Date().timeIntervalSince(lineStart)
+        
+        // Drew performance
+        let drewStart = Date()
+        for _ in 0..<iterations {
+            _ = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .drew)
+        }
+        let drewTime = Date().timeIntervalSince(drewStart)
         
         print("🏁 Performance Comparison (\(iterations) iterations):")
-        print("   Brus:        \(String(format: "%6.2f", brusTime * 1000))ms (\(String(format: "%.4f", (brusTime * 1000) / Double(iterations)))ms per op)")
-        print("   Todd:        \(String(format: "%6.2f", toddTime * 1000))ms (\(String(format: "%.4f", (toddTime * 1000) / Double(iterations)))ms per op)")
-        print("   Swift Native:\(String(format: "%6.2f", swiftNativeTime * 1000))ms (\(String(format: "%.4f", (swiftNativeTime * 1000) / Double(iterations)))ms per op)")
+        print("   Brus: \(String(format: "%6.2f", brusTime * 1000))ms (\(String(format: "%.4f", (brusTime * 1000) / Double(iterations)))ms per op)")
+        print("   Todd: \(String(format: "%6.2f", toddTime * 1000))ms (\(String(format: "%.4f", (toddTime * 1000) / Double(iterations)))ms per op)")
+        print("   Soda: \(String(format: "%6.2f", sodaTime * 1000))ms (\(String(format: "%.4f", (sodaTime * 1000) / Double(iterations)))ms per op)")
+        print("   Line: \(String(format: "%6.2f", lineTime * 1000))ms (\(String(format: "%.4f", (lineTime * 1000) / Double(iterations)))ms per op)")
+        print("   Drew: \(String(format: "%6.2f", drewTime * 1000))ms (\(String(format: "%.4f", (drewTime * 1000) / Double(iterations)))ms per op)")
         
         // Calculate relative speeds
-        let fastest = min(brusTime, toddTime, swiftNativeTime)
+        let fastest = min(brusTime, toddTime, sodaTime, lineTime, drewTime)
         print("\n📊 Relative Speed (1.0 = fastest):")
-        print("   Brus:        \(String(format: "%.2f", brusTime / fastest))x")
-        print("   Todd:        \(String(format: "%.2f", toddTime / fastest))x")
-        print("   Swift Native:\(String(format: "%.2f", swiftNativeTime / fastest))x")
+        print("   Brus: \(String(format: "%.2f", brusTime / fastest))x")
+        print("   Todd: \(String(format: "%.2f", toddTime / fastest))x")
+        print("   Soda: \(String(format: "%.2f", sodaTime / fastest))x")
+        print("   Line: \(String(format: "%.2f", lineTime / fastest))x")
+        print("   Drew: \(String(format: "%.2f", drewTime / fastest))x")
         
         print("\n📈 Operation Count Comparison:")
-        print("   Brus:        \(brusResult.operations.count) operations")
-        print("   Todd:        \(toddResult.operations.count) operations")
-        print("   Swift Native:\(swiftNativeResult.operations.count) operations")
+        print("   Brus: \(brusResult.operations.count) operations")
+        print("   Todd: \(toddResult.operations.count) operations")
+        print("   Soda: \(sodaResult.operations.count) operations")
+        print("   Line: \(lineResult.operations.count) operations")
+        print("   Drew: \(drewResult.operations.count) operations")
         
         // Show the actual operations for comparison
         print("\n🔍 Operation Details:")
-        print("🟦 Brus: \(brusResult.operations)")
-        print("🟩 Todd: \(toddResult.operations)")
-        print("🟪 Swift Native: \(swiftNativeResult.operations)")
+        print("🟦 Brus: \(formatOperations(brusResult))")
+        print("🟩 Todd: \(formatOperations(toddResult))")
+        print("🥤 Soda: \(formatOperations(sodaResult))")
+        print("📏 Line: \(formatOperations(lineResult))")
+        print("🎨 Drew: \(formatOperations(drewResult))")
     }
     
     @Test("Simple string test")
@@ -124,20 +154,28 @@ struct FourWayComparisonTests {
         
         let brusResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .brus)
         let toddResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .todd)
-        let swiftNativeResult = MultiLineDiff.createDiffUsingSwiftNativeMethods(source: source, destination: destination)
+        let sodaResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .soda)
+        let lineResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .line)
+        let drewResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .drew)
         
-        print("🟦 Brus:        \(brusResult.operations)")
-        print("🟩 Todd:        \(toddResult.operations)")
-        print("🟪 Swift Native:\(swiftNativeResult.operations)")
+        print("🟦 Brus: \(formatOperations(brusResult))")
+        print("🟩 Todd: \(formatOperations(toddResult))")
+        print("🥤 Soda: \(formatOperations(sodaResult))")
+        print("📏 Line: \(formatOperations(lineResult))")
+        print("🎨 Drew: \(formatOperations(drewResult))")
         
         // Verify correctness
         let appliedBrus = try MultiLineDiff.applyDiff(to: source, diff: brusResult)
         let appliedTodd = try MultiLineDiff.applyDiff(to: source, diff: toddResult)
-        let appliedSwiftNative = try MultiLineDiff.applyDiff(to: source, diff: swiftNativeResult)
+        let appliedSoda = try MultiLineDiff.applyDiff(to: source, diff: sodaResult)
+        let appliedLine = try MultiLineDiff.applyDiff(to: source, diff: lineResult)
+        let appliedDrew = try MultiLineDiff.applyDiff(to: source, diff: drewResult)
         
         #expect(appliedBrus == destination, "Brus should work")
         #expect(appliedTodd == destination, "Todd should work")
-        #expect(appliedSwiftNative == destination, "Swift Native should work")
+        #expect(appliedSoda == destination, "Soda should work")
+        #expect(appliedLine == destination, "Line should work")
+        #expect(appliedDrew == destination, "Drew should work")
         
         print("✅ All correct!")
     }
@@ -161,7 +199,9 @@ struct FourWayComparisonTests {
         let algorithms: [(name: String, test: () -> DiffResult)] = [
             ("Brus", { MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .brus) }),
             ("Todd", { MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .todd) }),
-            ("Swift Native", { MultiLineDiff.createDiffUsingSwiftNativeMethods(source: source, destination: destination) })
+            ("Soda", { MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .soda) }),
+            ("Line", { MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .line) }),
+            ("Drew", { MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .drew) })
         ]
         
         for (name, test) in algorithms {

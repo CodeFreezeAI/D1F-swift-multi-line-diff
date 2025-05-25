@@ -11,7 +11,7 @@ import Foundation
 
 struct AlgorithmVerificationTests {
     
-    @Test("Verify Todd vs Brus algorithm selection")
+    @Test("Verify All Five Algorithm Selection")
     func verifyAlgorithmSelection() throws {
         let source = """
         struct User {
@@ -41,42 +41,74 @@ struct AlgorithmVerificationTests {
         let brusResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .brus)
         print("🔍 Brus Algorithm:")
         print("   Operations count: \(brusResult.operations.count)")
-        print("   Operations: \(brusResult.operations)")
+        print("   Operations: \(formatOperations(brusResult))")
         print("   Algorithm used: \(brusResult.metadata?.algorithmUsed ?? .brus)")
         
         // Explicitly test Todd algorithm
         let toddResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .todd)
         print("\n🔍 Todd Algorithm:")
         print("   Operations count: \(toddResult.operations.count)")
-        print("   Operations: \(toddResult.operations)")
+        print("   Operations: \(formatOperations(toddResult))")
         print("   Algorithm used: \(toddResult.metadata?.algorithmUsed ?? .todd)")
+        
+        // Explicitly test Soda algorithm
+        let sodaResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .soda)
+        print("\n🥤 Soda Algorithm:")
+        print("   Operations count: \(sodaResult.operations.count)")
+        print("   Operations: \(formatOperations(sodaResult))")
+        print("   Algorithm used: \(sodaResult.metadata?.algorithmUsed ?? .soda)")
+        
+        // Explicitly test Line algorithm
+        let lineResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .line)
+        print("\n📏 Line Algorithm:")
+        print("   Operations count: \(lineResult.operations.count)")
+        print("   Operations: \(formatOperations(lineResult))")
+        print("   Algorithm used: \(lineResult.metadata?.algorithmUsed ?? .line)")
+        
+        // Explicitly test Drew algorithm
+        let drewResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .drew)
+        print("\n🎨 Drew Algorithm:")
+        print("   Operations count: \(drewResult.operations.count)")
+        print("   Operations: \(formatOperations(drewResult))")
+        print("   Algorithm used: \(drewResult.metadata?.algorithmUsed ?? .drew)")
         
         // Test default algorithm selection
         let defaultResult = MultiLineDiff.createDiff(source: source, destination: destination)
         print("\n🔍 Default Algorithm:")
         print("   Operations count: \(defaultResult.operations.count)")
-        print("   Operations: \(defaultResult.operations)")
+        print("   Operations: \(formatOperations(defaultResult))")
         print("   Algorithm used: \(defaultResult.metadata?.algorithmUsed ?? .brus)")
         
         // Verify they produce correct results
         let applied1 = try MultiLineDiff.applyDiff(to: source, diff: brusResult)
         let applied2 = try MultiLineDiff.applyDiff(to: source, diff: toddResult)
-        let applied3 = try MultiLineDiff.applyDiff(to: source, diff: defaultResult)
+        let applied3 = try MultiLineDiff.applyDiff(to: source, diff: sodaResult)
+        let applied4 = try MultiLineDiff.applyDiff(to: source, diff: lineResult)
+        let applied5 = try MultiLineDiff.applyDiff(to: source, diff: drewResult)
+        let applied6 = try MultiLineDiff.applyDiff(to: source, diff: defaultResult)
         
         #expect(applied1 == destination, "Brus should produce correct result")
         #expect(applied2 == destination, "Todd should produce correct result")
-        #expect(applied3 == destination, "Default should produce correct result")
+        #expect(applied3 == destination, "Soda should produce correct result")
+        #expect(applied4 == destination, "Line should produce correct result")
+        #expect(applied5 == destination, "Drew should produce correct result")
+        #expect(applied6 == destination, "Default should produce correct result")
         
-        // Todd should typically have more operations than Brus for multi-line text
-        print("\n📊 Comparison:")
+        // Algorithm comparison
+        print("\n📊 All Algorithm Comparison:")
         print("   Brus operations: \(brusResult.operations.count)")
         print("   Todd operations: \(toddResult.operations.count)")
-        print("   Todd should have more operations for line-aware diffing")
+        print("   Soda operations: \(sodaResult.operations.count)")
+        print("   Line operations: \(lineResult.operations.count)")
+        print("   Drew operations: \(drewResult.operations.count)")
+        print("   Default operations: \(defaultResult.operations.count)")
         
-        // Check if Todd is actually producing more operations
-        if toddResult.operations.count <= brusResult.operations.count {
-            print("   ⚠️  WARNING: Todd has same or fewer operations than Brus!")
-            print("   This suggests Todd might not be running or is falling back to Brus")
-        }
+        // Performance characteristics
+        print("\n🔬 Algorithm Characteristics:")
+        print("   • Brus: Character-based, fast, simple operations")
+        print("   • Todd: Line-based, semantic, more detailed operations")
+        print("   • Soda: Swift prefix-based, optimized for common patterns")
+        print("   • Line: Swift line-based, balanced granularity")
+        print("   • Drew: Swift line+diff, Todd-compatible but faster")
     }
 } 

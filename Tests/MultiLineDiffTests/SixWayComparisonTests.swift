@@ -47,35 +47,35 @@ import Foundation
     
 
     
-    print("\n🟪 Testing Swift Native (Char) Algorithm (\(iterations) iterations)...")
-    let swiftNativeCharResults = testSixWayAlgorithmPerformance(
+    print("\n🥤 Testing Soda Algorithm (\(iterations) iterations)...")
+    let sodaResults = testSixWayAlgorithmPerformance(
         source: originalContent,
         destination: modifiedContent,
-        algorithmName: "Swift Native (Char)",
+        algorithmName: "Soda",
         testFunction: { source, dest in
-            MultiLineDiff.createDiffUsingSwiftNativeMethods(source: source, destination: dest)
+            MultiLineDiff.createDiff(source: source, destination: dest, algorithm: .soda)
         },
         iterations: iterations
     )
     
-    print("\n🟦 Testing Swift Native (Lines) Algorithm (\(iterations) iterations)...")
-    let swiftNativeLinesResults = testSixWayAlgorithmPerformance(
+    print("\n📏 Testing Line Algorithm (\(iterations) iterations)...")
+    let lineResults = testSixWayAlgorithmPerformance(
         source: originalContent,
         destination: modifiedContent,
-        algorithmName: "Swift Native (Lines)",
+        algorithmName: "Line",
         testFunction: { source, dest in
-            MultiLineDiff.createDiffUsingSwiftNativeLinesMethods(source: source, destination: dest)
+            MultiLineDiff.createDiff(source: source, destination: dest, algorithm: .line)
         },
         iterations: iterations
     )
     
-    print("\n🟩 Testing Swift Native (Lines+Diff) Algorithm (\(iterations) iterations)...")
-    let swiftNativeLinesDiffResults = testSixWayAlgorithmPerformance(
+    print("\n🎨 Testing Drew Algorithm (\(iterations) iterations)...")
+    let drewResults = testSixWayAlgorithmPerformance(
         source: originalContent,
         destination: modifiedContent,
-        algorithmName: "Swift Native (Lines+Diff)",
+        algorithmName: "Drew",
         testFunction: { source, dest in
-            MultiLineDiff.createDiffUsingSwiftNativeLinesWithDifferenceMethods(source: source, destination: dest)
+            MultiLineDiff.createDiff(source: source, destination: dest, algorithm: .drew)
         },
         iterations: iterations
     )
@@ -84,18 +84,18 @@ import Foundation
     printFiveWayAlgorithmResults(
         brusResults: brusResults,
         toddResults: toddResults,
-        swiftNativeCharResults: swiftNativeCharResults,
-        swiftNativeLinesResults: swiftNativeLinesResults,
-        swiftNativeLinesDiffResults: swiftNativeLinesDiffResults,
+        sodaResults: sodaResults,
+        lineResults: lineResults,
+        drewResults: drewResults,
         iterations: iterations
     )
     
     // Verify all algorithms produce correct results
     #expect(brusResults.finalResult == modifiedContent, "Brus algorithm should produce correct result")
     #expect(toddResults.finalResult == modifiedContent, "Todd algorithm should produce correct result")
-    #expect(swiftNativeCharResults.finalResult == modifiedContent, "Swift Native (Char) algorithm should produce correct result")
-    #expect(swiftNativeLinesResults.finalResult == modifiedContent, "Swift Native (Lines) algorithm should produce correct result")
-    #expect(swiftNativeLinesDiffResults.finalResult == modifiedContent, "Swift Native (Lines+Diff) algorithm should produce correct result")
+    #expect(sodaResults.finalResult == modifiedContent, "Soda algorithm should produce correct result")
+    #expect(lineResults.finalResult == modifiedContent, "Line algorithm should produce correct result")
+    #expect(drewResults.finalResult == modifiedContent, "Drew algorithm should produce correct result")
     
     print("\n✅ All algorithms produce correct results!")
 }
@@ -335,9 +335,9 @@ private func testSixWayAlgorithmPerformance(
 private func printFiveWayAlgorithmResults(
     brusResults: SixWayAlgorithmResults,
     toddResults: SixWayAlgorithmResults,
-    swiftNativeCharResults: SixWayAlgorithmResults,
-    swiftNativeLinesResults: SixWayAlgorithmResults,
-    swiftNativeLinesDiffResults: SixWayAlgorithmResults,
+    sodaResults: SixWayAlgorithmResults,
+    lineResults: SixWayAlgorithmResults,
+    drewResults: SixWayAlgorithmResults,
     iterations: Int
 ) {
     print("\n📊 PERFORMANCE RESULTS - ALL 5 ALGORITHMS (\(iterations) iterations)")
@@ -349,7 +349,7 @@ private func printFiveWayAlgorithmResults(
     print("│ Algorithm               │ Create (ms) │ Apply (ms)  │ Total (ms)  │ Operations  │")
     print("├─────────────────────────┼─────────────┼─────────────┼─────────────┼─────────────┤")
     
-    let algorithms = [brusResults, toddResults, swiftNativeCharResults, swiftNativeLinesResults, swiftNativeLinesDiffResults]
+    let algorithms = [brusResults, toddResults, sodaResults, lineResults, drewResults]
     
     for result in algorithms {
         let createMs = String(format: "%.3f", result.averageCreateTime * 1000)
@@ -409,12 +409,12 @@ private func printFiveWayAlgorithmResults(
     let sampleResults = [
         ("Brus", MultiLineDiff.createDiff(source: sampleSource, destination: sampleDest, algorithm: .brus)),
         ("Todd", MultiLineDiff.createDiff(source: sampleSource, destination: sampleDest, algorithm: .todd)),
-        ("Swift Native (Char)", MultiLineDiff.createDiffUsingSwiftNativeMethods(source: sampleSource, destination: sampleDest)),
-        ("Swift Native (Lines)", MultiLineDiff.createDiffUsingSwiftNativeLinesMethods(source: sampleSource, destination: sampleDest)),
-        ("Swift Native (Lines+Diff)", MultiLineDiff.createDiffUsingSwiftNativeLinesWithDifferenceMethods(source: sampleSource, destination: sampleDest))
+        ("Soda", MultiLineDiff.createDiff(source: sampleSource, destination: sampleDest, algorithm: .soda)),
+        ("Line", MultiLineDiff.createDiff(source: sampleSource, destination: sampleDest, algorithm: .line)),
+        ("Drew", MultiLineDiff.createDiff(source: sampleSource, destination: sampleDest, algorithm: .drew))
     ]
     
     for (name, result) in sampleResults {
-        print("  \(name): \(result.operations)")
+        print("  \(name): \(formatOperations(result))")
     }
 } 

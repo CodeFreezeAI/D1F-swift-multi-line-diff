@@ -218,8 +218,8 @@ extension MultiLineDiff {
             return [.delete(deleteCount)]
         }
         
-        // Use medium chunks for balanced operations (aim for 300-800 operations)
-        let chunkSize = max(1, min(sourceLines.count, destLines.count) / 20) // Medium chunks = balanced detail
+        // Use ultra-small chunks for detailed operations (aim for 500-700 operations)
+        let chunkSize = max(1, min(sourceLines.count, destLines.count) / 200) // Ultra-small chunks = detailed operations
         var operations: [DiffOperation] = []
         var sourceIndex = 0
         var destIndex = 0
@@ -231,13 +231,13 @@ extension MultiLineDiff {
             let sourceChunk = Array(sourceLines[sourceIndex..<sourceChunkEnd])
             let destChunk = Array(destLines[destIndex..<destChunkEnd])
             
-            // Check if chunks are similar enough to retain, otherwise replace as blocks
+            // Check if chunks are similar enough to retain, otherwise process with more detail
             if sourceChunk.count == destChunk.count && sourceChunk.elementsEqual(destChunk) {
                 // Chunks are identical - retain the entire chunk
                 let chunkCharCount = sourceChunk.map { $0.count }.reduce(0, +)
                 operations.append(.retain(chunkCharCount))
             } else {
-                // Chunks differ - replace as blocks for efficiency
+                // Chunks differ - use block operations for moderate detail
                 if !sourceChunk.isEmpty {
                     let deleteCount = sourceChunk.map { $0.count }.reduce(0, +)
                     operations.append(.delete(deleteCount))
