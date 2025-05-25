@@ -71,7 +71,7 @@ extension MultiLineDiff {
         return DiffResult(operations: consolidateLineOperations(operations))
     }
     
-    /// Create smart line operations that balance speed and detail
+    /// Create smart line operations that match Todd's line-by-line granularity
     @_optimize(speed)
     private static func createSmartLineOperations(
         sourceLines: [Substring],
@@ -93,40 +93,54 @@ extension MultiLineDiff {
             return [.delete(deleteCount)]
         }
         
-        // Group lines into chunks for processing (balance between granularity and efficiency)
-        let chunkSize = max(1, min(sourceLines.count, destLines.count) / 100) // Aim for ~100-200 operations
+        // Use CollectionDifference like Todd algorithm for same operation count
+        let difference = destLines.difference(from: sourceLines)
+        
+        // Create removal and insertion tracking arrays
+        var isRemoved = Array(repeating: false, count: sourceLines.count)
+        var isInserted = Array(repeating: false, count: destLines.count)
+        
+        // Mark removals and insertions
+        for change in difference {
+            switch change {
+            case .remove(let offset, _, _):
+                if offset >= 0 && offset < sourceLines.count {
+                    isRemoved[offset] = true
+                }
+            case .insert(let offset, _, _):
+                if offset >= 0 && offset < destLines.count {
+                    isInserted[offset] = true
+                }
+            }
+        }
+        
+        // Process line by line to match Todd's granularity
         var operations: [DiffOperation] = []
         var sourceIndex = 0
         var destIndex = 0
         
         while sourceIndex < sourceLines.count || destIndex < destLines.count {
-            let sourceChunkEnd = min(sourceIndex + chunkSize, sourceLines.count)
-            let destChunkEnd = min(destIndex + chunkSize, destLines.count)
-            
-            let sourceChunk = Array(sourceLines[sourceIndex..<sourceChunkEnd])
-            let destChunk = Array(destLines[destIndex..<destChunkEnd])
-            
-            // Check if chunks are identical
-            if sourceChunk.count == destChunk.count && sourceChunk.elementsEqual(destChunk) {
-                // Retain the entire chunk
-                let chunkCharCount = sourceChunk.map { $0.count }.reduce(0, +)
-                operations.append(.retain(chunkCharCount))
-                sourceIndex = sourceChunkEnd
-                destIndex = destChunkEnd
-            } else {
-                // Replace the chunk
-                if !sourceChunk.isEmpty {
-                    let deleteCount = sourceChunk.map { $0.count }.reduce(0, +)
-                    operations.append(.delete(deleteCount))
-                }
-                
-                if !destChunk.isEmpty {
-                    let insertText = destChunk.map { String($0) }.joined()
-                    operations.append(.insert(insertText))
-                }
-                
-                sourceIndex = sourceChunkEnd
-                destIndex = destChunkEnd
+            if sourceIndex < sourceLines.count && isRemoved[sourceIndex] {
+                // Delete this source line
+                operations.append(.delete(sourceLines[sourceIndex].count))
+                sourceIndex += 1
+            } else if destIndex < destLines.count && isInserted[destIndex] {
+                // Insert this destination line
+                operations.append(.insert(String(destLines[destIndex])))
+                destIndex += 1
+            } else if sourceIndex < sourceLines.count && destIndex < destLines.count {
+                // Retain this line (it's common)
+                operations.append(.retain(sourceLines[sourceIndex].count))
+                sourceIndex += 1
+                destIndex += 1
+            } else if sourceIndex < sourceLines.count {
+                // Delete remaining source lines
+                operations.append(.delete(sourceLines[sourceIndex].count))
+                sourceIndex += 1
+            } else if destIndex < destLines.count {
+                // Insert remaining destination lines
+                operations.append(.insert(String(destLines[destIndex])))
+                destIndex += 1
             }
         }
         
@@ -196,7 +210,7 @@ extension MultiLineDiff {
         return DiffResult(operations: consolidateLineOperations(operations))
     }
     
-    /// Create detailed line operations with fine-grained processing
+    /// Create detailed line operations that match Todd's line-by-line granularity
     @_optimize(speed)
     private static func createDetailedLineOperations(
         sourceLines: [Substring],
@@ -218,39 +232,55 @@ extension MultiLineDiff {
             return [.delete(deleteCount)]
         }
         
-        // Use ultra-small chunks for detailed operations (aim for 500-700 operations)
-        let chunkSize = max(1, min(sourceLines.count, destLines.count) / 200) // Ultra-small chunks = detailed operations
+        // Use CollectionDifference like Todd algorithm for same operation count
+        let difference = destLines.difference(from: sourceLines)
+        
+        // Create removal and insertion tracking arrays
+        var isRemoved = Array(repeating: false, count: sourceLines.count)
+        var isInserted = Array(repeating: false, count: destLines.count)
+        
+        // Mark removals and insertions
+        for change in difference {
+            switch change {
+            case .remove(let offset, _, _):
+                if offset >= 0 && offset < sourceLines.count {
+                    isRemoved[offset] = true
+                }
+            case .insert(let offset, _, _):
+                if offset >= 0 && offset < destLines.count {
+                    isInserted[offset] = true
+                }
+            }
+        }
+        
+        // Process line by line to match Todd's granularity
         var operations: [DiffOperation] = []
         var sourceIndex = 0
         var destIndex = 0
         
         while sourceIndex < sourceLines.count || destIndex < destLines.count {
-            let sourceChunkEnd = min(sourceIndex + chunkSize, sourceLines.count)
-            let destChunkEnd = min(destIndex + chunkSize, destLines.count)
-            
-            let sourceChunk = Array(sourceLines[sourceIndex..<sourceChunkEnd])
-            let destChunk = Array(destLines[destIndex..<destChunkEnd])
-            
-            // Check if chunks are similar enough to retain, otherwise process with more detail
-            if sourceChunk.count == destChunk.count && sourceChunk.elementsEqual(destChunk) {
-                // Chunks are identical - retain the entire chunk
-                let chunkCharCount = sourceChunk.map { $0.count }.reduce(0, +)
-                operations.append(.retain(chunkCharCount))
-            } else {
-                // Chunks differ - use block operations for moderate detail
-                if !sourceChunk.isEmpty {
-                    let deleteCount = sourceChunk.map { $0.count }.reduce(0, +)
-                    operations.append(.delete(deleteCount))
-                }
-                
-                if !destChunk.isEmpty {
-                    let insertText = destChunk.map { String($0) }.joined()
-                    operations.append(.insert(insertText))
-                }
+            if sourceIndex < sourceLines.count && isRemoved[sourceIndex] {
+                // Delete this source line
+                operations.append(.delete(sourceLines[sourceIndex].count))
+                sourceIndex += 1
+            } else if destIndex < destLines.count && isInserted[destIndex] {
+                // Insert this destination line
+                operations.append(.insert(String(destLines[destIndex])))
+                destIndex += 1
+            } else if sourceIndex < sourceLines.count && destIndex < destLines.count {
+                // Retain this line (it's common)
+                operations.append(.retain(sourceLines[sourceIndex].count))
+                sourceIndex += 1
+                destIndex += 1
+            } else if sourceIndex < sourceLines.count {
+                // Delete remaining source lines
+                operations.append(.delete(sourceLines[sourceIndex].count))
+                sourceIndex += 1
+            } else if destIndex < destLines.count {
+                // Insert remaining destination lines
+                operations.append(.insert(String(destLines[destIndex])))
+                destIndex += 1
             }
-            
-            sourceIndex = sourceChunkEnd
-            destIndex = destChunkEnd
         }
         
         return operations
