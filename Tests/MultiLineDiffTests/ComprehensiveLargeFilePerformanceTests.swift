@@ -23,22 +23,22 @@ import Foundation
     let iterations = 10  // Same as original test
     
     // Test all six algorithms
-    print("\n🔥 Testing Brus Algorithm (\(iterations) iterations)...")
+    print("\n🔥 Testing \(AlgorithmNames.zoom) Algorithm (\(iterations) iterations)...")
     let brusResults = testComprehensiveAlgorithmPerformance(
         source: originalContent,
         destination: modifiedContent,
-        algorithmName: "Brus",
+        algorithmName: AlgorithmNames.zoom,
         testFunction: { source, dest in
             MultiLineDiff.createDiff(source: source, destination: dest, algorithm: .zoom)
         },
         iterations: iterations
     )
     
-    print("\n🧠 Testing Todd Algorithm (\(iterations) iterations)...")
+    print("\n🧠 Testing \(AlgorithmNames.todd) Algorithm (\(iterations) iterations)...")
     let toddResults = testComprehensiveAlgorithmPerformance(
         source: originalContent,
         destination: modifiedContent,
-        algorithmName: "Todd",
+        algorithmName: AlgorithmNames.todd,
         testFunction: { source, dest in
             MultiLineDiff.createDiff(source: source, destination: dest, algorithm: .todd)
         },
@@ -47,33 +47,33 @@ import Foundation
     
 
     
-    print("\n🟪 Testing Soda Algorithm (\(iterations) iterations)...")
+    print("\n🟪 Testing \(AlgorithmNames.flash) Algorithm (\(iterations) iterations)...")
     let sodaResults = testComprehensiveAlgorithmPerformance(
         source: originalContent,
         destination: modifiedContent,
-        algorithmName: "Soda",
+        algorithmName: AlgorithmNames.flash,
         testFunction: { source, dest in
             MultiLineDiff.createDiff(source: source, destination: dest, algorithm: .flash)
         },
         iterations: iterations
     )
     
-    print("\n🟦 Testing Line Algorithm (\(iterations) iterations)...")
+    print("\n🟦 Testing \(AlgorithmNames.arrow) Algorithm (\(iterations) iterations)...")
     let lineResults = testComprehensiveAlgorithmPerformance(
         source: originalContent,
         destination: modifiedContent,
-        algorithmName: "Line",
+        algorithmName: AlgorithmNames.arrow,
         testFunction: { source, dest in
             MultiLineDiff.createDiff(source: source, destination: dest, algorithm: .arrow)
         },
         iterations: iterations
     )
     
-    print("\n🟩 Testing Drew Algorithm (\(iterations) iterations)...")
+    print("\n🟩 Testing \(AlgorithmNames.drew) Algorithm (\(iterations) iterations)...")
     let drewResults = testComprehensiveAlgorithmPerformance(
         source: originalContent,
         destination: modifiedContent,
-        algorithmName: "Drew",
+        algorithmName: AlgorithmNames.drew,
         testFunction: { source, dest in
             MultiLineDiff.createDiff(source: source, destination: dest, algorithm: .drew)
         },

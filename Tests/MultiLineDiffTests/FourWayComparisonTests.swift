@@ -49,11 +49,11 @@ struct FourWayComparisonTests {
         let lineResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .arrow)
         let drewResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .drew)
         
-        print("🟦 Brus: \(brusResult.operations.count) operations")
-        print("🟩 Todd: \(toddResult.operations.count) operations")
-        print("🥤 Soda: \(sodaResult.operations.count) operations")
-        print("📏 Line: \(lineResult.operations.count) operations")
-        print("🎨 Drew: \(drewResult.operations.count) operations")
+        print("🟦 \(AlgorithmNames.zoom): \(brusResult.operations.count) operations")
+        print("🟩 \(AlgorithmNames.todd): \(toddResult.operations.count) operations")
+        print("🥤 \(AlgorithmNames.flash): \(sodaResult.operations.count) operations")
+        print("📏 \(AlgorithmNames.arrow): \(lineResult.operations.count) operations")
+        print("🎨 \(AlgorithmNames.drew): \(drewResult.operations.count) operations")
         print()
         
         // Verify all produce correct results
@@ -63,11 +63,11 @@ struct FourWayComparisonTests {
         let appliedLine = try MultiLineDiff.applyDiff(to: source, diff: lineResult)
         let appliedDrew = try MultiLineDiff.applyDiff(to: source, diff: drewResult)
         
-        #expect(appliedBrus == destination, "Brus should produce correct result")
-        #expect(appliedTodd == destination, "Todd should produce correct result")
-        #expect(appliedSoda == destination, "Soda should produce correct result")
-        #expect(appliedLine == destination, "Line should produce correct result")
-        #expect(appliedDrew == destination, "Drew should produce correct result")
+        #expect(appliedBrus == destination, "\(AlgorithmNames.zoom) should produce correct result")
+        #expect(appliedTodd == destination, "\(AlgorithmNames.todd) should produce correct result")
+        #expect(appliedSoda == destination, "\(AlgorithmNames.flash) should produce correct result")
+        #expect(appliedLine == destination, "\(AlgorithmNames.arrow) should produce correct result")
+        #expect(appliedDrew == destination, "\(AlgorithmNames.drew) should produce correct result")
         
         print("✅ All algorithms produce correct results!")
         print()
@@ -111,35 +111,35 @@ struct FourWayComparisonTests {
         let drewTime = Date().timeIntervalSince(drewStart)
         
         print("🏁 Performance Comparison (\(iterations) iterations):")
-        print("   Brus: \(String(format: "%6.2f", brusTime * 1000))ms (\(String(format: "%.4f", (brusTime * 1000) / Double(iterations)))ms per op)")
-        print("   Todd: \(String(format: "%6.2f", toddTime * 1000))ms (\(String(format: "%.4f", (toddTime * 1000) / Double(iterations)))ms per op)")
-        print("   Soda: \(String(format: "%6.2f", sodaTime * 1000))ms (\(String(format: "%.4f", (sodaTime * 1000) / Double(iterations)))ms per op)")
-        print("   Line: \(String(format: "%6.2f", lineTime * 1000))ms (\(String(format: "%.4f", (lineTime * 1000) / Double(iterations)))ms per op)")
-        print("   Drew: \(String(format: "%6.2f", drewTime * 1000))ms (\(String(format: "%.4f", (drewTime * 1000) / Double(iterations)))ms per op)")
+        print("   \(AlgorithmNames.zoom): \(String(format: "%6.2f", brusTime * 1000))ms (\(String(format: "%.4f", (brusTime * 1000) / Double(iterations)))ms per op)")
+        print("   \(AlgorithmNames.todd): \(String(format: "%6.2f", toddTime * 1000))ms (\(String(format: "%.4f", (toddTime * 1000) / Double(iterations)))ms per op)")
+        print("   \(AlgorithmNames.flash): \(String(format: "%6.2f", sodaTime * 1000))ms (\(String(format: "%.4f", (sodaTime * 1000) / Double(iterations)))ms per op)")
+        print("   \(AlgorithmNames.arrow): \(String(format: "%6.2f", lineTime * 1000))ms (\(String(format: "%.4f", (lineTime * 1000) / Double(iterations)))ms per op)")
+        print("   \(AlgorithmNames.drew): \(String(format: "%6.2f", drewTime * 1000))ms (\(String(format: "%.4f", (drewTime * 1000) / Double(iterations)))ms per op)")
         
         // Calculate relative speeds
         let fastest = min(brusTime, toddTime, sodaTime, lineTime, drewTime)
         print("\n📊 Relative Speed (1.0 = fastest):")
-        print("   Brus: \(String(format: "%.2f", brusTime / fastest))x")
-        print("   Todd: \(String(format: "%.2f", toddTime / fastest))x")
-        print("   Soda: \(String(format: "%.2f", sodaTime / fastest))x")
-        print("   Line: \(String(format: "%.2f", lineTime / fastest))x")
-        print("   Drew: \(String(format: "%.2f", drewTime / fastest))x")
+        print("   \(AlgorithmNames.zoom): \(String(format: "%.2f", brusTime / fastest))x")
+        print("   \(AlgorithmNames.todd): \(String(format: "%.2f", toddTime / fastest))x")
+        print("   \(AlgorithmNames.flash): \(String(format: "%.2f", sodaTime / fastest))x")
+        print("   \(AlgorithmNames.arrow): \(String(format: "%.2f", lineTime / fastest))x")
+        print("   \(AlgorithmNames.drew): \(String(format: "%.2f", drewTime / fastest))x")
         
         print("\n📈 Operation Count Comparison:")
-        print("   Brus: \(brusResult.operations.count) operations")
-        print("   Todd: \(toddResult.operations.count) operations")
-        print("   Soda: \(sodaResult.operations.count) operations")
-        print("   Line: \(lineResult.operations.count) operations")
-        print("   Drew: \(drewResult.operations.count) operations")
+        print("   \(AlgorithmNames.zoom): \(brusResult.operations.count) operations")
+        print("   \(AlgorithmNames.todd): \(toddResult.operations.count) operations")
+        print("   \(AlgorithmNames.flash): \(sodaResult.operations.count) operations")
+        print("   \(AlgorithmNames.arrow): \(lineResult.operations.count) operations")
+        print("   \(AlgorithmNames.drew): \(drewResult.operations.count) operations")
         
         // Show the actual operations for comparison
         print("\n🔍 Operation Details:")
-        print("🟦 Brus: \(formatOperations(brusResult))")
-        print("🟩 Todd: \(formatOperations(toddResult))")
-        print("🥤 Soda: \(formatOperations(sodaResult))")
-        print("📏 Line: \(formatOperations(lineResult))")
-        print("🎨 Drew: \(formatOperations(drewResult))")
+        print("🟦 \(AlgorithmNames.zoom): \(formatOperations(brusResult))")
+        print("🟩 \(AlgorithmNames.todd): \(formatOperations(toddResult))")
+        print("🥤 \(AlgorithmNames.flash): \(formatOperations(sodaResult))")
+        print("📏 \(AlgorithmNames.arrow): \(formatOperations(lineResult))")
+        print("🎨 \(AlgorithmNames.drew): \(formatOperations(drewResult))")
     }
     
     @Test("Simple string test")
@@ -158,11 +158,11 @@ struct FourWayComparisonTests {
         let lineResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .arrow)
         let drewResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .drew)
         
-        print("🟦 Brus: \(formatOperations(brusResult))")
-        print("🟩 Todd: \(formatOperations(toddResult))")
-        print("🥤 Soda: \(formatOperations(sodaResult))")
-        print("📏 Line: \(formatOperations(lineResult))")
-        print("🎨 Drew: \(formatOperations(drewResult))")
+        print("🟦 \(AlgorithmNames.zoom): \(formatOperations(brusResult))")
+        print("🟩 \(AlgorithmNames.todd): \(formatOperations(toddResult))")
+        print("🥤 \(AlgorithmNames.flash): \(formatOperations(sodaResult))")
+        print("📏 \(AlgorithmNames.arrow): \(formatOperations(lineResult))")
+        print("🎨 \(AlgorithmNames.drew): \(formatOperations(drewResult))")
         
         // Verify correctness
         let appliedBrus = try MultiLineDiff.applyDiff(to: source, diff: brusResult)
@@ -171,11 +171,11 @@ struct FourWayComparisonTests {
         let appliedLine = try MultiLineDiff.applyDiff(to: source, diff: lineResult)
         let appliedDrew = try MultiLineDiff.applyDiff(to: source, diff: drewResult)
         
-        #expect(appliedBrus == destination, "Brus should work")
-        #expect(appliedTodd == destination, "Todd should work")
-        #expect(appliedSoda == destination, "Soda should work")
-        #expect(appliedLine == destination, "Line should work")
-        #expect(appliedDrew == destination, "Drew should work")
+        #expect(appliedBrus == destination, "\(AlgorithmNames.zoom) should work")
+        #expect(appliedTodd == destination, "\(AlgorithmNames.todd) should work")
+        #expect(appliedSoda == destination, "\(AlgorithmNames.flash) should work")
+        #expect(appliedLine == destination, "\(AlgorithmNames.arrow) should work")
+        #expect(appliedDrew == destination, "\(AlgorithmNames.drew) should work")
         
         print("✅ All correct!")
     }
@@ -197,11 +197,11 @@ struct FourWayComparisonTests {
         
         // Test each algorithm
         let algorithms: [(name: String, test: () -> DiffResult)] = [
-            ("Brus", { MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .zoom) }),
-            ("Todd", { MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .todd) }),
-            ("Soda", { MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .flash) }),
-            ("Line", { MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .arrow) }),
-            ("Drew", { MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .drew) })
+            (AlgorithmNames.zoom, { MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .zoom) }),
+            (AlgorithmNames.todd, { MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .todd) }),
+            (AlgorithmNames.flash, { MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .flash) }),
+            (AlgorithmNames.arrow, { MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .arrow) }),
+            (AlgorithmNames.drew, { MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .drew) })
         ]
         
         for (name, test) in algorithms {

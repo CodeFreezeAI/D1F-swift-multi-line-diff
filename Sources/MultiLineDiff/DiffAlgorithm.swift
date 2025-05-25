@@ -5,6 +5,21 @@
 //  Created by Todd Bruss on 5/24/25.
 //
 
+/// Global algorithm names to eliminate hardcoded strings throughout the project
+public struct AlgorithmNames {
+    public static let zoom = "Zoom"
+    public static let todd = "Todd"
+    public static let flash = "Flash"
+    public static let arrow = "Arrow"
+    public static let drew = "Drew"
+    
+    /// Legacy names for backward compatibility
+    public struct Legacy {
+        public static let brus = "Brus"
+        public static let soda = "Soda"
+        public static let line = "Line"
+    }
+}
 
 /// Represents the available diff algorithms
 @frozen public enum DiffAlgorithm: String, Sendable, Codable {
@@ -22,11 +37,11 @@
     /// Display name for the algorithm
     public var displayName: String {
         switch self {
-        case .zoom: return "Zoom"
-        case .todd: return "Todd"
-        case .flash: return "Flash"
-        case .arrow: return "Arrow"
-        case .drew: return "Drew"
+        case .zoom: return AlgorithmNames.zoom
+        case .todd: return AlgorithmNames.todd
+        case .flash: return AlgorithmNames.flash
+        case .arrow: return AlgorithmNames.arrow
+        case .drew: return AlgorithmNames.drew
         }
     }
     

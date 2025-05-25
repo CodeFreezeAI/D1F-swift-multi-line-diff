@@ -23,22 +23,22 @@ import Foundation
     let iterations = 100
     
     // Test all six algorithms
-    print("\n🔥 Testing Brus Algorithm (\(iterations) iterations)...")
+    print("\n🔥 Testing \(AlgorithmNames.zoom) Algorithm (\(iterations) iterations)...")
     let brusResults = testSixWayAlgorithmPerformance(
         source: originalContent,
         destination: modifiedContent,
-        algorithmName: "Brus",
+        algorithmName: AlgorithmNames.zoom,
         testFunction: { source, dest in
             MultiLineDiff.createDiff(source: source, destination: dest, algorithm: .zoom)
         },
         iterations: iterations
     )
     
-    print("\n🧠 Testing Todd Algorithm (\(iterations) iterations)...")
+    print("\n🧠 Testing \(AlgorithmNames.todd) Algorithm (\(iterations) iterations)...")
     let toddResults = testSixWayAlgorithmPerformance(
         source: originalContent,
         destination: modifiedContent,
-        algorithmName: "Todd",
+        algorithmName: AlgorithmNames.todd,
         testFunction: { source, dest in
             MultiLineDiff.createDiff(source: source, destination: dest, algorithm: .todd)
         },
@@ -47,33 +47,33 @@ import Foundation
     
 
     
-    print("\n🥤 Testing Soda Algorithm (\(iterations) iterations)...")
+    print("\n🥤 Testing \(AlgorithmNames.flash) Algorithm (\(iterations) iterations)...")
     let sodaResults = testSixWayAlgorithmPerformance(
         source: originalContent,
         destination: modifiedContent,
-        algorithmName: "Soda",
+        algorithmName: AlgorithmNames.flash,
         testFunction: { source, dest in
             MultiLineDiff.createDiff(source: source, destination: dest, algorithm: .flash)
         },
         iterations: iterations
     )
     
-    print("\n📏 Testing Line Algorithm (\(iterations) iterations)...")
+    print("\n📏 Testing \(AlgorithmNames.arrow) Algorithm (\(iterations) iterations)...")
     let lineResults = testSixWayAlgorithmPerformance(
         source: originalContent,
         destination: modifiedContent,
-        algorithmName: "Line",
+        algorithmName: AlgorithmNames.arrow,
         testFunction: { source, dest in
             MultiLineDiff.createDiff(source: source, destination: dest, algorithm: .arrow)
         },
         iterations: iterations
     )
     
-    print("\n🎨 Testing Drew Algorithm (\(iterations) iterations)...")
+    print("\n🎨 Testing \(AlgorithmNames.drew) Algorithm (\(iterations) iterations)...")
     let drewResults = testSixWayAlgorithmPerformance(
         source: originalContent,
         destination: modifiedContent,
-        algorithmName: "Drew",
+        algorithmName: AlgorithmNames.drew,
         testFunction: { source, dest in
             MultiLineDiff.createDiff(source: source, destination: dest, algorithm: .drew)
         },
@@ -91,11 +91,11 @@ import Foundation
     )
     
     // Verify all algorithms produce correct results
-    #expect(brusResults.finalResult == modifiedContent, "Brus algorithm should produce correct result")
-    #expect(toddResults.finalResult == modifiedContent, "Todd algorithm should produce correct result")
-    #expect(sodaResults.finalResult == modifiedContent, "Soda algorithm should produce correct result")
-    #expect(lineResults.finalResult == modifiedContent, "Line algorithm should produce correct result")
-    #expect(drewResults.finalResult == modifiedContent, "Drew algorithm should produce correct result")
+    #expect(brusResults.finalResult == modifiedContent, "\(AlgorithmNames.zoom) algorithm should produce correct result")
+    #expect(toddResults.finalResult == modifiedContent, "\(AlgorithmNames.todd) algorithm should produce correct result")
+    #expect(sodaResults.finalResult == modifiedContent, "\(AlgorithmNames.flash) algorithm should produce correct result")
+    #expect(lineResults.finalResult == modifiedContent, "\(AlgorithmNames.arrow) algorithm should produce correct result")
+    #expect(drewResults.finalResult == modifiedContent, "\(AlgorithmNames.drew) algorithm should produce correct result")
     
     print("\n✅ All algorithms produce correct results!")
 }
@@ -407,11 +407,11 @@ private func printFiveWayAlgorithmResults(
     let sampleDest = "Hello Swift World\nLine 2 Modified\nLine 3"
     
     let sampleResults = [
-        ("Brus", MultiLineDiff.createDiff(source: sampleSource, destination: sampleDest, algorithm: .zoom)),
-        ("Todd", MultiLineDiff.createDiff(source: sampleSource, destination: sampleDest, algorithm: .todd)),
-        ("Soda", MultiLineDiff.createDiff(source: sampleSource, destination: sampleDest, algorithm: .flash)),
-        ("Line", MultiLineDiff.createDiff(source: sampleSource, destination: sampleDest, algorithm: .arrow)),
-        ("Drew", MultiLineDiff.createDiff(source: sampleSource, destination: sampleDest, algorithm: .drew))
+        (AlgorithmNames.zoom, MultiLineDiff.createDiff(source: sampleSource, destination: sampleDest, algorithm: .zoom)),
+        (AlgorithmNames.todd, MultiLineDiff.createDiff(source: sampleSource, destination: sampleDest, algorithm: .todd)),
+        (AlgorithmNames.flash, MultiLineDiff.createDiff(source: sampleSource, destination: sampleDest, algorithm: .flash)),
+        (AlgorithmNames.arrow, MultiLineDiff.createDiff(source: sampleSource, destination: sampleDest, algorithm: .arrow)),
+        (AlgorithmNames.drew, MultiLineDiff.createDiff(source: sampleSource, destination: sampleDest, algorithm: .drew))
     ]
     
     for (name, result) in sampleResults {

@@ -686,7 +686,7 @@ func demonstrateAlgorithmComparison() -> Bool {
        print("Modified Code Length: \(modifiedCode.count) chars")
        print("Total Runs: \(runs)")
        
-       print("\n--- Zoom Algorithm ---")
+       print("\n--- \(AlgorithmNames.zoom) Algorithm ---")
        print("Total Operations: \(brusStat.totalOperations)")
        print("  - Retain Operations: \(brusStat.retainCount) (\(brusStat.retainChars) chars)")
        print("  - Insert Operations: \(brusStat.insertCount) (\(brusStat.insertChars) chars)")
@@ -695,7 +695,7 @@ func demonstrateAlgorithmComparison() -> Bool {
        print("  - Apply Diff Time: \(String(format: "%.4f", brusMeasurement.applyDiffTime)) ms")
        print("  - Total Time: \(String(format: "%.4f", brusMeasurement.totalTime)) ms")
        
-       print("\n--- Todd Algorithm ---")
+       print("\n--- \(AlgorithmNames.todd) Algorithm ---")
        print("Total Operations: \(toddStat.totalOperations)")
        print("  - Retain Operations: \(toddStat.retainCount) (\(toddStat.retainChars) chars)")
        print("  - Insert Operations: \(toddStat.insertCount) (\(toddStat.insertChars) chars)")
@@ -704,7 +704,7 @@ func demonstrateAlgorithmComparison() -> Bool {
        print("  - Apply Diff Time: \(String(format: "%.4f", toddMeasurement.applyDiffTime)) ms")
        print("  - Total Time: \(String(format: "%.4f", toddMeasurement.totalTime)) ms")
        
-       print("\n--- Flash Algorithm ---")
+       print("\n--- \(AlgorithmNames.flash) Algorithm ---")
        print("Total Operations: \(sodaStat.totalOperations)")
        print("  - Retain Operations: \(sodaStat.retainCount) (\(sodaStat.retainChars) chars)")
        print("  - Insert Operations: \(sodaStat.insertCount) (\(sodaStat.insertChars) chars)")
@@ -713,7 +713,7 @@ func demonstrateAlgorithmComparison() -> Bool {
        print("  - Apply Diff Time: \(String(format: "%.4f", sodaMeasurement.applyDiffTime)) ms")
        print("  - Total Time: \(String(format: "%.4f", sodaMeasurement.totalTime)) ms")
        
-       print("\n--- Arrow Algorithm ---")
+       print("\n--- \(AlgorithmNames.arrow) Algorithm ---")
        print("Total Operations: \(lineStat.totalOperations)")
        print("  - Retain Operations: \(lineStat.retainCount) (\(lineStat.retainChars) chars)")
        print("  - Insert Operations: \(lineStat.insertCount) (\(lineStat.insertChars) chars)")
@@ -722,7 +722,7 @@ func demonstrateAlgorithmComparison() -> Bool {
        print("  - Apply Diff Time: \(String(format: "%.4f", lineMeasurement.applyDiffTime)) ms")
        print("  - Total Time: \(String(format: "%.4f", lineMeasurement.totalTime)) ms")
        
-       print("\n--- Drew Algorithm ---")
+       print("\n--- \(AlgorithmNames.drew) Algorithm ---")
        print("Total Operations: \(drewStat.totalOperations)")
        print("  - Retain Operations: \(drewStat.retainCount) (\(drewStat.retainChars) chars)")
        print("  - Insert Operations: \(drewStat.insertCount) (\(drewStat.insertChars) chars)")
@@ -733,11 +733,11 @@ func demonstrateAlgorithmComparison() -> Bool {
        
        // Performance comparison across all algorithms
        let measurements = [
-           ("Zoom", brusMeasurement),
-           ("Todd", toddMeasurement),
-           ("Flash", sodaMeasurement),
-           ("Arrow", lineMeasurement),
-           ("Drew", drewMeasurement)
+           (AlgorithmNames.zoom, brusMeasurement),
+           (AlgorithmNames.todd, toddMeasurement),
+           (AlgorithmNames.flash, sodaMeasurement),
+           (AlgorithmNames.arrow, lineMeasurement),
+           (AlgorithmNames.drew, drewMeasurement)
        ]
        
        let fastestCreateDiff = measurements.min { $0.1.createDiffTime < $1.1.createDiffTime }!
