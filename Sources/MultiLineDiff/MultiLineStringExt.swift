@@ -33,11 +33,30 @@ public extension String {
             .count
     }
     
-    /// Swift 6.1 enhanced Unicode-aware line splitting
+    /// Swift 6.1 enhanced Unicode-aware line splitting that preserves newlines
     @_optimize(speed)
     var efficientLines: [Substring] {
-        // Leverage Swift 6.1's improved string splitting performance
-        return self.split(separator: "\n", omittingEmptySubsequences: false)
+        // Use components(separatedBy:) to preserve the original character structure
+        // This ensures that newlines are accounted for correctly in character counting
+        guard !isEmpty else { return [] }
+        
+        var lines: [Substring] = []
+        var currentIndex = startIndex
+        
+        while currentIndex < endIndex {
+            if let newlineIndex = self[currentIndex...].firstIndex(of: "\n") {
+                // Include the newline character in the line
+                let lineEndIndex = index(after: newlineIndex)
+                lines.append(self[currentIndex..<lineEndIndex])
+                currentIndex = lineEndIndex
+            } else {
+                // Last line without newline
+                lines.append(self[currentIndex...])
+                break
+            }
+        }
+        
+        return lines
     }
     
     /// Memory-efficient character access using Swift 6.1 features

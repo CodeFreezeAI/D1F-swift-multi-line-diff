@@ -42,10 +42,12 @@ extension MultiLineDiff {
             if appliedResult == destination {
                 return (toddResult, .todd)
             } else {
+                print("Todd similarity: \(DiffAlgorithmCore.AlgorithmSelector.calculateSimilarity(source: appliedResult, destination: destination)) < 0.98, falling back to Brus")
                 // Fallback to enhanced Brus
                 return (createEnhancedBrusDiff(source: source, destination: destination), .brus)
             }
         } catch {
+            print("Todd algorithm failed with error: \(error), falling back to Brus")
             // Fallback to enhanced Brus
             return (createEnhancedBrusDiff(source: source, destination: destination), .brus)
         }
@@ -133,28 +135,19 @@ extension MultiLineDiff {
         for operation in lcsOperations {
             switch operation {
             case .retain(let i):
-                // Properly handle newlines based on original source string
+                // Lines now include newlines, so use the exact character count
                 let line = sourceLines[i]
-                let isLastLine = (i == sourceLines.count - 1)
-                let shouldAddNewline = !isLastLine || (isLastLine && sourceEndsWithNewline)
-                let charCount = line.count + (shouldAddNewline ? 1 : 0)
-                builder.addRetain(count: charCount)
+                builder.addRetain(count: line.count)
                 
             case .delete(let i):
-                // Properly handle newlines based on original source string
+                // Lines now include newlines, so use the exact character count
                 let line = sourceLines[i]
-                let isLastLine = (i == sourceLines.count - 1)
-                let shouldAddNewline = !isLastLine || (isLastLine && sourceEndsWithNewline)
-                let charCount = line.count + (shouldAddNewline ? 1 : 0)
-                builder.addDelete(count: charCount)
+                builder.addDelete(count: line.count)
                 
             case .insert(let i):
-                // Properly handle newlines based on original destination string
+                // Lines now include newlines, so use the exact text
                 let line = destLines[i]
-                let isLastLine = (i == destLines.count - 1)
-                let shouldAddNewline = !isLastLine || (isLastLine && destEndsWithNewline)
-                let lineText = String(line) + (shouldAddNewline ? "\n" : "")
-                builder.addInsert(text: lineText)
+                builder.addInsert(text: String(line))
             }
         }
         
@@ -169,29 +162,20 @@ extension MultiLineDiff {
         
         while srcIdx < sourceLines.count || dstIdx < destLines.count {
             if srcIdx < sourceLines.count && dstIdx < destLines.count && sourceLines[srcIdx] == destLines[dstIdx] {
-                // Lines match - retain (individual line)
+                // Lines match - retain (lines now include newlines)
                 let line = sourceLines[srcIdx]
-                let isLastLine = (srcIdx == sourceLines.count - 1)
-                let shouldAddNewline = !isLastLine || (isLastLine && sourceEndsWithNewline)
-                let charCount = line.count + (shouldAddNewline ? 1 : 0)
-                builder.addRetain(count: charCount)
+                builder.addRetain(count: line.count)
                 srcIdx += 1
                 dstIdx += 1
             } else if srcIdx < sourceLines.count && (dstIdx >= destLines.count || sourceLines[srcIdx] != destLines[dstIdx]) {
-                // Delete source line (individual line)
+                // Delete source line (lines now include newlines)
                 let line = sourceLines[srcIdx]
-                let isLastLine = (srcIdx == sourceLines.count - 1)
-                let shouldAddNewline = !isLastLine || (isLastLine && sourceEndsWithNewline)
-                let charCount = line.count + (shouldAddNewline ? 1 : 0)
-                builder.addDelete(count: charCount)
+                builder.addDelete(count: line.count)
                 srcIdx += 1
             } else if dstIdx < destLines.count {
-                // Insert destination line (individual line)
+                // Insert destination line (lines now include newlines)
                 let line = destLines[dstIdx]
-                let isLastLine = (dstIdx == destLines.count - 1)
-                let shouldAddNewline = !isLastLine || (isLastLine && destEndsWithNewline)
-                let lineText = String(line) + (shouldAddNewline ? "\n" : "")
-                builder.addInsert(text: lineText)
+                builder.addInsert(text: String(line))
                 dstIdx += 1
             }
         }
