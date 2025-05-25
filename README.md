@@ -1,5 +1,11 @@
 # 🔍 MultiLineDiff
 
+[![Swift 6.1](https://img.shields.io/badge/Swift-6.1-orange.svg)](https://swift.org)
+[![Website](https://img.shields.io/badge/website-xcf.ai-blue.svg)](https://xcf.ai)
+[![Version](https://img.shields.io/badge/version-1.3.3-green.svg)](https://github.com/codefreezeai/swift-multi-line-diff)
+[![GitHub stars](https://img.shields.io/github/stars/codefreezeai/swift-multi-line-diff.svg?style=social)](https://github.com/codefreezeai/swift-multi-line-diff/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/codefreezeai/swift-multi-line-diff.svg?style=social)](https://github.com/codefreezeai/swift-multi-line-diff/network)
+
 **Advanced multi-line string diffing with semantic-aware algorithms and intelligent application detection.**
 
 A powerful, performance-optimized Swift package that provides sophisticated multi-line string comparison and modification capabilities. Features dual-algorithm support with automatic source type detection, comprehensive metadata, and enterprise-grade reliability.
@@ -43,7 +49,7 @@ print(result == destination) // true
 ## 🎯 Visual Diff Examples
 
 ### Example 1: Simple Text Changes
-```
+```swift
 Source:      "Hello, world!"
 Destination: "Hello, Swift!"
 
@@ -71,11 +77,11 @@ func calculate(a: Int, b: Int) -> Int {
 }
 
 // OPERATIONS (Todd Algorithm - Line Granular)
-┌──────────────────────────────────────────────────────────────┐
-│ RETAIN(40)           │ INSERT(31)              │ RETAIN(17)  │
-│  func calculate(...  │ // Enhanced calc        │ return...   │
-│  return "            │  let result = a + b\n   │             │
-└──────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────┐
+│ RETAIN(40)          │ INSERT(31)             │ RETAIN(17)  │
+│ func calculate(...  │ ... Enhanced calc      │ return...   │
+│ return              │ let result = a + b\n   │             │
+└────────────────────────────────────────────────────────────┘
 ```
 
 ### Example 3: Algorithm Comparison - Real Differences
@@ -102,28 +108,28 @@ func processUser() -> User {
 ```
 
 **Brus Algorithm (4 Bulk Operations)**
-```
-┌───────────────────────────────────────────────────────────────────---------------──┐
-│ 1. RETAIN(19)          │ 2. DELETE(101)         │ 3. INSERT(163)    │ 4. RETAIN(2) │
-│  func processUser() {  │ Delete original body   │ "-> User {\n      │    \n}       │
-│  \n    let user =      │ {\n    let user...     │     let user =... │              │
-│                        │ return user\n}"        │ return validated" │              │
-└──────────────────────────────────────────────────────────────────===============───┘
+```swift
+┌────────────────────────────────────────────────────────────────────────────────-──┐
+│ 1. RETAIN(19)         │ 2. DELETE(101)         │ 3. INSERT(163)    │ 4. RETAIN(2) │
+│ func processUser() {  │ Delete original body   │ -> User {\n       │ \n}          │
+│ \n    let user =      │ {\n    let user...     │    let user = ... │              │
+│                       │ return user\n}         │ return validated  │              │
+└───────────────────────────────────────────────────────────────────────────────────┘
 
 🔥 Result: 4 operations, ultra-fast bulk replacement
 ```
 
 **Todd Algorithm (6 Line-Aware Operations)**  
-```
+```swift
 ┌─────────────────────────────────────────────────────────────────────┐
 │ 1. DELETE(21)          │ 2. INSERT(29)          │ 3. RETAIN(32)     │
-│ func processUser() {   │  func processUser()    │ let user =        │
+│ func processUser() {   │ func processUser()     │ let user =        │
 │                        │ -> User {\n            │ getCurrentUser()  │
-│-------------------------------------------------------------------- │
+│─────────────────────────────────────────────────────────────────────│
 │ 4. DELETE(68)          │ 5. INSERT(122)         │ 6. RETAIN(1)      │
 │ \n    print(\Process   │ \n    print(\Process   │ \n                │
 │ ing user\)\n...return  │ ing user data\)...     │ return validated  │
-│ user"                  │ return validated"      │                   │
+│ user                   │ return validated       │                   │
 └─────────────────────────────────────────────────────────────────────┘
 
 🧠 Result: 6 operations, line-by-line semantic processing
@@ -131,15 +137,15 @@ func processUser() -> User {
 
 **Key Differences:**
 - **Brus**: Treats entire change as 4 bulk character operations
-- **Todd**: Processes with 6 semantic operations, more granular  
-- **Both**: Produce identical final code ✅
+- **Todd**: Processes with 6+ semantic operations, more granular  
+- **Both**: Produce identical final code, complete with line endings and leading whitespace ✅
 - **Use Case**: Brus for speed, Todd for detailed change tracking
 
 ## 📊 Performance Comparison
 
 | Algorithm | Speed (Small Files) | Speed (Large Files) | Operations | Use Case |
 |-----------|--------------------|--------------------|------------|----------|
-| **Brus** | ⚡ 0.11ms | ⚡ 17ms | 📦 Bulk (3-5) | Speed Critical |
+| **Brus** | ⚡ 0.11ms | ⚡ 17ms | 📦 Bulk (4) | Speed Critical |
 | **Todd** | 🏃 0.22ms | 🏃 45ms | 🔬 Granular (1000s) | Semantic Aware |
 
 Both algorithms guarantee **100% identical final results**.
@@ -151,7 +157,7 @@ Add to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/toddbruss/swift-multi-line-diff.git", from: "1.3.2")
+    .package(url: "https://github.com/toddbruss/swift-multi-line-diff.git", from: "1.3.3")
 ]
 ```
 
@@ -251,7 +257,7 @@ let diff = MultiLineDiff.createDiff(
     source: section2,
     destination: modifiedSection,
     includeMetadata: true,
-    sourceStartLine: 3 // Section starts at line 3
+    sourceStartLine: 3 // Section starts at line 3 (optional)
 )
 
 // Apply to full document (automatically handles section matching)
@@ -300,7 +306,7 @@ print("Diff is valid: \(isValid)")
 ## 🔬 Algorithm Deep Dive
 
 ### Brus Algorithm - Bulk Operations
-```
+```swift
 ┌─────────────────────────────────────────────┐
 │                BRUS ALGORITHM               │
 │  ┌─────────┐    ┌─────────┐    ┌─────────┐  │
@@ -317,15 +323,16 @@ print("Diff is valid: \(isValid)")
 ```
 
 ### Todd Algorithm - Line-Aware Processing
-```
+```swift
 ┌──────────────────────────────────────────────┐
 │               TODD ALGORITHM                 │
 │                                              │
 │  Line 1: ────────────────────── RETAIN       │
 │  Line 2: ─┬─ DELETE old line                 │
-│          └─ INSERT new line                  │
-│  Line 3: ────────────────────── RETAIN       |
-│  Line 4: ────────────────────── INSERT (new) |
+│           └─ INSERT new line                 │
+│  Line 1: ────────────────────── RETAIN       │
+│  Line 3: ────────────────────── RETAIN       │
+│  Line 4: ────────────────────── INSERT (new) │
 │                                              │
 │  Semantic line operations:                   │
 │  • Processes line-by-line                    │
@@ -356,7 +363,7 @@ Adds new `text` content at the current position.
 Removes `count` characters from the source.
 
 ### Example Operation Sequence
-```
+```swift
 Source: "Hello, world!"
 Dest:   "Hello, Swift world!"
 
@@ -413,7 +420,7 @@ let diff = MultiLineDiff.createDiff(
     source: "## Old Section\nOld content",
     destination: updatedSection,
     includeMetadata: true,
-    sourceStartLine: 42
+    sourceStartLine: 42 // Optional, uses metadata diff to locate section
 )
 
 // Apply to full README
@@ -464,7 +471,7 @@ do {
 ## 🏆 Performance Benchmarks
 
 ### Large File Performance (10,000 lines)
-```
+```swift
 📊 Brus Algorithm:
 • Create Diff: 17ms
 • Apply Diff: 7ms  
@@ -481,7 +488,7 @@ do {
 ```
 
 ### Memory Usage Comparison
-```
+```swift
 Small Files    (< 1KB):  📱 ~50KB peak memory
 Medium Files (< 100KB):  📱 ~200KB peak memory  
 Large Files   (< 10MB):  📱 ~2MB peak memory
@@ -495,7 +502,7 @@ Large Files   (< 10MB):  📱 ~2MB peak memory
 We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
 
 ### Development Setup
-```bash
+```swift
 git clone https://github.com/toddbruss/swift-multi-line-diff.git
 cd swift-multi-line-diff
 swift test  # Run all tests
