@@ -19,6 +19,7 @@ func runTest(_ name: String, _ test: () throws -> Bool) {
     print("")
 }
 
+
 // Test empty strings
 runTest("Empty Strings") {
    let result = MultiLineDiff.createDiff(source: "", destination: "")

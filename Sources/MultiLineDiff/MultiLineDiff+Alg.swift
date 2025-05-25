@@ -209,11 +209,9 @@ extension MultiLineDiff {
             return handleEmptyCases(srcCount: S, dstCount: D)
         }
         
+        
         // Use Swift's built-in optimized difference algorithm
         let difference = destLines.difference(from: sourceLines)
-        
-        print(difference)
-        
         
         // Pre-allocate operations array for better performance
         var operations: [EnhancedLineOperation] = []
