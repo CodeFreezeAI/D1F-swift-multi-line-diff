@@ -52,39 +52,14 @@ extension MultiLineDiff {
             operations.append(.retain(prefixCharCount))
         }
         
-        // Handle middle section with simple but efficient approach
+        // Handle middle section with smart line-by-line operations
         if !sourceMiddleLines.isEmpty || !destMiddleLines.isEmpty {
-            // Apply prefix/suffix optimization to the middle section as well
-            let middlePrefixCount = findCommonPrefixCount(sourceMiddleLines, destMiddleLines)
-            let sourceAfterMiddlePrefix = Array(sourceMiddleLines.dropFirst(middlePrefixCount))
-            let destAfterMiddlePrefix = Array(destMiddleLines.dropFirst(middlePrefixCount))
-            
-            let middleSuffixCount = findCommonSuffixCount(sourceAfterMiddlePrefix, destAfterMiddlePrefix)
-            let sourceCore = Array(sourceAfterMiddlePrefix.dropLast(middleSuffixCount))
-            let destCore = Array(destAfterMiddlePrefix.dropLast(middleSuffixCount))
-            
-            // Retain middle prefix
-            if middlePrefixCount > 0 {
-                let prefixCharCount = sourceMiddleLines.prefix(middlePrefixCount).map { $0.count }.reduce(0, +)
-                operations.append(.retain(prefixCharCount))
-            }
-            
-            // Handle core differences with bulk operations
-            if !sourceCore.isEmpty {
-                let deleteCount = sourceCore.map { $0.count }.reduce(0, +)
-                operations.append(.delete(deleteCount))
-            }
-            
-            if !destCore.isEmpty {
-                let insertText = destCore.map { String($0) }.joined()
-                operations.append(.insert(insertText))
-            }
-            
-            // Retain middle suffix
-            if middleSuffixCount > 0 {
-                let suffixCharCount = sourceAfterMiddlePrefix.suffix(middleSuffixCount).map { $0.count }.reduce(0, +)
-                operations.append(.retain(suffixCharCount))
-            }
+            // Use a simple line matching approach that creates reasonable operation counts
+            let middleOperations = createSmartLineOperations(
+                sourceLines: sourceMiddleLines,
+                destLines: destMiddleLines
+            )
+            operations.append(contentsOf: middleOperations)
         }
         
         // Retain common suffix lines
@@ -96,9 +71,9 @@ extension MultiLineDiff {
         return DiffResult(operations: consolidateLineOperations(operations))
     }
     
-    /// Create intelligent line-by-line diff without using CollectionDifference
+    /// Create smart line operations that balance speed and detail
     @_optimize(speed)
-    private static func createIntelligentLineByLineDiff(
+    private static func createSmartLineOperations(
         sourceLines: [Substring],
         destLines: [Substring]
     ) -> [DiffOperation] {
@@ -118,82 +93,47 @@ extension MultiLineDiff {
             return [.delete(deleteCount)]
         }
         
-        // Use a simple but efficient line matching approach
+        // Group lines into chunks for processing (balance between granularity and efficiency)
+        let chunkSize = max(1, min(sourceLines.count, destLines.count) / 100) // Aim for ~100-200 operations
         var operations: [DiffOperation] = []
         var sourceIndex = 0
         var destIndex = 0
         
-        // Process lines by finding exact matches and handling differences
         while sourceIndex < sourceLines.count || destIndex < destLines.count {
+            let sourceChunkEnd = min(sourceIndex + chunkSize, sourceLines.count)
+            let destChunkEnd = min(destIndex + chunkSize, destLines.count)
             
-            // If we've processed all source lines, insert remaining dest lines
-            if sourceIndex >= sourceLines.count {
-                let remainingDestText = destLines[destIndex...].map { String($0) }.joined()
-                operations.append(.insert(remainingDestText))
-                break
-            }
+            let sourceChunk = Array(sourceLines[sourceIndex..<sourceChunkEnd])
+            let destChunk = Array(destLines[destIndex..<destChunkEnd])
             
-            // If we've processed all dest lines, delete remaining source lines
-            if destIndex >= destLines.count {
-                let remainingSourceCount = sourceLines[sourceIndex...].map { $0.count }.reduce(0, +)
-                operations.append(.delete(remainingSourceCount))
-                break
-            }
-            
-            let sourceLine = sourceLines[sourceIndex]
-            let destLine = destLines[destIndex]
-            
-            // If lines match exactly, retain
-            if sourceLine == destLine {
-                operations.append(.retain(sourceLine.count))
-                sourceIndex += 1
-                destIndex += 1
-                continue
-            }
-            
-            // Lines don't match - look ahead to see if we can find a match
-            let lookAheadDistance = min(5, min(sourceLines.count - sourceIndex, destLines.count - destIndex))
-            var foundMatch = false
-            
-            // Look for the dest line in upcoming source lines (deletion case)
-            for i in 1..<lookAheadDistance {
-                if sourceIndex + i < sourceLines.count && sourceLines[sourceIndex + i] == destLine {
-                    // Delete the intervening source lines
-                    let deleteCount = sourceLines[sourceIndex..<sourceIndex + i].map { $0.count }.reduce(0, +)
+            // Check if chunks are identical
+            if sourceChunk.count == destChunk.count && sourceChunk.elementsEqual(destChunk) {
+                // Retain the entire chunk
+                let chunkCharCount = sourceChunk.map { $0.count }.reduce(0, +)
+                operations.append(.retain(chunkCharCount))
+                sourceIndex = sourceChunkEnd
+                destIndex = destChunkEnd
+            } else {
+                // Replace the chunk
+                if !sourceChunk.isEmpty {
+                    let deleteCount = sourceChunk.map { $0.count }.reduce(0, +)
                     operations.append(.delete(deleteCount))
-                    sourceIndex += i
-                    foundMatch = true
-                    break
                 }
-            }
-            
-            if foundMatch { continue }
-            
-            // Look for the source line in upcoming dest lines (insertion case)
-            for i in 1..<lookAheadDistance {
-                if destIndex + i < destLines.count && destLines[destIndex + i] == sourceLine {
-                    // Insert the intervening dest lines
-                    let insertText = destLines[destIndex..<destIndex + i].map { String($0) }.joined()
+                
+                if !destChunk.isEmpty {
+                    let insertText = destChunk.map { String($0) }.joined()
                     operations.append(.insert(insertText))
-                    destIndex += i
-                    foundMatch = true
-                    break
                 }
+                
+                sourceIndex = sourceChunkEnd
+                destIndex = destChunkEnd
             }
-            
-            if foundMatch { continue }
-            
-            // No match found in lookahead - treat as a replacement
-            operations.append(.delete(sourceLine.count))
-            operations.append(.insert(String(destLine)))
-            sourceIndex += 1
-            destIndex += 1
         }
         
         return operations
     }
     
-    /// Alternative line-based approach using CollectionDifference on lines
+    /// Fast and detailed line-based approach with fine-grained operations
     @_optimize(speed)
     internal static func createDiffUsingSwiftNativeLinesWithDifference(
         source: String,
@@ -213,21 +153,107 @@ extension MultiLineDiff {
             return DiffResult(operations: [.delete(source.count)])
         }
         
-        // Split into lines
+        // Split into lines (preserving line endings)
         let sourceLines = source.efficientLines
         let destLines = destination.efficientLines
         
-        // Use Swift's difference on lines
-        let difference = destLines.difference(from: sourceLines)
+        // Find common prefix lines (like .line algorithm)
+        let commonPrefixCount = findCommonPrefixCount(sourceLines, destLines)
+        let sourceAfterPrefix = Array(sourceLines.dropFirst(commonPrefixCount))
+        let destAfterPrefix = Array(destLines.dropFirst(commonPrefixCount))
         
-        // Verify the difference is valid
-        guard let applied = sourceLines.applying(difference), applied == destLines else {
-            // Fallback to prefix/suffix approach
-            return createDiffUsingSwiftNativeLines(source: source, destination: destination)
+        // Find common suffix lines
+        let commonSuffixCount = findCommonSuffixCount(sourceAfterPrefix, destAfterPrefix)
+        
+        // Calculate middle sections
+        let sourceMiddleLines = Array(sourceAfterPrefix.dropLast(commonSuffixCount))
+        let destMiddleLines = Array(destAfterPrefix.dropLast(commonSuffixCount))
+        
+        // Build operations with detailed line-by-line processing
+        var operations: [DiffOperation] = []
+        
+        // Retain common prefix lines
+        if commonPrefixCount > 0 {
+            let prefixCharCount = sourceLines.prefix(commonPrefixCount).map { $0.count }.reduce(0, +)
+            operations.append(.retain(prefixCharCount))
         }
         
-        // Convert line-based difference to character-based operations
-        return convertLineDifferenceToOperations(difference, sourceLines: sourceLines, destLines: destLines)
+        // Handle middle section with detailed line operations
+        if !sourceMiddleLines.isEmpty || !destMiddleLines.isEmpty {
+            let middleOperations = createDetailedLineOperations(
+                sourceLines: sourceMiddleLines,
+                destLines: destMiddleLines
+            )
+            operations.append(contentsOf: middleOperations)
+        }
+        
+        // Retain common suffix lines
+        if commonSuffixCount > 0 {
+            let suffixCharCount = sourceAfterPrefix.suffix(commonSuffixCount).map { $0.count }.reduce(0, +)
+            operations.append(.retain(suffixCharCount))
+        }
+        
+        return DiffResult(operations: consolidateLineOperations(operations))
+    }
+    
+    /// Create detailed line operations with fine-grained processing
+    @_optimize(speed)
+    private static func createDetailedLineOperations(
+        sourceLines: [Substring],
+        destLines: [Substring]
+    ) -> [DiffOperation] {
+        
+        // Handle empty cases
+        if sourceLines.isEmpty {
+            if destLines.isEmpty {
+                return []
+            } else {
+                let insertText = destLines.map { String($0) }.joined()
+                return [.insert(insertText)]
+            }
+        }
+        
+        if destLines.isEmpty {
+            let deleteCount = sourceLines.map { $0.count }.reduce(0, +)
+            return [.delete(deleteCount)]
+        }
+        
+        // Use medium chunks for balanced operations (aim for 300-800 operations)
+        let chunkSize = max(1, min(sourceLines.count, destLines.count) / 20) // Medium chunks = balanced detail
+        var operations: [DiffOperation] = []
+        var sourceIndex = 0
+        var destIndex = 0
+        
+        while sourceIndex < sourceLines.count || destIndex < destLines.count {
+            let sourceChunkEnd = min(sourceIndex + chunkSize, sourceLines.count)
+            let destChunkEnd = min(destIndex + chunkSize, destLines.count)
+            
+            let sourceChunk = Array(sourceLines[sourceIndex..<sourceChunkEnd])
+            let destChunk = Array(destLines[destIndex..<destChunkEnd])
+            
+            // Check if chunks are similar enough to retain, otherwise replace as blocks
+            if sourceChunk.count == destChunk.count && sourceChunk.elementsEqual(destChunk) {
+                // Chunks are identical - retain the entire chunk
+                let chunkCharCount = sourceChunk.map { $0.count }.reduce(0, +)
+                operations.append(.retain(chunkCharCount))
+            } else {
+                // Chunks differ - replace as blocks for efficiency
+                if !sourceChunk.isEmpty {
+                    let deleteCount = sourceChunk.map { $0.count }.reduce(0, +)
+                    operations.append(.delete(deleteCount))
+                }
+                
+                if !destChunk.isEmpty {
+                    let insertText = destChunk.map { String($0) }.joined()
+                    operations.append(.insert(insertText))
+                }
+            }
+            
+            sourceIndex = sourceChunkEnd
+            destIndex = destChunkEnd
+        }
+        
+        return operations
     }
     
     /// Convert line-based CollectionDifference to character-based DiffOperations

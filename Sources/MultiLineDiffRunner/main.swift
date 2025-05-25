@@ -604,10 +604,13 @@ func demonstrateAlgorithmComparison() -> Bool {
            )
        }
        
-       // Measure performance for both algorithms
+       // Measure performance for all 5 algorithms
        let runs = 1000
        let brusMeasurement = measurePerformance(algorithm: .brus, runs: runs)
        let toddMeasurement = measurePerformance(algorithm: .todd, runs: runs)
+       let sodaMeasurement = measurePerformance(algorithm: .soda, runs: runs)
+       let lineMeasurement = measurePerformance(algorithm: .line, runs: runs)
+       let drewMeasurement = measurePerformance(algorithm: .drew, runs: runs)
        
        // Analyze operations
        func analyzeOperations(_ diff: DiffResult) -> (
@@ -653,6 +656,9 @@ func demonstrateAlgorithmComparison() -> Bool {
        
        let brusStat = analyzeOperations(brusMeasurement.diff)
        let toddStat = analyzeOperations(toddMeasurement.diff)
+       let sodaStat = analyzeOperations(sodaMeasurement.diff)
+       let lineStat = analyzeOperations(lineMeasurement.diff)
+       let drewStat = analyzeOperations(drewMeasurement.diff)
        
        // Print detailed operations for visualization
        func printDetailedOperations(_ diff: DiffResult, algorithmName: String) {
@@ -675,7 +681,7 @@ func demonstrateAlgorithmComparison() -> Bool {
        // printDetailedOperations(toddMeasurement.diff, algorithmName: "Todd")
        
        // Print detailed comparison
-       print("\n=== Diff Algorithm Comparison ===")
+       print("\n=== Diff Algorithm Comparison - All 5 Algorithms ===")
        print("Source Code Length: \(sourceCode.count) chars")
        print("Modified Code Length: \(modifiedCode.count) chars")
        print("Total Runs: \(runs)")
@@ -698,32 +704,94 @@ func demonstrateAlgorithmComparison() -> Bool {
        print("  - Apply Diff Time: \(String(format: "%.4f", toddMeasurement.applyDiffTime)) ms")
        print("  - Total Time: \(String(format: "%.4f", toddMeasurement.totalTime)) ms")
        
-       // Performance comparison
-       let createDiffSpeedDifference = abs(brusMeasurement.createDiffTime - toddMeasurement.createDiffTime)
-       let applyDiffSpeedDifference = abs(brusMeasurement.applyDiffTime - toddMeasurement.applyDiffTime)
-       let totalTimeSpeedDifference = abs(brusMeasurement.totalTime - toddMeasurement.totalTime)
+       print("\n--- Soda Algorithm ---")
+       print("Total Operations: \(sodaStat.totalOperations)")
+       print("  - Retain Operations: \(sodaStat.retainCount) (\(sodaStat.retainChars) chars)")
+       print("  - Insert Operations: \(sodaStat.insertCount) (\(sodaStat.insertChars) chars)")
+       print("  - Delete Operations: \(sodaStat.deleteCount) (\(sodaStat.deleteChars) chars)")
+       print("  - Create Diff Time: \(String(format: "%.4f", sodaMeasurement.createDiffTime)) ms")
+       print("  - Apply Diff Time: \(String(format: "%.4f", sodaMeasurement.applyDiffTime)) ms")
+       print("  - Total Time: \(String(format: "%.4f", sodaMeasurement.totalTime)) ms")
        
-       let fasterCreateDiffAlgorithm = brusMeasurement.createDiffTime < toddMeasurement.createDiffTime ? "Brus" : "Todd"
-       let fasterApplyDiffAlgorithm = brusMeasurement.applyDiffTime < toddMeasurement.applyDiffTime ? "Brus" : "Todd"
-       let fasterTotalTimeAlgorithm = brusMeasurement.totalTime < toddMeasurement.totalTime ? "Brus" : "Todd"
+       print("\n--- Line Algorithm ---")
+       print("Total Operations: \(lineStat.totalOperations)")
+       print("  - Retain Operations: \(lineStat.retainCount) (\(lineStat.retainChars) chars)")
+       print("  - Insert Operations: \(lineStat.insertCount) (\(lineStat.insertChars) chars)")
+       print("  - Delete Operations: \(lineStat.deleteCount) (\(lineStat.deleteChars) chars)")
+       print("  - Create Diff Time: \(String(format: "%.4f", lineMeasurement.createDiffTime)) ms")
+       print("  - Apply Diff Time: \(String(format: "%.4f", lineMeasurement.applyDiffTime)) ms")
+       print("  - Total Time: \(String(format: "%.4f", lineMeasurement.totalTime)) ms")
        
-       print("\n--- Performance Summary ---")
-       print("Faster Create Diff Algorithm: \(fasterCreateDiffAlgorithm)")
-       print("Create Diff Speed Difference: \(String(format: "%.4f", createDiffSpeedDifference)) ms")
-       print("Faster Apply Diff Algorithm: \(fasterApplyDiffAlgorithm)")
-       print("Apply Diff Speed Difference: \(String(format: "%.4f", applyDiffSpeedDifference)) ms")
-       print("Faster Total Time Algorithm: \(fasterTotalTimeAlgorithm)")
-       print("Total Time Speed Difference: \(String(format: "%.4f", totalTimeSpeedDifference)) ms\n")
+       print("\n--- Drew Algorithm ---")
+       print("Total Operations: \(drewStat.totalOperations)")
+       print("  - Retain Operations: \(drewStat.retainCount) (\(drewStat.retainChars) chars)")
+       print("  - Insert Operations: \(drewStat.insertCount) (\(drewStat.insertChars) chars)")
+       print("  - Delete Operations: \(drewStat.deleteCount) (\(drewStat.deleteChars) chars)")
+       print("  - Create Diff Time: \(String(format: "%.4f", drewMeasurement.createDiffTime)) ms")
+       print("  - Apply Diff Time: \(String(format: "%.4f", drewMeasurement.applyDiffTime)) ms")
+       print("  - Total Time: \(String(format: "%.4f", drewMeasurement.totalTime)) ms")
        
-       // Apply both diffs to verify they work
+       // Performance comparison across all algorithms
+       let measurements = [
+           ("Brus", brusMeasurement),
+           ("Todd", toddMeasurement),
+           ("Soda", sodaMeasurement),
+           ("Line", lineMeasurement),
+           ("Drew", drewMeasurement)
+       ]
+       
+       let fastestCreateDiff = measurements.min { $0.1.createDiffTime < $1.1.createDiffTime }!
+       let fastestApplyDiff = measurements.min { $0.1.applyDiffTime < $1.1.applyDiffTime }!
+       let fastestTotalTime = measurements.min { $0.1.totalTime < $1.1.totalTime }!
+       
+       let slowestCreateDiff = measurements.max { $0.1.createDiffTime < $1.1.createDiffTime }!
+       let slowestApplyDiff = measurements.max { $0.1.applyDiffTime < $1.1.applyDiffTime }!
+       let slowestTotalTime = measurements.max { $0.1.totalTime < $1.1.totalTime }!
+       
+       print("\n--- Performance Summary (All 5 Algorithms) ---")
+       print("🏆 Fastest Create Diff: \(fastestCreateDiff.0) (\(String(format: "%.4f", fastestCreateDiff.1.createDiffTime)) ms)")
+       print("🐌 Slowest Create Diff: \(slowestCreateDiff.0) (\(String(format: "%.4f", slowestCreateDiff.1.createDiffTime)) ms)")
+       print("📊 Create Diff Speed Range: \(String(format: "%.4f", slowestCreateDiff.1.createDiffTime - fastestCreateDiff.1.createDiffTime)) ms")
+       
+       print("🏆 Fastest Apply Diff: \(fastestApplyDiff.0) (\(String(format: "%.4f", fastestApplyDiff.1.applyDiffTime)) ms)")
+       print("🐌 Slowest Apply Diff: \(slowestApplyDiff.0) (\(String(format: "%.4f", slowestApplyDiff.1.applyDiffTime)) ms)")
+       print("📊 Apply Diff Speed Range: \(String(format: "%.4f", slowestApplyDiff.1.applyDiffTime - fastestApplyDiff.1.applyDiffTime)) ms")
+       
+       print("🏆 Fastest Total Time: \(fastestTotalTime.0) (\(String(format: "%.4f", fastestTotalTime.1.totalTime)) ms)")
+       print("🐌 Slowest Total Time: \(slowestTotalTime.0) (\(String(format: "%.4f", slowestTotalTime.1.totalTime)) ms)")
+       print("📊 Total Time Speed Range: \(String(format: "%.4f", slowestTotalTime.1.totalTime - fastestTotalTime.1.totalTime)) ms")
+       
+       // Speed ratios relative to fastest
+       print("\n--- Speed Ratios (relative to fastest) ---")
+       for (name, measurement) in measurements {
+           let createRatio = measurement.createDiffTime / fastestCreateDiff.1.createDiffTime
+           let applyRatio = measurement.applyDiffTime / fastestApplyDiff.1.applyDiffTime
+           let totalRatio = measurement.totalTime / fastestTotalTime.1.totalTime
+           print("\(name): Create \(String(format: "%.2f", createRatio))x, Apply \(String(format: "%.2f", applyRatio))x, Total \(String(format: "%.2f", totalRatio))x")
+       }
+       print("")
+       
+       // Apply all diffs to verify they work
        let brusResult = try MultiLineDiff.applyDiff(to: sourceCode, diff: brusMeasurement.diff)
        let toddResult = try MultiLineDiff.applyDiff(to: sourceCode, diff: toddMeasurement.diff)
+       let sodaResult = try MultiLineDiff.applyDiff(to: sourceCode, diff: sodaMeasurement.diff)
+       let lineResult = try MultiLineDiff.applyDiff(to: sourceCode, diff: lineMeasurement.diff)
+       let drewResult = try MultiLineDiff.applyDiff(to: sourceCode, diff: drewMeasurement.diff)
        
        let brusMatches = brusResult == modifiedCode
        let toddMatches = toddResult == modifiedCode
-       let bothFilesMatch = toddResult == brusResult
+       let sodaMatches = sodaResult == modifiedCode
+       let lineMatches = lineResult == modifiedCode
+       let drewMatches = drewResult == modifiedCode
+       
+       let allResultsMatch = brusResult == toddResult && toddResult == sodaResult && 
+                            sodaResult == lineResult && lineResult == drewResult
+       
+       print("--- Verification Results ---")
+       print("✅ All algorithms produce correct results: \(brusMatches && toddMatches && sodaMatches && lineMatches && drewMatches)")
+       print("✅ All algorithms produce identical results: \(allResultsMatch)")
 
-       return brusMatches && toddMatches && bothFilesMatch
+       return brusMatches && toddMatches && sodaMatches && lineMatches && drewMatches && allResultsMatch
 
    } catch {
        return false
@@ -912,7 +980,7 @@ func main() throws {
        return demonstrateLargeFileDiffWithPatterns()
    }
    
-   runTest("Algorithm comparison (Brus vs Todd)") {
+   runTest("Algorithm comparison (All 5 Algorithms)") {
        return demonstrateAlgorithmComparison()
    }
    
