@@ -926,9 +926,8 @@ func main() throws {
     print("\n" + String(repeating: "=", count: 50))
     print("Running test: Enhanced Truncated Diff with Dual Context")
     runTest("Enhanced Truncated Diff with Dual Context") {
-        demonstrateEnhancedTruncatedDiff()
-        return true
-    }
+        return demonstrateEnhancedTruncatedDiff()
+     }
 
     print("\n" + String(repeating: "=", count: 50))
     print("Running test: SmartDiff Base64 Methods")

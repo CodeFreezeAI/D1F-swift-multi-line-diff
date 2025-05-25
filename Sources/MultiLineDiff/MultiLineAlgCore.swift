@@ -125,52 +125,6 @@ public enum DiffAlgorithmCore {
         }
     }
     
-    /// Enhanced algorithm selection heuristics
-    struct AlgorithmSelector {
         
-        @_optimize(speed)
-        static func selectOptimalAlgorithm(source: String, destination: String) -> DiffAlgorithm {
-            // Swift 6.1 enhanced decision tree - balance performance with semantic value
-            let sourceLines = source.efficientLines
-            let destLines = destination.efficientLines
-            
-            // Fast path for simple cases
-            if source.isEmpty || destination.isEmpty {
-                return .brus
-            }
-            
-            // Only use Brus for very tiny content (Todd overhead not worth it)
-            if sourceLines.count <= 2 && destLines.count <= 2 {
-                return .brus
-            }
-            
-            // Use enhanced string comparison for similarity detection
-            let similarity = calculateSimilarity(source: source, destination: destination)
-            let lineCountDiff = Swift.abs(sourceLines.count - destLines.count)
-            
-            // Balanced selection - preserve Todd's semantic value
-            switch (similarity, lineCountDiff, Swift.max(sourceLines.count, destLines.count)) {
-            case (0.95..., _, 0...5):
-                // Nearly identical small content - use fast Brus
-                return .brus
-            case (0.0..<0.1, _, _):
-                // Completely different content - Brus for complete rewrites
-                return .brus
-            default:
-                // Most cases benefit from semantic Todd
-                return .todd
-            }
-        }
-        
-        @_optimize(speed)
-        public static func calculateSimilarity(source: String, destination: String) -> Double {
-            guard !source.isEmpty && !destination.isEmpty else { return 0.0 }
-            
-            let commonRegions = EnhancedCommonRegions(source: source, destination: destination)
-            let commonChars = commonRegions.prefixLength + commonRegions.suffixLength
-            let totalChars = Swift.max(source.count, destination.count)
-            
-            return Double(commonChars) / Double(totalChars)
-        }
-    }
+       
 }

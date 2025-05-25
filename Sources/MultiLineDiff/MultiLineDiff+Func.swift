@@ -201,36 +201,39 @@ extension MultiLineDiff {
     /// Swift built-in difference algorithm
     @_optimize(speed)
     internal static func ToddsDiffAlg(sourceLines: [Substring], destLines: [Substring]) -> [EnhancedLineOperation] {
-        let M = sourceLines.count
-        let N = destLines.count
+        let S = sourceLines.count
+        let D = destLines.count
         
         // Handle edge cases
-        if M == 0 || N == 0 {
-            return handleEmptyCases(srcCount: M, dstCount: N)
+        if S == 0 || D == 0 {
+            return handleEmptyCases(srcCount: S, dstCount: D)
         }
         
         // Use Swift's built-in optimized difference algorithm
         let difference = destLines.difference(from: sourceLines)
         
+        print(difference)
+        
+        
         // Pre-allocate operations array for better performance
         var operations: [EnhancedLineOperation] = []
-        operations.reserveCapacity(M + N)
+        operations.reserveCapacity(S + D)
         
         // Create removal and insertion tracking arrays (faster than Set for small collections)
-        var isRemoved = Array(repeating: false, count: M)
-        var isInserted = Array(repeating: false, count: N)
+        var isRemoved = Array(repeating: false, count: S)
+        var isInserted = Array(repeating: false, count: D)
         
         // Mark removals and insertions in O(changes) time with bounds checking
         for change in difference {
             switch change {
             case .remove(let offset, _, _):
                 // SAFETY: Bounds checking to prevent crashes
-                if offset >= 0 && offset < M { 
+                if offset >= 0 && offset < S { 
                     isRemoved[offset] = true 
                 }
             case .insert(let offset, _, _):
                 // SAFETY: Bounds checking to prevent crashes
-                if offset >= 0 && offset < N { 
+                if offset >= 0 && offset < D { 
                     isInserted[offset] = true 
                 }
             }
@@ -240,22 +243,22 @@ extension MultiLineDiff {
         var sourceIndex = 0
         var destIndex = 0
         
-        while sourceIndex < M || destIndex < N {
+        while sourceIndex < S || destIndex < D {
             // SAFETY: Additional bounds checking for all array accesses
-            if sourceIndex < M && sourceIndex < isRemoved.count && isRemoved[sourceIndex] {
+            if sourceIndex < S && sourceIndex < isRemoved.count && isRemoved[sourceIndex] {
                 operations.append(.delete(sourceIndex))
                 sourceIndex += 1
-            } else if destIndex < N && destIndex < isInserted.count && isInserted[destIndex] {
+            } else if destIndex < D && destIndex < isInserted.count && isInserted[destIndex] {
                 operations.append(.insert(destIndex))
                 destIndex += 1
-            } else if sourceIndex < M && destIndex < N {
+            } else if sourceIndex < S && destIndex < D {
                 operations.append(.retain(sourceIndex))
                 sourceIndex += 1
                 destIndex += 1
-            } else if sourceIndex < M {
+            } else if sourceIndex < S {
                 operations.append(.delete(sourceIndex))
                 sourceIndex += 1
-            } else if destIndex < N {
+            } else if destIndex < D {
                 operations.append(.insert(destIndex))
                 destIndex += 1
             } else {
