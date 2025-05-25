@@ -323,15 +323,16 @@ print("Diff is valid: \(isValid)")
 ```
 
 ### Todd Algorithm - Line-Aware Processing
-```
+```swift
 ┌──────────────────────────────────────────────┐
 │               TODD ALGORITHM                 │
 │                                              │
 │  Line 1: ────────────────────── RETAIN       │
 │  Line 2: ─┬─ DELETE old line                 │
 │          └─ INSERT new line                  │
-│  Line 3: ────────────────────── RETAIN       |
-│  Line 4: ────────────────────── INSERT (new) |
+│  Line 1: ────────────────────── RETAIN       │
+│  Line 3: ────────────────────── RETAIN       │
+│  Line 4: ────────────────────── INSERT (new) │
 │                                              │
 │  Semantic line operations:                   │
 │  • Processes line-by-line                    │
