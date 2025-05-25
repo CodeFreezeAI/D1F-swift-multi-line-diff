@@ -113,7 +113,7 @@ func processUser() -> User {
 │ 1. RETAIN(19)         │ 2. DELETE(101)         │ 3. INSERT(163)    │ 4. RETAIN(2) │
 │ func processUser() {  │ Delete original body   │ -> User {\n       │ \n}          │
 │ \n    let user =      │ {\n    let user...     │    let user = ... │              │
-│                       │ return user\n}"        │ return validated" │              │
+│                       │ return user\n}         │ return validated  │              │
 └───────────────────────────────────────────────────────────────────────────────────┘
 
 🔥 Result: 4 operations, ultra-fast bulk replacement
