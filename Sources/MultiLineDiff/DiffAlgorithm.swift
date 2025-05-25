@@ -30,12 +30,14 @@ public struct AlgorithmNames {
     case zoom
     /// Detailed, semantic diff algorithm with O(n log n) time complexity
     case megatron
-    /// Swift native prefix/suffix algorithm - fastest for most cases
+    /// Swift native prefix/suffix algorithm - fastest for most cases  (2x faster than zoom)
     case flash
     /// Swift native line-aware algorithm - fast with detailed line operations
     case starscream
     /// Swift native line-aware with CollectionDifference - Todd-compatible but faster
     case optimus
+    /// AI-generated diff with enhanced metadata tracking
+    case aigenerated
     
     /// Display name for the algorithm
     public var displayName: String {
@@ -45,6 +47,7 @@ public struct AlgorithmNames {
         case .flash: return AlgorithmNames.flash
         case .starscream: return AlgorithmNames.starscream
         case .optimus: return AlgorithmNames.optimus
+        case .aigenerated: return "AI Generated"
         }
     }
     

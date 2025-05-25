@@ -1271,6 +1271,77 @@ func main() throws {
     print("       source: oldCode, destination: newCode, format: .terminal)")
     print("   print(coloredDiff)")
     
+    print("\n" + String(repeating: "=", count: 60))
+    print("🎯 ASCII DIFF PARSING DEMONSTRATION")
+    print(String(repeating: "=", count: 60))
+    
+    // Demonstrate the grand finale: parsing ASCII diffs submitted by AI
+    let originalSourceCode = """
+    func calculate() -> Int {
+        return 42
+    }
+    """
+    
+    // Simulate an AI submitting this diff
+    let aiSubmittedDiff = """
+    = func calculate() -> Int {
+    -     return 42
+    +     return 100
+    = }
+    """
+    
+    print("\n🤖 AI SUBMITS THIS DIFF:")
+    print("```swift")
+    print(aiSubmittedDiff)
+    print("```")
+    
+    do {
+        // Parse the AI's diff
+        let parsedDiff = try MultiLineDiff.parseDiffFromASCII(aiSubmittedDiff)
+        
+        print("\n📋 PARSED OPERATIONS:")
+        for (i, op) in parsedDiff.operations.enumerated() {
+            switch op {
+            case .retain(let count):
+                print("   \(i): RETAIN(\(count) chars)")
+            case .delete(let count):
+                print("   \(i): DELETE(\(count) chars)")
+            case .insert(let text):
+                print("   \(i): INSERT(\(text.count) chars): \"\(text)\"")
+            }
+        }
+        
+        // Apply the parsed diff
+        let result = try MultiLineDiff.applyDiff(to: originalSourceCode, diff: parsedDiff)
+        
+        print("\n✅ RESULT AFTER APPLYING AI'S DIFF:")
+        print("```swift")
+        print(result)
+        print("```")
+        
+        // Verify it worked
+        let expectedResult = """
+        func calculate() -> Int {
+            return 100
+        }
+        """
+        
+        let success = result == expectedResult
+        print("\n🎯 SUCCESS: \(success ? "✅" : "❌")")
+        
+        if success {
+            print("🚀 AI can now submit diffs in readable ASCII format!")
+            print("🔄 Round-trip workflow: Create → Display → Parse → Apply")
+        } else {
+            print("❌ Result doesn't match expected output")
+            print("Expected: '\(expectedResult)'")
+            print("Got: '\(result)'")
+        }
+        
+    } catch {
+        print("❌ Error parsing or applying ASCII diff: \(error)")
+    }
+    
     let endTime = getCurrentTimeMs()
     let totalExecutionTime = Double(endTime - startTime) / 1000.0
     
@@ -1279,6 +1350,472 @@ func main() throws {
     print("Start Time: \(Date(timeIntervalSince1970: Double(startTime) / 1000.0))")
     print("End Time: \(Date(timeIntervalSince1970: Double(endTime) / 1000.0))")
     print("Total Execution Time: \(String(format: "%.3f", totalExecutionTime)) seconds")
+    
+    // MARK: - ASCII Diff Workflow Demonstration
+    
+    print("\n" + String(repeating: "=", count: 60))
+    print("🎯 ASCII DIFF WORKFLOW DEMONSTRATION")
+    print(String(repeating: "=", count: 60))
+    
+    // Example 1: Simple function change
+    let source1 = """
+    func greet() {
+        print("Hello")
+    }
+    """
+    
+    let destination1 = """
+    func greet() {
+        print("Hello, World!")
+    }
+    """
+    
+    print("\n📝 Example 1: Simple Function Change")
+    print("Source:")
+    print(source1)
+    print("\nDestination:")
+    print(destination1)
+    
+    do {
+        let demo1 = try MultiLineDiff.demonstrateASCIIWorkflow(
+            source: source1,
+            destination: destination1,
+            algorithm: .megatron
+        )
+        
+        print("\n📄 Generated ASCII Diff:")
+        print(demo1.asciiDiff)
+        
+        print("\n📊 Summary:")
+        print(demo1.summary)
+        
+    } catch {
+        print("❌ Demo 1 failed: \(error)")
+    }
+    
+    // Example 2: Class modification
+    let source2 = """
+    class Calculator {
+        func add(a: Int, b: Int) -> Int {
+            return a + b
+        }
+    }
+    """
+    
+    let destination2 = """
+    class Calculator {
+        func add(a: Int, b: Int) -> Int {
+            return a + b
+        }
+        
+        func multiply(a: Int, b: Int) -> Int {
+            return a * b
+        }
+    }
+    """
+    
+    print("\n" + String(repeating: "-", count: 50))
+    print("📝 Example 2: Class Method Addition")
+    print("Source:")
+    print(source2)
+    print("\nDestination:")
+    print(destination2)
+    
+    do {
+        let demo2 = try MultiLineDiff.demonstrateASCIIWorkflow(
+            source: source2,
+            destination: destination2,
+            algorithm: .flash
+        )
+        
+        print("\n📄 Generated ASCII Diff:")
+        print(demo2.asciiDiff)
+        
+        print("\n📊 Summary:")
+        print(demo2.summary)
+        
+    } catch {
+        print("❌ Demo 2 failed: \(error)")
+    }
+    
+    // Example 3: AI-style diff submission
+    print("\n" + String(repeating: "-", count: 50))
+    print("🤖 Example 3: AI Diff Submission Simulation")
+    
+    let aiSourceCode = """
+    func calculate() -> Int {
+        return 42
+    }
+    """
+    
+    let aiDiffSubmission = """
+    = func calculate() -> Int {
+    -     return 42
+    +     return 100
+    = }
+    """
+    
+    print("AI receives source code:")
+    print(aiSourceCode)
+    print("\nAI submits this diff:")
+    print(aiDiffSubmission)
+    
+    do {
+        print("\n🔄 Applying AI's diff...")
+        let aiResult = try MultiLineDiff.applyASCIIDiff(
+            to: aiSourceCode,
+            asciiDiff: aiDiffSubmission
+        )
+        
+        print("✅ Result:")
+        print(aiResult)
+        
+        let expectedResult = """
+        func calculate() -> Int {
+            return 100
+        }
+        """
+        
+        let success = aiResult == expectedResult
+        print("\n🎯 Success: \(success ? "✅" : "❌")")
+        
+        if success {
+            print("🚀 AI can now submit diffs in readable ASCII format!")
+        }
+        
+    } catch {
+        print("❌ AI demo failed: \(error)")
+    }
+    
+    print("\n" + String(repeating: "=", count: 60))
+    print("🎉 ASCII DIFF DEMONSTRATIONS COMPLETED")
+    print(String(repeating: "=", count: 60))
+
+    // Run the UserManager test
+    runUserManagerASCIIDiffTest()
+
+    // MARK: - AI Generated Diff Test
+
+    func testAIGeneratedDiff() {
+        print("\n🤖 AI Generated Diff Test")
+        print(String(repeating: "=", count: 50))
+        
+        let fullSourceCode = """
+        import Foundation
+        
+        class Calculator {
+            private var history: [String] = []
+            
+            func add(a: Int, b: Int) -> Int {
+                let result = a + b
+                history.append("\\(a) + \\(b) = \\(result)")
+                return result
+            }
+            
+            func subtract(a: Int, b: Int) -> Int {
+                let result = a - b
+                history.append("\\(a) - \\(b) = \\(result)")
+                return result
+            }
+            
+            func getHistory() -> [String] {
+                return history
+            }
+            
+            func clearHistory() {
+                history.removeAll()
+            }
+        }
+        """
+        
+        // AI submits a COMPLETE diff covering the entire source
+        let aiSubmittedDiff = """
+        = import Foundation
+        = 
+        = class Calculator {
+        =     private var history: [String] = []
+        =     
+        -     func add(a: Int, b: Int) -> Int {
+        +     func add(a: Int, b: Int) -> Int {
+        +         print("Adding \\(a) and \\(b)")
+        =         let result = a + b
+        =         history.append("\\(a) + \\(b) = \\(result)")
+        =         return result
+        =     }
+        =     
+        =     func subtract(a: Int, b: Int) -> Int {
+        =         let result = a - b
+        =         history.append("\\(a) - \\(b) = \\(result)")
+        =         return result
+        =     }
+        =     
+        =     func getHistory() -> [String] {
+        =         return history
+        =     }
+        =     
+        =     func clearHistory() {
+        =         history.removeAll()
+        =     }
+        = }
+        """
+        
+        print("📝 Full Source Code:")
+        print(fullSourceCode)
+        
+        print("\n🤖 AI Submitted Diff:")
+        print(aiSubmittedDiff)
+        
+        do {
+            // Step 1: Create AI-generated diff with metadata
+            print("\n🔄 Step 1: Creating AI-generated diff with metadata...")
+            let aiDiff = try MultiLineDiff.createAIGeneratedDiff(
+                originalSource: fullSourceCode,
+                aiSubmittedDiff: aiSubmittedDiff,
+                contextLines: 3
+            )
+            
+            print("✅ Created AI diff with \(aiDiff.operations.count) operations")
+            
+            // Display metadata
+            if let metadata = aiDiff.metadata {
+                print("\n📊 AI Diff Metadata:")
+                print("   Algorithm: \(metadata.algorithmUsed?.displayName ?? "Unknown")")
+                print("   Start Line: \(metadata.sourceStartLine ?? 0)")
+                print("   Total Lines: \(metadata.sourceTotalLines ?? 0)")
+                print("   Preceding Context: \"\(metadata.precedingContext?.prefix(30) ?? "None")...\"")
+                print("   Following Context: \"\(metadata.followingContext?.prefix(30) ?? "None")...\"")
+                print("   Application Type: \(metadata.applicationType?.rawValue ?? "Unknown")")
+            }
+            
+            // Step 2: Apply the AI-generated diff
+            print("\n🔄 Step 2: Applying AI-generated diff...")
+            let result = try MultiLineDiff.applyAIGeneratedDiff(
+                to: fullSourceCode,
+                aiDiffResult: aiDiff
+            )
+            
+            print("\n✅ Result:")
+            print(result)
+            
+            // Step 3: Verify the change was applied correctly
+            let expectedChange = "print(\"Adding \\(a) and \\(b)\")"
+            let success = result.contains(expectedChange)
+            
+            print("\n🎯 Verification:")
+            print("   Contains expected change: \(success ? "✅" : "❌")")
+            print("   Expected: \(expectedChange)")
+            
+            if success {
+                print("\n🎉 AI-generated diff test completed successfully!")
+                print("🚀 AI can now submit diffs with rich metadata tracking!")
+            } else {
+                print("\n❌ AI-generated diff test failed!")
+            }
+            
+        } catch {
+            print("❌ Error: \(error)")
+        }
+        
+        print("\n" + String(repeating: "=", count: 50))
+        print("🏁 AI Generated Diff Test Completed")
+    }
+
+    // Run the AI Generated Diff test
+    testAIGeneratedDiff()
+
+    // MARK: - ASCII Diff Round-Trip Demonstration
+
+    func demonstrateASCIIRoundTrip() {
+        print("\n🔄 ASCII Diff Round-Trip Demonstration")
+        print(String(repeating: "=", count: 60))
+        
+        let sourceCode = """
+        class UserManager {
+            private var users: [String: User] = [:]
+            
+            func addUser(name: String, email: String) -> Bool {
+                guard !name.isEmpty && !email.isEmpty else {
+                    return false
+                }
+                
+                let user = User(name: name, email: email)
+                users[email] = user
+                return true
+            }
+            
+            func getUser(by email: String) -> User? {
+                return users[email]
+            }
+        }
+        
+        struct User {
+            let name: String
+            let email: String
+        }
+        """
+        
+        let destinationCode = """
+        class UserManager {
+            private var users: [String: User] = [:]
+            private var userCount: Int = 0
+            
+            func addUser(name: String, email: String, age: Int = 0) -> Result<User, UserError> {
+                guard !name.isEmpty && !email.isEmpty else {
+                    return .failure(.invalidInput)
+                }
+                
+                let user = User(id: UUID(), name: name, email: email, age: age)
+                users[email] = user
+                userCount += 1
+                return .success(user)
+            }
+            
+            func getUser(by email: String) -> User? {
+                return users[email]
+            }
+            
+            var count: Int {
+                return userCount
+            }
+        }
+        
+        struct User {
+            let id: UUID
+            let name: String
+            let email: String
+            let age: Int
+        }
+        
+        enum UserError: Error {
+            case invalidInput
+            case userAlreadyExists
+        }
+        """
+        
+        print("📝 Source Code:")
+        print(sourceCode)
+        
+        print("\n📝 Destination Code:")
+        print(destinationCode)
+        
+        do {
+            // STEP 1: Create diff and convert to ASCII
+            print("\n🔄 STEP 1: Creating diff and converting to ASCII...")
+            let originalDiff = MultiLineDiff.createDiff(
+                source: sourceCode,
+                destination: destinationCode,
+                algorithm: .megatron
+            )
+            
+            let asciiDiff1 = MultiLineDiff.displayDiff(
+                diff: originalDiff,
+                source: sourceCode,
+                format: .ai
+            )
+            
+            print("✅ Generated ASCII diff (\(asciiDiff1.count) characters)")
+            print("\n📄 ASCII Diff #1 (Original):")
+            print(asciiDiff1)
+            
+            // STEP 2: Parse ASCII diff back to operations
+            print("\n🔄 STEP 2: Parsing ASCII diff back to operations...")
+            let parsedDiff = try MultiLineDiff.parseDiffFromASCII(asciiDiff1)
+            print("✅ Parsed \(parsedDiff.operations.count) operations")
+            
+            print("\n📊 Parsed Operations:")
+            for (i, op) in parsedDiff.operations.enumerated() {
+                switch op {
+                case .retain(let count):
+                    print("   \(i + 1). RETAIN(\(count) chars)")
+                case .delete(let count):
+                    print("   \(i + 1). DELETE(\(count) chars)")
+                case .insert(let text):
+                    let preview = text.count > 50 ? String(text.prefix(50)) + "..." : text
+                    print("   \(i + 1). INSERT(\(text.count) chars): \"\(preview)\"")
+                }
+            }
+            
+            // STEP 3: Apply parsed diff to verify it works
+            print("\n🔄 STEP 3: Applying parsed diff to source...")
+            let appliedResult = try MultiLineDiff.applyDiff(to: sourceCode, diff: parsedDiff)
+            let step3Success = appliedResult == destinationCode
+            print("✅ Applied diff successfully: \(step3Success ? "✅" : "❌")")
+            
+            // STEP 4: Convert parsed diff back to ASCII (round-trip)
+            print("\n🔄 STEP 4: Converting parsed diff back to ASCII...")
+            let asciiDiff2 = MultiLineDiff.displayDiff(
+                diff: parsedDiff,
+                source: sourceCode,
+                format: .ai
+            )
+            
+            print("✅ Generated ASCII diff #2 (\(asciiDiff2.count) characters)")
+            print("\n📄 ASCII Diff #2 (Round-Trip):")
+            print(asciiDiff2)
+            
+            // STEP 5: Compare the two ASCII diffs
+            print("\n🔄 STEP 5: Comparing ASCII diffs...")
+            let asciiMatches = asciiDiff1 == asciiDiff2
+            print("✅ ASCII diffs match: \(asciiMatches ? "✅" : "❌")")
+            
+            if !asciiMatches {
+                print("\n🔍 Differences found:")
+                print("Original length: \(asciiDiff1.count)")
+                print("Round-trip length: \(asciiDiff2.count)")
+                
+                let lines1 = asciiDiff1.components(separatedBy: .newlines)
+                let lines2 = asciiDiff2.components(separatedBy: .newlines)
+                
+                for (i, (line1, line2)) in zip(lines1, lines2).enumerated() {
+                    if line1 != line2 {
+                        print("Line \(i + 1) differs:")
+                        print("  Original:   '\(line1)'")
+                        print("  Round-trip: '\(line2)'")
+                        break
+                    }
+                }
+            }
+            
+            // STEP 6: Parse the round-trip ASCII and apply it
+            print("\n🔄 STEP 6: Testing round-trip ASCII diff...")
+            let finalParsedDiff = try MultiLineDiff.parseDiffFromASCII(asciiDiff2)
+            let finalResult = try MultiLineDiff.applyDiff(to: sourceCode, diff: finalParsedDiff)
+            let finalSuccess = finalResult == destinationCode
+            print("✅ Round-trip diff works: \(finalSuccess ? "✅" : "❌")")
+            
+            // STEP 7: Summary
+            print("\n🎯 ROUND-TRIP SUMMARY:")
+            print("   📊 Original operations: \(originalDiff.operations.count)")
+            print("   📊 Parsed operations: \(parsedDiff.operations.count)")
+            print("   📊 Final operations: \(finalParsedDiff.operations.count)")
+            print("   📄 ASCII diff 1 length: \(asciiDiff1.count)")
+            print("   📄 ASCII diff 2 length: \(asciiDiff2.count)")
+            print("   ✅ Step 3 success: \(step3Success)")
+            print("   ✅ ASCII diffs match: \(asciiMatches)")
+            print("   ✅ Final result correct: \(finalSuccess)")
+            
+            let overallSuccess = step3Success && asciiMatches && finalSuccess
+            
+            if overallSuccess {
+                print("\n🎉 COMPLETE SUCCESS!")
+                print("🚀 ASCII diff round-trip workflow is working perfectly!")
+                print("🔄 Source → ASCII → Operations → ASCII → Operations → Result")
+                print("✅ All steps completed successfully with 100% accuracy!")
+            } else {
+                print("\n❌ ROUND-TRIP FAILED!")
+                print("🔍 Some steps did not complete successfully")
+            }
+            
+        } catch {
+            print("❌ Error during round-trip: \(error)")
+        }
+        
+        print("\n" + String(repeating: "=", count: 60))
+        print("🏁 ASCII Diff Round-Trip Demonstration Completed")
+    }
+
+    // Run the ASCII Round-Trip demonstration
+    demonstrateASCIIRoundTrip()
 }
 
 // Run the main function
@@ -1286,5 +1823,221 @@ do {
     try main()
 } catch {
     print("Error in main function: \(error)")
+}
+
+// MARK: - UserManager ASCII Diff Test
+
+func runUserManagerASCIIDiffTest() {
+    print("\n🚀 UserManager ASCII Diff Test")
+    print(String(repeating: "=", count: 50))
+    
+    let sourceCode = """
+    class UserManager {
+        private var users: [String: User] = [:]
+        
+        func addUser(name: String, email: String) -> Bool {
+            guard !name.isEmpty && !email.isEmpty else {
+                return false
+            }
+            
+            let user = User(name: name, email: email)
+            users[email] = user
+            return true
+        }
+        
+        func getUser(by email: String) -> User? {
+            return users[email]
+        }
+        
+        func removeUser(email: String) {
+            users.removeValue(forKey: email)
+        }
+    }
+    
+    struct User {
+        let name: String
+        let email: String
+    }
+    """
+    
+    let destinationCode = """
+    class UserManager {
+        private var users: [String: User] = [:]
+        private var userCount: Int = 0
+        
+        func addUser(name: String, email: String, age: Int = 0) -> Result<User, UserError> {
+            guard !name.isEmpty && !email.isEmpty else {
+                return .failure(.invalidInput)
+            }
+            
+            let user = User(id: UUID(), name: name, email: email, age: age)
+            users[email] = user
+            userCount += 1
+            return .success(user)
+        }
+        
+        func getUser(by email: String) -> User? {
+            return users[email]
+        }
+        
+        func removeUser(email: String) -> Bool {
+            guard users[email] != nil else { return false }
+            users.removeValue(forKey: email)
+            userCount -= 1
+            return true
+        }
+        
+        func getAllUsers() -> [User] {
+            return Array(users.values).sorted { $0.name < $1.name }
+        }
+        
+        var count: Int {
+            return userCount
+        }
+    }
+    
+    struct User {
+        let id: UUID
+        let name: String
+        let email: String
+        let age: Int
+    }
+    
+    enum UserError: Error {
+        case invalidInput
+        case userAlreadyExists
+    }
+    """
+    
+    print("\n📝 Source Code:")
+    print(sourceCode)
+    
+    print("\n📝 Destination Code:")
+    print(destinationCode)
+    
+    do {
+        // Step 1: Create diff and display as ASCII
+        print("\n🔄 Step 1: Creating diff and converting to ASCII...")
+        let diff = MultiLineDiff.createDiff(
+            source: sourceCode,
+            destination: destinationCode,
+            algorithm: .megatron
+        )
+        
+        let asciiDiff = MultiLineDiff.displayDiff(
+            diff: diff,
+            source: sourceCode,
+            format: .ai
+        )
+        
+        print("✅ Generated ASCII diff (\(asciiDiff.count) characters)")
+        print("\n📄 ASCII Diff:")
+        print(asciiDiff)
+        
+        // Step 2: Parse the ASCII diff back
+        print("\n🔄 Step 2: Parsing ASCII diff back to operations...")
+        let parsedDiff = try MultiLineDiff.parseDiffFromASCII(asciiDiff)
+        print("✅ Parsed \(parsedDiff.operations.count) operations")
+        
+        // Step 3: Apply the parsed diff
+        print("\n🔄 Step 3: Applying parsed diff to source...")
+        let result = try MultiLineDiff.applyDiff(to: sourceCode, diff: parsedDiff)
+        print("✅ Applied diff successfully")
+        
+        // Step 4: Verify result
+        print("\n🔄 Step 4: Verifying result...")
+        let success = result == destinationCode
+        print("✅ Result matches destination: \(success)")
+        
+        if success {
+            print("\n🎉 ASCII diff workflow completed successfully!")
+            print("🚀 The ASCII diff parsing is working perfectly!")
+        } else {
+            print("\n❌ Workflow failed!")
+            print("Expected length: \(destinationCode.count)")
+            print("Result length: \(result.count)")
+            
+            // Show first difference
+            let expectedLines = destinationCode.components(separatedBy: .newlines)
+            let resultLines = result.components(separatedBy: .newlines)
+            
+            for (i, (expected, actual)) in zip(expectedLines, resultLines).enumerated() {
+                if expected != actual {
+                    print("First difference at line \(i + 1):")
+                    print("Expected: '\(expected)'")
+                    print("Actual:   '\(actual)'")
+                    break
+                }
+            }
+        }
+        
+        // Step 5: Test AI submission workflow with complete diff
+        print("\n" + String(repeating: "-", count: 50))
+        print("🤖 AI Submission Test (Complete Diff)")
+        
+        // Use the same complete ASCII diff that was generated above
+        print("AI submits the complete diff:")
+        print(asciiDiff)
+        
+        print("\n🔄 Applying AI's complete diff...")
+        let aiResult = try MultiLineDiff.applyASCIIDiff(
+            to: sourceCode,
+            asciiDiff: asciiDiff
+        )
+        
+        print("✅ AI diff applied successfully!")
+        print("Result contains 'userCount': \(aiResult.contains("userCount"))")
+        print("Result contains 'Result<User, UserError>': \(aiResult.contains("Result<User, UserError>"))")
+        print("Result contains '.failure(.invalidInput)': \(aiResult.contains(".failure(.invalidInput)"))")
+        print("Result matches destination: \(aiResult == destinationCode)")
+        
+        // Step 6: Test simple AI submission workflow
+        print("\n" + String(repeating: "-", count: 50))
+        print("🤖 Simple AI Submission Test")
+        
+        let simpleSource = """
+        func greet() {
+            print("Hello")
+        }
+        """
+        
+        let simpleAIDiff = """
+        = func greet() {
+        -     print("Hello")
+        +     print("Hello, World!")
+        = }
+        """
+        
+        print("Simple source:")
+        print(simpleSource)
+        print("\nAI submits simple diff:")
+        print(simpleAIDiff)
+        
+        print("\n🔄 Applying simple AI diff...")
+        let simpleResult = try MultiLineDiff.applyASCIIDiff(
+            to: simpleSource,
+            asciiDiff: simpleAIDiff
+        )
+        
+        print("✅ Simple AI diff applied successfully!")
+        print("Result:")
+        print(simpleResult)
+        
+        let expectedSimple = """
+        func greet() {
+            print("Hello, World!")
+        }
+        """
+        
+        print("Matches expected: \(simpleResult == expectedSimple)")
+        
+        print("\n🎯 AI workflow tests completed!")
+        
+    } catch {
+        print("❌ Error: \(error)")
+    }
+    
+    print("\n" + String(repeating: "=", count: 50))
+    print("🏁 UserManager ASCII Diff Test Completed")
 }
 
