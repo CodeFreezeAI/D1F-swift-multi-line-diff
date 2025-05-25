@@ -15,43 +15,43 @@ import CryptoKit
 extension MultiLineDiff {
     
     /// Enhanced algorithm execution with intelligent selection and verification
-    internal static func executeEnhancedAlgorithm(
-        algorithm: DiffAlgorithm,
-        source: String,
-        destination: String
-    ) -> (DiffResult, DiffAlgorithm) {
-        switch algorithm {
-        case .brus:
-            return (createEnhancedBrusDiff(source: source, destination: destination), .brus)
-        case .todd:
-            return executeEnhancedToddWithFallback(source: source, destination: destination)
-        }
-    }
+//    internal static func executeEnhancedAlgorithm(
+//        algorithm: DiffAlgorithm,
+//        source: String,
+//        destination: String
+//    ) -> (DiffResult, DiffAlgorithm) {
+//        switch algorithm {
+//        case .brus:
+//            return (createEnhancedBrusDiff(source: source, destination: destination), .brus)
+//        case .todd:
+//            return executeEnhancedToddWithFallback(source: source, destination: destination)
+//        }
+//    }
     
     /// Enhanced Todd algorithm with intelligent fallback
-    internal static func executeEnhancedToddWithFallback(
-        source: String,
-        destination: String
-    ) -> (DiffResult, DiffAlgorithm) {
-        // Try enhanced Todd algorithm
-        let toddResult = createEnhancedToddDiff(source: source, destination: destination)
-        
-        // Verify the Todd result by applying it
-        do {
-            let appliedResult = try applyDiff(to: source, diff: toddResult)
-            if appliedResult == destination {
-                return (toddResult, .todd)
-            } else {
-                print("Todd similarity: \(DiffAlgorithmCore.AlgorithmSelector.calculateSimilarity(source: appliedResult, destination: destination)) < 0.98, falling back to Brus")
-                // Fallback to enhanced Brus
-                return (createEnhancedBrusDiff(source: source, destination: destination), .brus)
-            }
-        } catch {
-            print("Todd algorithm failed with error: \(error), falling back to Brus")
-            // Fallback to enhanced Brus
-            return (createEnhancedBrusDiff(source: source, destination: destination), .brus)
-        }
-    }
+//    internal static func executeEnhancedToddWithFallback(
+//        source: String,
+//        destination: String
+//    ) -> (DiffResult, DiffAlgorithm) {
+//        // Try enhanced Todd algorithm
+//        let toddResult = createEnhancedToddDiff(source: source, destination: destination)
+//        
+//        // Verify the Todd result by applying it
+//        do {
+//            let appliedResult = try applyDiff(to: source, diff: toddResult)
+//            if appliedResult == destination {
+//                return (toddResult, .todd)
+//            } else {
+//                print("Todd similarity: \(DiffAlgorithmCore.AlgorithmSelector.calculateSimilarity(source: appliedResult, destination: destination)) < 0.98, falling back to Brus")
+//                // Fallback to enhanced Brus
+//                return (createEnhancedBrusDiff(source: source, destination: destination), .brus)
+//            }
+//        } catch {
+//            print("Todd algorithm failed with error: \(error), falling back to Brus")
+//            // Fallback to enhanced Brus
+//            return (createEnhancedBrusDiff(source: source, destination: destination), .brus)
+//        }
+//    }
     
     /// Enhanced Brus algorithm using Swift 6.1 features
     @_optimize(speed)
@@ -108,7 +108,7 @@ extension MultiLineDiff {
         }
         
         // Use optimized LCS for semantic line-by-line processing
-        let lcsOperations = DiffAlg(sourceLines: sourceLines, destLines: destLines)
+        let lcsOperations = ToddsDiffAlg(sourceLines: sourceLines, destLines: destLines)
         
         // OPTIMIZATION: Work directly with lines, no character conversion!
         return createDiffFromLineOperations(
@@ -185,7 +185,7 @@ extension MultiLineDiff {
     
     /// Swift built-in difference algorithm
     @_optimize(speed)
-    internal static func DiffAlg(sourceLines: [Substring], destLines: [Substring]) -> [EnhancedLineOperation] {
+    internal static func ToddsDiffAlg(sourceLines: [Substring], destLines: [Substring]) -> [EnhancedLineOperation] {
         let M = sourceLines.count
         let N = destLines.count
         

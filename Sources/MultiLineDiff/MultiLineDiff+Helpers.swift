@@ -27,7 +27,10 @@ extension MultiLineDiff {
             
             // Extract potential section
             let sectionLines = Array(fullLines[startIndex..<endIndex])
-            let sectionText = sectionLines.joined(separator: "\n")
+            
+            // FIXED: Handle newline-preserving lines correctly
+            // Since lines now include newlines, join without adding separator
+            let sectionText = sectionLines.map(String.init).joined()
             
             // Calculate confidence score based on both contexts
             let confidence = calculateSectionMatchConfidence(
@@ -57,7 +60,16 @@ extension MultiLineDiff {
         }
         
         let endIndex = Swift.min(fullLines.count, startIndex + sourceLineCount)
-        return startIndex..<endIndex
+        
+        // FIXED: Extend the range to include trailing blank lines that are part of section formatting
+        var extendedEndIndex = endIndex
+        // Include trailing blank lines (lines that are just "\n") up to the next content
+        while extendedEndIndex < fullLines.count && 
+              fullLines[extendedEndIndex].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            extendedEndIndex += 1
+        }
+        
+        return startIndex..<extendedEndIndex
     }
     
     /// Reconstruct document with modified section
@@ -68,7 +80,10 @@ extension MultiLineDiff {
     ) throws -> String {
         // Extract the section to be modified
         let sectionLines = Array(fullLines[sectionRange])
-        let sectionText = sectionLines.joined(separator: "\n")
+        
+        // FIXED: Handle newline-preserving lines correctly
+        // Since lines now include newlines, join without adding separator
+        let sectionText = sectionLines.map(String.init).joined()
         
         // Apply the diff to the section
         let modifiedSection = try processOperationsOnSource(
@@ -79,12 +94,47 @@ extension MultiLineDiff {
         
         // Reconstruct the full document with the modified section
         var resultLines = Array(fullLines)
-        let modifiedLines = modifiedSection.split(separator: "\n", omittingEmptySubsequences: false)
+        
+        // FIXED: Handle modified section correctly and preserve trailing formatting
+        let modifiedLines: [Substring]
+        if modifiedSection.isEmpty {
+            modifiedLines = []
+        } else {
+            // Use the same newline-preserving line splitting as the original
+            var tempLines = modifiedSection.efficientLines
+            
+            // FIXED: Preserve trailing formatting from original section
+            // If the original section ended with whitespace/newlines, preserve that pattern
+            let originalSectionLines = Array(fullLines[sectionRange])
+            if !originalSectionLines.isEmpty {
+                let lastOriginalLine = originalSectionLines.last!
+                
+                // If the last original line was just whitespace (blank line), 
+                // and the modified section doesn't end with a newline, add one
+                if lastOriginalLine.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    // This was a trailing blank line - preserve it
+                    if !tempLines.isEmpty && !tempLines.last!.hasSuffix("\n") {
+                        // Modified section doesn't end with newline, add one
+                        let lastLine = tempLines.removeLast()
+                        tempLines.append(Substring(String(lastLine) + "\n"))
+                    }
+                    // Add the blank line
+                    tempLines.append(Substring("\n"))
+                } else if lastOriginalLine.hasSuffix("\n") && !tempLines.isEmpty && !tempLines.last!.hasSuffix("\n") {
+                    // Original ended with newline, but modified doesn't - add it
+                    let lastLine = tempLines.removeLast()
+                    tempLines.append(Substring(String(lastLine) + "\n"))
+                }
+            }
+            
+            modifiedLines = tempLines
+        }
         
         // Replace the original section lines with modified lines
         resultLines.replaceSubrange(sectionRange, with: modifiedLines)
         
-        return resultLines.map(String.init).joined(separator: "\n")
+        // FIXED: Join without separator since lines already include newlines
+        return resultLines.map(String.init).joined()
     }
     
     /// Perform smart verification of diff application result

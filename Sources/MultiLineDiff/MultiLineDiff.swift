@@ -92,14 +92,14 @@ import CryptoKit
         destStartLine: Int? = nil
     ) -> DiffResult {
         
-        let (result, actualAlgorithmUsed) = executeEnhancedAlgorithm(
-            algorithm: algorithm,
-            source: source,
-            destination: destination
-        )
+        let result : DiffResult
         
-        print(actualAlgorithmUsed.rawValue)
-        
+        if algorithm == .todd {
+            result = createEnhancedToddDiff(source: source, destination: destination)
+        } else {
+            result = createEnhancedBrusDiff(source: source, destination: destination)
+        }
+
         // If metadata isn't needed, return the result as is
         guard includeMetadata else {
             return result
@@ -110,7 +110,7 @@ import CryptoKit
             result: result,
             source: source,
             destination: destination,
-            actualAlgorithm: actualAlgorithmUsed,
+            actualAlgorithm: algorithm,
             sourceStartLine: sourceStartLine,
             destStartLine: destStartLine
         )
