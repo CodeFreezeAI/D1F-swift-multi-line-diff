@@ -149,7 +149,7 @@ struct PerformanceBenchmarkTests {
         // Test all five algorithms
         var start = Date()
         for _ in 0..<iterations {
-            _ = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .brus)
+            _ = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .zoom)
         }
         let brusTime = Date().timeIntervalSince(start)
         
@@ -161,13 +161,13 @@ struct PerformanceBenchmarkTests {
         
         start = Date()
         for _ in 0..<iterations {
-            _ = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .soda)
+            _ = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .flash)
         }
         let sodaTime = Date().timeIntervalSince(start)
         
         start = Date()
         for _ in 0..<iterations {
-            _ = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .line)
+            _ = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .arrow)
         }
         let lineTime = Date().timeIntervalSince(start)
         
@@ -194,10 +194,10 @@ struct PerformanceBenchmarkTests {
         print("   Drew: \(String(format: "%.2f", drewTime / fastest))x")
         
         // Verify all produce correct results
-        let result1 = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .brus)
+        let result1 = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .zoom)
         let result2 = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .todd)
-        let result3 = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .soda)
-        let result4 = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .line)
+        let result3 = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .flash)
+        let result4 = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .arrow)
         let result5 = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .drew)
         
         let applied1 = try MultiLineDiff.applyDiff(to: source, diff: result1)

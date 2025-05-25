@@ -44,7 +44,7 @@ import Foundation
     let destination = "Hello, Swift!"
     
     // Use the Brus algorithm explicitly, as we're making assumptions about its output format
-    let result = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .brus)
+    let result = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .zoom)
     
     // Expected operations: retain "Hello, ", delete "world", insert "Swift", retain "!"
     #expect(result.operations.count == 4)
@@ -151,7 +151,7 @@ import Foundation
     """
     
     // Use Brus algorithm explicitly for consistent behavior
-    let result = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .brus)
+    let result = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .zoom)
     let applied = try MultiLineDiff.applyDiff(to: source, diff: result)
     #expect(applied == destination)
 }
@@ -278,7 +278,7 @@ import Foundation
     """
     
     // Create diffs with both algorithms
-    let brusDiff = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .brus)
+    let brusDiff = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .zoom)
     let toddDiff = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .todd)
     
     // Apply both diffs
@@ -921,7 +921,7 @@ class TestFileManager {
         let base64Diff = try MultiLineDiff.createBase64Diff(
             source: source, 
             destination: destination, 
-            algorithm: useTodd ? .todd : .brus
+            algorithm: useTodd ? .todd : .zoom
         )
         let result = try MultiLineDiff.applyBase64Diff(to: source, base64Diff: base64Diff)
         
@@ -970,7 +970,7 @@ class TestFileManager {
         let base64Diff = try MultiLineDiff.createBase64Diff(
             source: source,
             destination: destination,
-            algorithm: .brus
+            algorithm: .zoom
         )
         let result = try MultiLineDiff.applyBase64Diff(to: source, base64Diff: base64Diff)
         
@@ -1001,10 +1001,10 @@ class TestFileManager {
     var brusDiff: String = ""
     var toddDiff: String = ""
     
-    // Test Brus algorithm (explicitly set to .brus)
+    // Test Brus algorithm (explicitly set to .zoom)
     do {
         let startTime = Date()
-        let diffResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .brus)
+        let diffResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .zoom)
         let createTime = Date().timeIntervalSince(startTime)
         brusDiff = try MultiLineDiff.diffToBase64(diffResult)
         

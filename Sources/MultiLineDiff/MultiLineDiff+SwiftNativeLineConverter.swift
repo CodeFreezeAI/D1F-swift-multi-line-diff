@@ -157,7 +157,7 @@ extension MultiLineDiff {
         let sourceLines = source.efficientLines
         let destLines = destination.efficientLines
         
-        // Find common prefix lines (like .line algorithm)
+        // Find common prefix lines (like .arrow algorithm)
         let commonPrefixCount = findCommonPrefixCount(sourceLines, destLines)
         let sourceAfterPrefix = Array(sourceLines.dropFirst(commonPrefixCount))
         let destAfterPrefix = Array(destLines.dropFirst(commonPrefixCount))

@@ -21,8 +21,8 @@ extension MultiLineDiff {
 //        destination: String
 //    ) -> (DiffResult, DiffAlgorithm) {
 //        switch algorithm {
-//        case .brus:
-//            return (createEnhancedBrusDiff(source: source, destination: destination), .brus)
+//        case .zoom:
+//            return (createEnhancedBrusDiff(source: source, destination: destination), .zoom)
 //        case .todd:
 //            return executeEnhancedToddWithFallback(source: source, destination: destination)
 //        }
@@ -44,12 +44,12 @@ extension MultiLineDiff {
 //            } else {
 //                print("Todd similarity: \(DiffAlgorithmCore.AlgorithmSelector.calculateSimilarity(source: appliedResult, destination: destination)) < 0.98, falling back to Brus")
 //                // Fallback to enhanced Brus
-//                return (createEnhancedBrusDiff(source: source, destination: destination), .brus)
+//                return (createEnhancedBrusDiff(source: source, destination: destination), .zoom)
 //            }
 //        } catch {
 //            print("Todd algorithm failed with error: \(error), falling back to Brus")
 //            // Fallback to enhanced Brus
-//            return (createEnhancedBrusDiff(source: source, destination: destination), .brus)
+//            return (createEnhancedBrusDiff(source: source, destination: destination), .zoom)
 //        }
 //    }
     

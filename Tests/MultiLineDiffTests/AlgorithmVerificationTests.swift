@@ -38,11 +38,11 @@ struct AlgorithmVerificationTests {
         """
         
         // Explicitly test Brus algorithm
-        let brusResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .brus)
+        let brusResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .zoom)
         print("🔍 Brus Algorithm:")
         print("   Operations count: \(brusResult.operations.count)")
         print("   Operations: \(formatOperations(brusResult))")
-        print("   Algorithm used: \(brusResult.metadata?.algorithmUsed ?? .brus)")
+        print("   Algorithm used: \(brusResult.metadata?.algorithmUsed ?? .zoom)")
         
         // Explicitly test Todd algorithm
         let toddResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .todd)
@@ -52,18 +52,18 @@ struct AlgorithmVerificationTests {
         print("   Algorithm used: \(toddResult.metadata?.algorithmUsed ?? .todd)")
         
         // Explicitly test Soda algorithm
-        let sodaResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .soda)
+        let sodaResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .flash)
         print("\n🥤 Soda Algorithm:")
         print("   Operations count: \(sodaResult.operations.count)")
         print("   Operations: \(formatOperations(sodaResult))")
-        print("   Algorithm used: \(sodaResult.metadata?.algorithmUsed ?? .soda)")
+        print("   Algorithm used: \(sodaResult.metadata?.algorithmUsed ?? .flash)")
         
         // Explicitly test Line algorithm
-        let lineResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .line)
+        let lineResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .arrow)
         print("\n📏 Line Algorithm:")
         print("   Operations count: \(lineResult.operations.count)")
         print("   Operations: \(formatOperations(lineResult))")
-        print("   Algorithm used: \(lineResult.metadata?.algorithmUsed ?? .line)")
+        print("   Algorithm used: \(lineResult.metadata?.algorithmUsed ?? .arrow)")
         
         // Explicitly test Drew algorithm
         let drewResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .drew)
@@ -77,7 +77,7 @@ struct AlgorithmVerificationTests {
         print("\n🔍 Default Algorithm:")
         print("   Operations count: \(defaultResult.operations.count)")
         print("   Operations: \(formatOperations(defaultResult))")
-        print("   Algorithm used: \(defaultResult.metadata?.algorithmUsed ?? .brus)")
+        print("   Algorithm used: \(defaultResult.metadata?.algorithmUsed ?? .zoom)")
         
         // Verify they produce correct results
         let applied1 = try MultiLineDiff.applyDiff(to: source, diff: brusResult)

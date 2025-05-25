@@ -27,7 +27,7 @@ import Foundation
     let brusResults = try testAlgorithmPerformance(
         source: originalContent,
         destination: modifiedContent,
-        algorithm: .brus,
+        algorithm: .zoom,
         iterations: iterations,
         testFiles: testFiles
     )
@@ -547,7 +547,7 @@ private func testAlgorithmPerformance(
     var operationCounts: [Int] = []
     var finalResult = ""
     
-    let algorithmName = algorithm == .brus ? "Brus" : "Todd"
+    let algorithmName = algorithm == .zoom ? "Brus" : "Todd"
     
     // Warm up run
     let warmupDiff = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: algorithm)

@@ -43,10 +43,10 @@ struct FourWayComparisonTests {
         print()
         
         // Test all five algorithms
-        let brusResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .brus)
+        let brusResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .zoom)
         let toddResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .todd)
-        let sodaResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .soda)
-        let lineResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .line)
+        let sodaResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .flash)
+        let lineResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .arrow)
         let drewResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .drew)
         
         print("🟦 Brus: \(brusResult.operations.count) operations")
@@ -78,7 +78,7 @@ struct FourWayComparisonTests {
         // Brus performance
         let brusStart = Date()
         for _ in 0..<iterations {
-            _ = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .brus)
+            _ = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .zoom)
         }
         let brusTime = Date().timeIntervalSince(brusStart)
         
@@ -92,14 +92,14 @@ struct FourWayComparisonTests {
         // Soda performance
         let sodaStart = Date()
         for _ in 0..<iterations {
-            _ = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .soda)
+            _ = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .flash)
         }
         let sodaTime = Date().timeIntervalSince(sodaStart)
         
         // Line performance
         let lineStart = Date()
         for _ in 0..<iterations {
-            _ = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .line)
+            _ = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .arrow)
         }
         let lineTime = Date().timeIntervalSince(lineStart)
         
@@ -152,10 +152,10 @@ struct FourWayComparisonTests {
         print("Destination: '\(destination)'")
         print()
         
-        let brusResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .brus)
+        let brusResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .zoom)
         let toddResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .todd)
-        let sodaResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .soda)
-        let lineResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .line)
+        let sodaResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .flash)
+        let lineResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .arrow)
         let drewResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .drew)
         
         print("🟦 Brus: \(formatOperations(brusResult))")
@@ -197,10 +197,10 @@ struct FourWayComparisonTests {
         
         // Test each algorithm
         let algorithms: [(name: String, test: () -> DiffResult)] = [
-            ("Brus", { MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .brus) }),
+            ("Brus", { MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .zoom) }),
             ("Todd", { MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .todd) }),
-            ("Soda", { MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .soda) }),
-            ("Line", { MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .line) }),
+            ("Soda", { MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .flash) }),
+            ("Line", { MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .arrow) }),
             ("Drew", { MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .drew) })
         ]
         

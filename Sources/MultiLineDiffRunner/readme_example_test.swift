@@ -31,10 +31,10 @@ func processUser() -> User {
     print()
 
     // Test Brus Algorithm
-    let brusDiff = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .brus)
+    let brusDiff = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .zoom)
     let brusResult = try! MultiLineDiff.applyDiff(to: source, diff: brusDiff)
 
-    print("🔥 Brus Algorithm - Bulk Operations:")
+    print("🔥 Zoom Algorithm - Bulk Operations:")
     print("Total Operations: \(brusDiff.operations.count)")
     for (i, op) in brusDiff.operations.enumerated() {
         switch op {
@@ -70,7 +70,7 @@ func processUser() -> User {
 
     print("📊 Algorithm Comparison:")
     print("• Both produce identical final results: \(brusResult == toddResult)")
-    print("• Brus operations: \(brusDiff.operations.count) (bulk approach)")
+    print("• Zoom operations: \(brusDiff.operations.count) (bulk approach)")
     print("• Todd operations: \(toddDiff.operations.count) (line-aware approach)")
     print("• Operation difference: \(toddDiff.operations.count - brusDiff.operations.count) more operations in Todd")
     
@@ -84,7 +84,7 @@ func processUser() -> User {
     let toddInserts = toddDiff.operations.filter { if case .insert = $0 { return true }; return false }.count
     
     print("\n📈 Operation Breakdown:")
-    print("• Brus: \(brusRetains) retains, \(brusDeletes) deletes, \(brusInserts) inserts")
+    print("• Zoom: \(brusRetains) retains, \(brusDeletes) deletes, \(brusInserts) inserts")
     print("• Todd: \(toddRetains) retains, \(toddDeletes) deletes, \(toddInserts) inserts")
     print("\n✅ README Example 3 verification complete!")
 }

@@ -43,7 +43,7 @@ import CryptoKit
     /// Brus (fast, O(n)) and Todd (semantic, O(n log n)).
     ///
     /// # Algorithms
-    /// - `.brus`: Optimized for simple, character-level changes
+    /// - `.zoom`: Optimized for simple, character-level changes
     ///   - Fastest performance
     ///   - Best for minimal text modifications
     ///   - O(n) time complexity
@@ -97,11 +97,11 @@ import CryptoKit
         switch algorithm {
         case .todd:
             result = createEnhancedToddDiff(source: source, destination: destination)
-        case .brus:
+        case .zoom:
             result = createEnhancedBrusDiff(source: source, destination: destination)
-        case .soda:
+        case .flash:
             result = createDiffUsingSwiftNativeMethods(source: source, destination: destination)
-        case .line:
+        case .arrow:
             result = createDiffUsingSwiftNativeLinesMethods(source: source, destination: destination)
         case .drew:
             result = createDiffUsingSwiftNativeLinesWithDifferenceMethods(source: source, destination: destination)

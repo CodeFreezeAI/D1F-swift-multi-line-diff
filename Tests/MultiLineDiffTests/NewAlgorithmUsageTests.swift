@@ -28,7 +28,7 @@ import Foundation
     
     // Test all algorithms through the main API
     print("\n🔥 Testing Brus Algorithm...")
-    let brusDiff = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .brus)
+    let brusDiff = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .zoom)
     let brusResult = try MultiLineDiff.applyDiff(to: source, diff: brusDiff)
     print("  Operations: \(brusDiff.operations.count)")
     #expect(brusResult == destination, "Brus should produce correct result")
@@ -40,13 +40,13 @@ import Foundation
     #expect(toddResult == destination, "Todd should produce correct result")
     
     print("\n🥤 Testing Soda Algorithm...")
-    let sodaDiff = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .soda)
+    let sodaDiff = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .flash)
     let sodaResult = try MultiLineDiff.applyDiff(to: source, diff: sodaDiff)
     print("  Operations: \(sodaDiff.operations.count)")
     #expect(sodaResult == destination, "Soda should produce correct result")
     
     print("\n📏 Testing Line Algorithm...")
-    let lineDiff = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .line)
+    let lineDiff = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .arrow)
     let lineResult = try MultiLineDiff.applyDiff(to: source, diff: lineDiff)
     print("  Operations: \(lineDiff.operations.count)")
     #expect(lineResult == destination, "Line should produce correct result")
@@ -77,10 +77,10 @@ import Foundation
     
     // Test each algorithm and show their characteristics
     let algorithms: [(DiffAlgorithm, String)] = [
-        (.brus, "Brus (Fast & Simple)"),
+        (.zoom, "Brus (Fast & Simple)"),
         (.todd, "Todd (Semantic)"),
-        (.soda, "Soda (Swift Prefix)"),
-        (.line, "Line (Swift Lines)"),
+        (.flash, "Soda (Swift Prefix)"),
+        (.arrow, "Line (Swift Lines)"),
         (.drew, "Drew (Swift Todd)")
     ]
     

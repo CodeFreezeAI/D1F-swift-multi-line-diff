@@ -45,10 +45,10 @@ struct ThreeWayComparisonTests {
         print()
         
         // Test all five algorithms
-        let brusResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .brus)
+        let brusResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .zoom)
         print("🟦 Brus Algorithm (Character-based, O(n)):")
         print("   Operations count: \(brusResult.operations.count)")
-        print("   Algorithm used: \(brusResult.metadata?.algorithmUsed ?? .brus)")
+        print("   Algorithm used: \(brusResult.metadata?.algorithmUsed ?? .zoom)")
         print("   Operations:")
         for (i, op) in brusResult.operations.enumerated() {
             print("     \(i): \(op.description)")
@@ -63,19 +63,19 @@ struct ThreeWayComparisonTests {
             print("     \(i): \(op.description)")
         }
         
-        let sodaResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .soda)
+        let sodaResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .flash)
         print("\n🥤 Soda Algorithm (Swift Prefix-based):")
         print("   Operations count: \(sodaResult.operations.count)")
-        print("   Algorithm used: \(sodaResult.metadata?.algorithmUsed ?? .soda)")
+        print("   Algorithm used: \(sodaResult.metadata?.algorithmUsed ?? .flash)")
         print("   Operations:")
         for (i, op) in sodaResult.operations.enumerated() {
             print("     \(i): \(op.description)")
         }
         
-        let lineResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .line)
+        let lineResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .arrow)
         print("\n📏 Line Algorithm (Swift Lines-based):")
         print("   Operations count: \(lineResult.operations.count)")
-        print("   Algorithm used: \(lineResult.metadata?.algorithmUsed ?? .line)")
+        print("   Algorithm used: \(lineResult.metadata?.algorithmUsed ?? .arrow)")
         print("   Operations:")
         for (i, op) in lineResult.operations.enumerated() {
             print("     \(i): \(op.description)")
@@ -111,7 +111,7 @@ struct ThreeWayComparisonTests {
         // Brus performance
         let brusStart = Date()
         for _ in 0..<iterations {
-            _ = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .brus)
+            _ = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .zoom)
         }
         let brusTime = Date().timeIntervalSince(brusStart)
         
@@ -125,14 +125,14 @@ struct ThreeWayComparisonTests {
         // Soda performance
         let sodaStart = Date()
         for _ in 0..<iterations {
-            _ = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .soda)
+            _ = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .flash)
         }
         let sodaTime = Date().timeIntervalSince(sodaStart)
         
         // Line performance
         let lineStart = Date()
         for _ in 0..<iterations {
-            _ = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .line)
+            _ = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .arrow)
         }
         let lineTime = Date().timeIntervalSince(lineStart)
         
@@ -177,7 +177,7 @@ struct ThreeWayComparisonTests {
         print("Destination: '\(destination)'")
         print()
         
-        let brusResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .brus)
+        let brusResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .zoom)
         let toddResult = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .todd)
         
         print("🟦 Brus: \(formatOperations(brusResult))")
@@ -242,7 +242,7 @@ struct ThreeWayComparisonTests {
         // Performance test
         let brusStart = Date()
         for _ in 0..<iterations {
-            _ = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .brus)
+            _ = MultiLineDiff.createDiff(source: source, destination: destination, algorithm: .zoom)
         }
         let brusTime = Date().timeIntervalSince(brusStart)
         

@@ -29,7 +29,7 @@ import Foundation
         destination: modifiedContent,
         algorithmName: "Brus",
         testFunction: { source, dest in
-            MultiLineDiff.createDiff(source: source, destination: dest, algorithm: .brus)
+            MultiLineDiff.createDiff(source: source, destination: dest, algorithm: .zoom)
         },
         iterations: iterations
     )
@@ -53,7 +53,7 @@ import Foundation
         destination: modifiedContent,
         algorithmName: "Soda",
         testFunction: { source, dest in
-            MultiLineDiff.createDiff(source: source, destination: dest, algorithm: .soda)
+            MultiLineDiff.createDiff(source: source, destination: dest, algorithm: .flash)
         },
         iterations: iterations
     )
@@ -64,7 +64,7 @@ import Foundation
         destination: modifiedContent,
         algorithmName: "Line",
         testFunction: { source, dest in
-            MultiLineDiff.createDiff(source: source, destination: dest, algorithm: .line)
+            MultiLineDiff.createDiff(source: source, destination: dest, algorithm: .arrow)
         },
         iterations: iterations
     )
@@ -407,10 +407,10 @@ private func printFiveWayAlgorithmResults(
     let sampleDest = "Hello Swift World\nLine 2 Modified\nLine 3"
     
     let sampleResults = [
-        ("Brus", MultiLineDiff.createDiff(source: sampleSource, destination: sampleDest, algorithm: .brus)),
+        ("Brus", MultiLineDiff.createDiff(source: sampleSource, destination: sampleDest, algorithm: .zoom)),
         ("Todd", MultiLineDiff.createDiff(source: sampleSource, destination: sampleDest, algorithm: .todd)),
-        ("Soda", MultiLineDiff.createDiff(source: sampleSource, destination: sampleDest, algorithm: .soda)),
-        ("Line", MultiLineDiff.createDiff(source: sampleSource, destination: sampleDest, algorithm: .line)),
+        ("Soda", MultiLineDiff.createDiff(source: sampleSource, destination: sampleDest, algorithm: .flash)),
+        ("Line", MultiLineDiff.createDiff(source: sampleSource, destination: sampleDest, algorithm: .arrow)),
         ("Drew", MultiLineDiff.createDiff(source: sampleSource, destination: sampleDest, algorithm: .drew))
     ]
     
