@@ -77,11 +77,11 @@ func calculate(a: Int, b: Int) -> Int {
 }
 
 // OPERATIONS (Todd Algorithm - Line Granular)
-┌──────────────────────────────────────────────────────────────┐
-│ RETAIN(40)           │ INSERT(31)              │ RETAIN(17)  │
-│  func calculate(...  │  // Enhanced calc       │ return...   │
-│  return              │  let result = a + b\n   │             │
-└──────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────┐
+│ RETAIN(40)          │ INSERT(31)             │ RETAIN(17)  │
+│ func calculate(...  │ ... Enhanced calc      │ return...   │
+│ return              │ let result = a + b\n   │             │
+└────────────────────────────────────────────────────────────┘
 ```
 
 ### Example 3: Algorithm Comparison - Real Differences
