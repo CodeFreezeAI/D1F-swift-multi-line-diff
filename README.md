@@ -108,28 +108,28 @@ func processUser() -> User {
 ```
 
 **Brus Algorithm (4 Bulk Operations)**
-```
-┌───────────────────────────────────────────────────────────────────---------------──┐
-│ 1. RETAIN(19)          │ 2. DELETE(101)         │ 3. INSERT(163)    │ 4. RETAIN(2) │
-│  func processUser() {  │ Delete original body   │  -> User {\n      │    \n}       │
-│  \n    let user =      │ {\n    let user...     │     let user =... │              │
-│                        │ return user\n}"        │ return validated" │              │
-└──────────────────────────────────────────────────────────────────===============───┘
+```swift
+┌──────────────────────────────────────────────────────────────────---------------──┐
+│ 1. RETAIN(19)         │ 2. DELETE(101)         │ 3. INSERT(163)    │ 4. RETAIN(2) │
+│ func processUser() {  │ Delete original body   │ -> User {\n       │ \n}          │
+│ \n    let user =      │ {\n    let user...     │    let user = ... │              │
+│                       │ return user\n}"        │ return validated" │              │
+└─────────────────────────────────────────────────────────────────===============───┘
 
 🔥 Result: 4 operations, ultra-fast bulk replacement
 ```
 
 **Todd Algorithm (6 Line-Aware Operations)**  
-```
+```swift
 ┌─────────────────────────────────────────────────────────────────────┐
 │ 1. DELETE(21)          │ 2. INSERT(29)          │ 3. RETAIN(32)     │
-│ func processUser() {   │  func processUser()    │ let user =        │
+│ func processUser() {   │ func processUser()     │ let user =        │
 │                        │ -> User {\n            │ getCurrentUser()  │
 │-------------------------------------------------------------------- │
 │ 4. DELETE(68)          │ 5. INSERT(122)         │ 6. RETAIN(1)      │
 │ \n    print(\Process   │ \n    print(\Process   │ \n                │
 │ ing user\)\n...return  │ ing user data\)...     │ return validated  │
-│ user"                  │ return validated"      │                   │
+│ user                   │ return validated"      │                   │
 └─────────────────────────────────────────────────────────────────────┘
 
 🧠 Result: 6 operations, line-by-line semantic processing
@@ -362,7 +362,7 @@ Adds new `text` content at the current position.
 Removes `count` characters from the source.
 
 ### Example Operation Sequence
-```
+```swift
 Source: "Hello, world!"
 Dest:   "Hello, Swift world!"
 
@@ -470,7 +470,7 @@ do {
 ## 🏆 Performance Benchmarks
 
 ### Large File Performance (10,000 lines)
-```
+```swift
 📊 Brus Algorithm:
 • Create Diff: 17ms
 • Apply Diff: 7ms  
@@ -487,7 +487,7 @@ do {
 ```
 
 ### Memory Usage Comparison
-```
+```swift
 Small Files    (< 1KB):  📱 ~50KB peak memory
 Medium Files (< 100KB):  📱 ~200KB peak memory  
 Large Files   (< 10MB):  📱 ~2MB peak memory
@@ -501,7 +501,7 @@ Large Files   (< 10MB):  📱 ~2MB peak memory
 We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
 
 ### Development Setup
-```bash
+```swift
 git clone https://github.com/toddbruss/swift-multi-line-diff.git
 cd swift-multi-line-diff
 swift test  # Run all tests
