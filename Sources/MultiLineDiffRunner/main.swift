@@ -1924,18 +1924,18 @@ func showcaseEnhancedASCIIParser() {
                 } else if sourceLine.isEmpty && !destLine.isEmpty {
                     // Only in destination (insert)
                     let emptySource = "".padding(toLength: 60, withPad: " ", startingAt: 0)
-                    print("   \(lineNum): \(emptySource) | \(lineNum): + \(destDisplay)")
+                    print("   \(lineNum): \(emptySource) | \(lineNum)+ \(destDisplay)")
                 } else if !sourceLine.isEmpty && destLine.isEmpty {
                     // Only in source (delete)
-                    print("   \(lineNum): - \(sourceDisplay) | \(lineNum):")
+                    print("   \(lineNum)- \(sourceDisplay) | \(lineNum):")
                 } else if sourceLine != destLine {
                     // Different lines (modify)
-                    print("   \(lineNum): - \(sourceDisplay) | \(lineNum): + \(destDisplay)\(marker)")
+                    print("   \(lineNum)- \(sourceDisplay) | \(lineNum)+ \(destDisplay)\(marker)")
                 }
             }
             
             print("   " + String(repeating: "─", count: 80))
-            print("   Legend: ❌ = Deleted/Changed, ✅ = Added/Changed, No symbol = Unchanged")
+            print("   Legend: - = Deleted/Changed, + = Added/Changed, : = Unchanged")
         }
         
         // 3. Context Information
