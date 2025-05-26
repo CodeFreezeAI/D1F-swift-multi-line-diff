@@ -37,7 +37,7 @@
 Add the dependency to your `Package.swift` file:
 
 ```swift
-// swift-tools-version: 5.9
+// swift-tools-version: 6.1
 import PackageDescription
 
 let package = Package(
