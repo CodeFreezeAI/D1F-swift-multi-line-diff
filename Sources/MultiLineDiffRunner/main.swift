@@ -2162,6 +2162,161 @@ func showcaseEnhancedASCIIParserExactLines() {
         print("   Where modifications begin: Line \(displayStartLine)")
         print("   This tells us exactly where the changes start in the source!")
         
+                 // 2. Source and Destination Content Side-by-Side with Exact Line Numbers
+         print("\n2. 📝 SOURCE & DESTINATION CONTENT RECONSTRUCTION (EXACT LINES):")
+         if let sourceContent = metadata.sourceContent,
+            let destContent = metadata.destinationContent {
+             
+             print("   📄 SOURCE (\(sourceContent.count) chars) | 📄 DESTINATION (\(destContent.count) chars)")
+             print("   " + String(repeating: "─", count: 80))
+             
+             // Split the actual source and destination content into lines
+             let sourceLines = sourceContent.components(separatedBy: .newlines)
+             let destLines = destContent.components(separatedBy: .newlines)
+             
+             // Find the maximum number of lines to display
+             let maxLines = max(sourceLines.count, destLines.count)
+             
+             for i in 0..<maxLines {
+                 let sourceLineNum = i + 1
+                 let destLineNum = i + 1
+                 
+                 var sourceDisplay = ""
+                 var destDisplay = ""
+                 
+                 // Source side
+                 if i < sourceLines.count {
+                     let sourceLine = sourceLines[i]
+                     let marker = sourceLineNum == (metadata.sourceStartLine ?? -1) + 1 ? " ← MODS START" : ""
+                     
+                     // Determine if this line was deleted, modified, or unchanged
+                     var lineMarker = ":"
+                     if i < destLines.count {
+                         let destLine = destLines[i]
+                         if sourceLine != destLine {
+                             lineMarker = "-"
+                         }
+                     } else {
+                         lineMarker = "-" // Source line with no corresponding dest line
+                     }
+                     
+                     sourceDisplay = String(format: "%4d%s %s", sourceLineNum, lineMarker, sourceLine).padding(toLength: 70, withPad: " ", startingAt: 0) + marker
+                 } else {
+                     // No source line, just empty space
+                     sourceDisplay = String(repeating: " ", count: 70)
+                 }
+                 
+                 // Destination side
+                 if i < destLines.count {
+                     let destLine = destLines[i]
+                     let marker = destLineNum == (metadata.sourceStartLine ?? -1) + 1 ? " ← MODS START" : ""
+                     
+                     // Determine if this line was added, modified, or unchanged
+                     var lineMarker = ":"
+                     if i < sourceLines.count {
+                         let sourceLine = sourceLines[i]
+                         if sourceLine != destLine {
+                             lineMarker = "+"
+                         }
+                     } else {
+                         lineMarker = "+" // Dest line with no corresponding source line
+                     }
+                     
+                     destDisplay = String(format: "%4d%s %s", destLineNum, lineMarker, destLine) + marker
+                 }
+                 
+                 print("   \(sourceDisplay) | \(destDisplay)")
+             }
+             
+             print("   " + String(repeating: "─", count: 80))
+         }
+        
+        print("\n💡 This view shows the exact line numbers where content appears in source vs destination!")
+        print("🔍 Notice how deleted lines don't consume destination line numbers")
+        print("🔍 Notice how inserted lines don't consume source line numbers")
+        
+    } catch {
+        print("❌ Error during ASCII parsing: \(error)")
+    }
+    
+    print("\n" + String(repeating: "=", count: 70))
+    print("🏁 Enhanced ASCII Parser with Exact Line Numbers Completed")
+}
+
+func showcaseEnhancedASCIIParsera_SOURCE_AND_DESTINATION_ON_ACTUAL_LINE_POSITIONS_WITHOUT_PLACERHOLDERLINES() {
+    print("\n🎯 Enhanced ASCII Parser WITHOUT PLACEHOLDERS")
+    print(String(repeating: "=", count: 70))
+    print("🚀 Demonstrating source and destination WITHOUT ----: placeholders!")
+    
+    // Create a comprehensive ASCII diff example
+    let asciiDiff = """
+    📎 class Calculator {
+    📎     private var result: Double = 0
+    📎     private var history: [String] = []
+    📎     
+    ❌     func add(_ value: Double) {
+    ❌         result += value
+    ❌     }
+    ❌     
+    ❌     func subtract(_ value: Double) {
+    ❌         result -= value
+    ❌     }
+    ✅     func add(_ value: Double) -> Double {
+    ✅         result += value
+    ✅         history.append("Added \\(value)")
+    ✅         return result
+    ✅     }
+    ✅     
+    ✅     func subtract(_ value: Double) -> Double {
+    ✅         result -= value
+    ✅         history.append("Subtracted \\(value)")
+    ✅         return result
+    ✅     }
+    ✅     
+    ✅     func multiply(_ value: Double) -> Double {
+    ✅         result *= value
+    ✅         history.append("Multiplied by \\(value)")
+    ✅         return result
+    ✅     }
+    📎     
+    📎     func getResult() -> Double {
+    📎         return result
+    📎     }
+    ✅     
+    ✅     func getHistory() -> [String] {
+    ✅         return history
+    ✅     }
+    ✅     
+    ✅     func clearHistory() {
+    ✅         history.removeAll()
+    ✅     }
+    📎 }
+    """
+    
+    print("\n📄 ASCII Diff Input:")
+    print(asciiDiff)
+    
+    do {
+        print("\n🔄 Parsing ASCII diff with enhanced metadata...")
+        let diffResult = try MultiLineDiff.parseDiffFromASCII(asciiDiff)
+        
+        print("✅ Successfully parsed \(diffResult.operations.count) operations")
+        
+        // Showcase the enhanced metadata
+        guard let metadata = diffResult.metadata else {
+            print("❌ No metadata found!")
+            return
+        }
+        
+        print("\n✨ ENHANCED METADATA SHOWCASE:")
+        print(String(repeating: "-", count: 50))
+        
+        // 1. Source Start Line
+        print("\n1. 🎯 SOURCE START LINE (NEW!):")
+        let displayStartLine = (metadata.sourceStartLine ?? -1) + 1
+        print("   Where modifications begin: Line \(displayStartLine)")
+        print("   This tells us exactly where the changes start in the source!")
+        
         // 2. Source and Destination Content Side-by-Side with Exact Line Numbers
         print("\n2. 📝 SOURCE & DESTINATION CONTENT RECONSTRUCTION (EXACT LINES):")
         if let sourceContent = metadata.sourceContent,
@@ -2261,7 +2416,10 @@ do {
     showcaseEnhancedASCIIParser()
     
     // Run the exact line numbers version
-    showcaseEnhancedASCIIParserExactLines()
+    //showcaseEnhancedASCIIParserExactLines()
+    
+    // Run the clean version without placeholders
+    showcaseEnhancedASCIIParsera_SOURCE_AND_DESTINATION_ON_ACTUAL_LINE_POSITIONS_WITHOUT_PLACERHOLDERLINES()
     
 } catch {
     print("Error in main function: \(error)")
