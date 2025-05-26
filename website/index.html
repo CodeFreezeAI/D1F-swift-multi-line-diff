@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MultiLineDiff - The World's Most Advanced Diffing System</title>
+    <meta name="description" content="Revolutionary Swift diffing library with AI integration, ASCII diffs, and lightning-fast performance. Created by Todd Bruss © xcf.ai">
+    <meta name="keywords" content="diff, swift, AI, ASCII, code, algorithm, performance, xcf.ai, todd bruss">
+    <meta name="author" content="Todd Bruss, xcf.ai">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://diff.xcf.ai/">
+    <meta property="og:title" content="MultiLineDiff - Revolutionary Diffing System">
+    <meta property="og:description" content="The world's most advanced diffing system with AI integration and lightning-fast performance">
+    <meta property="og:image" content="https://diff.xcf.ai/images/og-image.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://diff.xcf.ai/">
+    <meta property="twitter:title" content="MultiLineDiff - Revolutionary Diffing System">
+    <meta property="twitter:description" content="The world's most advanced diffing system with AI integration and lightning-fast performance">
+    <meta property="twitter:image" content="https://diff.xcf.ai/images/twitter-image.png">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="images/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <link rel="stylesheet" href="css/components.css">
+    
+    <!-- Prism.js for syntax highlighting -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <svg class="logo-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M8 12L20 24L32 12" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M8 28L20 16L32 28" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span class="logo-text">MultiLineDiff</span>
+            </div>
+            <div class="nav-menu" id="nav-menu">
+                <a href="#showcase" class="nav-link">Showcase</a>
+                <a href="#features" class="nav-link">Features</a>
+                <a href="#algorithms" class="nav-link">Algorithms</a>
+                <a href="#demo" class="nav-link">Demo</a>
+                <a href="#docs" class="nav-link">Docs</a>
+                <a href="#performance" class="nav-link">Performance</a>
+                <a href="https://github.com/codefreezeai/swift-multi-line-diff" class="nav-link github-link" target="_blank">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                    </svg>
+                    GitHub
+                </a>
+            </div>
+            <div class="nav-toggle" id="nav-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-background">
+            <div class="hero-grid"></div>
+            <div class="hero-gradient"></div>
+        </div>
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    <span class="badge-icon">🚀</span>
+                    <span>Revolutionary Breakthrough</span>
+                </div>
+                <h1 class="hero-title">
+                    The World's Most
+                    <span class="gradient-text">Advanced Diffing System</span>
+                </h1>
+                <p class="hero-subtitle">
+                    MultiLineDiff makes Git diff, Myers algorithm, and traditional tools obsolete. 
+                    Experience <strong>10x faster performance</strong>, <strong>AI integration</strong>, 
+                    and <strong>character-perfect accuracy</strong> with the most flexible diffing system on Earth.
+                </p>
+                <div class="hero-stats">
+                                            <div class="stat">
+                            <div class="stat-number">10x</div>
+                            <div class="stat-label">Faster</div>
+                        </div>
+                    <div class="stat">
+                        <div class="stat-number">5</div>
+                        <div class="stat-label">Algorithms</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">100%</div>
+                        <div class="stat-label">Accurate</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">🤖</div>
+                        <div class="stat-label">AI Ready</div>
+                    </div>
+                </div>
+                <div class="hero-actions">
+                    <a href="#demo" class="btn btn-primary">
+                        <span>Try Live Demo</span>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="m9 18 6-6-6-6"/>
+                        </svg>
+                    </a>
+                    <a href="https://github.com/codefreezeai/swift-multi-line-diff" class="btn btn-secondary" target="_blank">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                        </svg>
+                        <span>View on GitHub</span>
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Diff Showcase Section -->
+    <section id="showcase" class="diff-showcase">
+        <div class="container">
+            <div class="showcase-content">
+                <div class="showcase-text">
+                    <div class="showcase-badge">
+                        <span class="badge-icon">✨</span>
+                        <span>Live Example</span>
+                    </div>
+                    <h2 class="showcase-title">See the Magic in Action</h2>
+                    <p class="showcase-subtitle">
+                        Watch MultiLineDiff transform complex code changes into beautiful, 
+                        AI-readable ASCII format with intuitive emoji symbols.
+                    </p>
+                    <div class="showcase-features">
+                        <div class="showcase-feature">
+                            <span class="feature-symbol">📎</span>
+                            <span>Paperclip = Unchanged lines</span>
+                        </div>
+                        <div class="showcase-feature">
+                            <span class="feature-symbol">❌</span>
+                            <span>Red X = Lines to delete</span>
+                        </div>
+                        <div class="showcase-feature">
+                            <span class="feature-symbol">✅</span>
+                            <span>Green check = Lines to add</span>
+                        </div>
+                    </div>
+                    <div class="showcase-stats">
+                        <div class="stat-item">
+                            <span class="stat-number">100%</span>
+                            <span class="stat-label">Round-trip Accuracy</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">10x</span>
+                            <span class="stat-label">Faster than Git</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">🤖</span>
+                            <span class="stat-label">AI Native</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="showcase-visual">
+                    <div class="code-demo">
+                        <div class="code-header">
+                            <div class="code-dots">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </div>
+                            <span class="code-title">DIFF</span>
+                            <div class="code-actions">
+                                <button class="code-action-btn" title="Copy to clipboard">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                    </svg>
+                                </button>
+                                <button class="code-action-btn" title="View in terminal">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="4,17 10,11 4,5"></polyline>
+                                        <line x1="12" y1="19" x2="20" y2="19"></line>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="code-content">
+                            <pre><code class="language-swift">📎 class UserManager {
+📎     private var users: [String: User] = [:]
+✅     private var userCount: Int = 0
+📎     
+❌     func addUser(name: String, email: String) -> Bool {
+✅     func addUser(name: String, email: String, age: Int = 0) -> Result<User, UserError> {
+📎         guard !name.isEmpty && !email.isEmpty else {
+❌             return false
+✅             return .failure(.invalidInput)
+📎         }
+📎         
+❌         let user = User(name: name, email: email)
+✅         let user = User(id: UUID(), name: name, email: email, age: age)
+📎         users[email] = user
+❌         return true
+✅         userCount += 1
+✅         return .success(user)
+📎     }
+📎 }</code></pre>
+                        </div>
+                        <div class="code-footer">
+                            <div class="diff-stats">
+                                <span class="diff-stat">🤖 Optimus Algorithm</span>
+                                <span class="diff-stat">📊 15 operations</span>
+                                <span class="diff-stat">🕐 1.0ms</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Revolutionary Features</h2>
+                <p class="section-subtitle">Innovations not found anywhere else on Earth</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Lightning Fast Performance</h3>
+                    <p>Flash algorithm delivers 10x faster performance than traditional methods with O(n) complexity and minimal memory usage.</p>
+                    <div class="feature-stats">
+                        <span class="stat-badge">14.5ms create</span>
+                        <span class="stat-badge">6.6ms apply</span>
+                    </div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🤖</div>
+                    <h3>AI-Native Integration</h3>
+                    <p>First diffing system designed for AI interaction with human-readable ASCII format and round-trip accuracy.</p>
+                    <div class="feature-highlight">
+                        <code>📎 ❌ ✅</code> symbols for instant AI understanding
+                    </div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔐</div>
+                    <h3>Cryptographic Security</h3>
+                    <p>Built-in SHA256 integrity verification, tamper detection, and automatic undo generation for enterprise security.</p>
+                    <div class="feature-highlight">
+                        SHA256 + Checksum + Verification
+                    </div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3>Intelligent Context Matching</h3>
+                    <p>Dual context matching with confidence scoring handles truncated patches and repeated content intelligently.</p>
+                    <div class="feature-highlight">
+                        Auto-detects full vs. partial source
+                    </div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔄</div>
+                    <h3>Perfect Round-Trip</h3>
+                    <p>100% accuracy with zero data loss through complete ASCII workflow: Create → Display → Parse → Apply.</p>
+                    <div class="feature-highlight">
+                        Character-perfect preservation
+                    </div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Multiple I/O Formats</h3>
+                    <p>JSON, Base64, ASCII formats with compact encoding and cross-platform compatibility for any use case.</p>
+                    <div class="feature-stats">
+                        <span class="stat-badge">JSON</span>
+                        <span class="stat-badge">Base64</span>
+                        <span class="stat-badge">ASCII</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Algorithms Section -->
+    <section id="algorithms" class="algorithms">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Five Powerful Algorithms</h2>
+                <p class="section-subtitle">Choose the perfect algorithm for your specific needs</p>
+            </div>
+            <div class="algorithms-container">
+                <div class="algorithm-tabs">
+                    <button class="tab-button active" data-algorithm="flash">⚡ Flash</button>
+                    <button class="tab-button" data-algorithm="optimus">🤖 Optimus</button>
+                    <button class="tab-button" data-algorithm="megatron">🧠 Megatron</button>
+                    <button class="tab-button" data-algorithm="starscream">🌟 Starscream</button>
+                    <button class="tab-button" data-algorithm="zoom">🔍 Zoom</button>
+                </div>
+                <div class="algorithm-content">
+                    <div class="algorithm-panel active" id="flash">
+                        <div class="algorithm-info">
+                            <div class="algorithm-header">
+                                <h3>⚡ Flash Algorithm</h3>
+                                <div class="algorithm-badges">
+                                    <span class="badge badge-primary">Fastest</span>
+                                    <span class="badge badge-success">O(n)</span>
+                                    <span class="badge badge-info">Swift Native</span>
+                                </div>
+                            </div>
+                            <p>Lightning-fast prefix/suffix detection using Swift's native string methods. Perfect for speed-critical applications and real-time editing.</p>
+                            <div class="algorithm-stats">
+                                <div class="stat-item">
+                                    <span class="stat-label">Create Time</span>
+                                    <span class="stat-value">14.5ms</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Apply Time</span>
+                                    <span class="stat-value">6.6ms</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Operations</span>
+                                    <span class="stat-value">3</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Memory</span>
+                                    <span class="stat-value">Minimal</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="algorithm-code">
+                            <pre><code class="language-swift">// Flash: Fastest algorithm
+let diff = MultiLineDiff.createDiff(
+    source: "Hello, world!",
+    destination: "Hello, Swift!",
+    algorithm: .flash
+)
+// Result: 3 operations, 21.0ms total</code></pre>
+                        </div>
+                    </div>
+                    <div class="algorithm-panel" id="optimus">
+                        <div class="algorithm-info">
+                            <div class="algorithm-header">
+                                <h3>🤖 Optimus Algorithm</h3>
+                                <div class="algorithm-badges">
+                                    <span class="badge badge-primary">Line-Aware</span>
+                                    <span class="badge badge-warning">O(n log n)</span>
+                                    <span class="badge badge-info">CollectionDiff</span>
+                                </div>
+                            </div>
+                            <p>Sophisticated CollectionDifference-based line analysis with semantic understanding. Ideal for code refactoring and structured text.</p>
+                            <div class="algorithm-stats">
+                                <div class="stat-item">
+                                    <span class="stat-label">Create Time</span>
+                                    <span class="stat-value">43.7ms</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Apply Time</span>
+                                    <span class="stat-value">6.6ms</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Operations</span>
+                                    <span class="stat-value">1256</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Detail</span>
+                                    <span class="stat-value">High</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="algorithm-code">
+                            <pre><code class="language-swift">// Optimus: Line-aware processing
+let diff = MultiLineDiff.createDiff(
+    source: sourceCode,
+    destination: refactoredCode,
+    algorithm: .optimus
+)
+// Result: Detailed operations, semantic understanding</code></pre>
+                        </div>
+                    </div>
+                    <div class="algorithm-panel" id="megatron">
+                        <div class="algorithm-info">
+                            <div class="algorithm-header">
+                                <h3>🧠 Megatron Algorithm</h3>
+                                <div class="algorithm-badges">
+                                    <span class="badge badge-primary">Semantic</span>
+                                    <span class="badge badge-warning">O(n log n)</span>
+                                    <span class="badge badge-success">Balanced</span>
+                                </div>
+                            </div>
+                            <p>Advanced semantic analysis with balanced performance and accuracy. The default choice for most applications requiring detailed diff analysis.</p>
+                            <div class="algorithm-stats">
+                                <div class="stat-item">
+                                    <span class="stat-label">Create Time</span>
+                                    <span class="stat-value">47.8ms</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Apply Time</span>
+                                    <span class="stat-value">7.0ms</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Operations</span>
+                                    <span class="stat-value">1256</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Accuracy</span>
+                                    <span class="stat-value">Excellent</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="algorithm-code">
+                            <pre><code class="language-swift">// Megatron: Semantic analysis (default)
+let diff = MultiLineDiff.createDiff(
+    source: source,
+    destination: destination,
+    algorithm: .megatron
+)
+// Result: Balanced performance and accuracy</code></pre>
+                        </div>
+                    </div>
+                    <div class="algorithm-panel" id="starscream">
+                        <div class="algorithm-info">
+                            <div class="algorithm-header">
+                                <h3>🌟 Starscream Algorithm</h3>
+                                <div class="algorithm-badges">
+                                    <span class="badge badge-primary">Line-Aware</span>
+                                    <span class="badge badge-warning">O(n log n)</span>
+                                    <span class="badge badge-info">Swift Native</span>
+                                </div>
+                            </div>
+                            <p>Swift-native line-aware processing with excellent performance for structured content and code with clear line boundaries.</p>
+                            <div class="algorithm-stats">
+                                <div class="stat-item">
+                                    <span class="stat-label">Create Time</span>
+                                    <span class="stat-value">45.1ms</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Apply Time</span>
+                                    <span class="stat-value">6.9ms</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Operations</span>
+                                    <span class="stat-value">1256</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Structure</span>
+                                    <span class="stat-value">Aware</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="algorithm-code">
+                            <pre><code class="language-swift">// Starscream: Line-aware Swift native
+let diff = MultiLineDiff.createDiff(
+    source: structuredText,
+    destination: modifiedText,
+    algorithm: .starscream
+)
+// Result: Structure-aware processing</code></pre>
+                        </div>
+                    </div>
+                    <div class="algorithm-panel" id="zoom">
+                        <div class="algorithm-info">
+                            <div class="algorithm-header">
+                                <h3>🔍 Zoom Algorithm</h3>
+                                <div class="algorithm-badges">
+                                    <span class="badge badge-primary">Simple</span>
+                                    <span class="badge badge-success">O(n)</span>
+                                    <span class="badge badge-info">Character-based</span>
+                                </div>
+                            </div>
+                            <p>Simple and fast character-based algorithm for straightforward text changes. Minimal operations with excellent performance.</p>
+                            <div class="algorithm-stats">
+                                <div class="stat-item">
+                                    <span class="stat-label">Create Time</span>
+                                    <span class="stat-value">23.9ms</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Apply Time</span>
+                                    <span class="stat-value">9.1ms</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Operations</span>
+                                    <span class="stat-value">3</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Simplicity</span>
+                                    <span class="stat-value">Maximum</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="algorithm-code">
+                            <pre><code class="language-swift">// Zoom: Simple character-based
+let diff = MultiLineDiff.createDiff(
+    source: simpleText,
+    destination: modifiedText,
+    algorithm: .zoom
+)
+// Result: Minimal operations, fast processing</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Demo Section -->
+    <section id="demo" class="demo">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Interactive Demo</h2>
+                <p class="section-subtitle">Experience the power of MultiLineDiff in real-time</p>
+            </div>
+            <div class="demo-container">
+                <div class="demo-controls">
+                    <div class="control-group">
+                        <label for="algorithm-select">Algorithm:</label>
+                        <select id="algorithm-select" class="control-select">
+                            <option value="flash">⚡ Flash (Fastest)</option>
+                            <option value="optimus">🤖 Optimus (Line-aware)</option>
+                            <option value="megatron" selected>🧠 Megatron (Balanced)</option>
+                            <option value="starscream">🌟 Starscream (Structure)</option>
+                            <option value="zoom">🔍 Zoom (Simple)</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="format-select">Output Format:</label>
+                        <select id="format-select" class="control-select">
+                            <option value="ai" selected>🤖 AI Format</option>
+                            <option value="terminal">🌈 Terminal Colors</option>
+                            <option value="json">📊 JSON</option>
+                            <option value="base64">🔐 Base64</option>
+                        </select>
+                    </div>
+                    <button id="generate-diff" class="btn btn-primary">Generate Diff</button>
+                </div>
+                <div class="demo-panels">
+                    <div class="demo-panel">
+                        <div class="panel-header">
+                            <h4>Source</h4>
+                            <button class="btn-small" id="load-example">Load Example</button>
+                        </div>
+                        <textarea id="source-input" class="demo-textarea" placeholder="Enter your source code here..."></textarea>
+                    </div>
+                    <div class="demo-panel">
+                        <div class="panel-header">
+                            <h4>Destination</h4>
+                            <button class="btn-small" id="clear-dest">Clear</button>
+                        </div>
+                        <textarea id="dest-input" class="demo-textarea" placeholder="Enter your modified code here..."></textarea>
+                    </div>
+                    <div class="demo-panel demo-output">
+                        <div class="panel-header">
+                            <h4>Swift<br>MultiLine<br>DIFF</h4>
+                            <div class="output-stats" id="output-stats"></div>
+                        </div>
+                        <div id="diff-output" class="demo-output-content">
+                            <div class="placeholder">
+                                <div class="placeholder-icon">📊</div>
+                                <p>Generate a diff to see the output here</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Performance Section -->
+    <section id="performance" class="performance">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Performance Benchmarks</h2>
+                <p class="section-subtitle">Real-world performance data from 1000+ test runs</p>
+            </div>
+            <div class="performance-content">
+                <div class="performance-chart">
+                    <h3>Algorithm Performance Comparison</h3>
+                    <div class="chart-container">
+                        <canvas id="performance-chart"></canvas>
+                    </div>
+                </div>
+                <div class="performance-table">
+                    <h3>Detailed Benchmarks</h3>
+                    <div class="table-container">
+                        <table class="performance-data">
+                            <thead>
+                                <tr>
+                                    <th>Algorithm</th>
+                                    <th>Create (ms)</th>
+                                    <th>Apply (ms)</th>
+                                    <th>Total (ms)</th>
+                                    <th>Operations</th>
+                                    <th>Complexity</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="winner">
+                                    <td><span class="algorithm-name">⚡ Flash</span></td>
+                                    <td><strong>14.5</strong></td>
+                                    <td><strong>6.6</strong></td>
+                                    <td><strong>21.0</strong></td>
+                                    <td>3</td>
+                                    <td>O(n)</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="algorithm-name">🔍 Zoom</span></td>
+                                    <td>23.9</td>
+                                    <td>9.1</td>
+                                    <td>33.0</td>
+                                    <td>3</td>
+                                    <td>O(n)</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="algorithm-name">🤖 Optimus</span></td>
+                                    <td>43.7</td>
+                                    <td>6.6</td>
+                                    <td>50.3</td>
+                                    <td>1256</td>
+                                    <td>O(n log n)</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="algorithm-name">🌟 Starscream</span></td>
+                                    <td>45.1</td>
+                                    <td>6.9</td>
+                                    <td>52.0</td>
+                                    <td>1256</td>
+                                    <td>O(n log n)</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="algorithm-name">🧠 Megatron</span></td>
+                                    <td>47.8</td>
+                                    <td>7.0</td>
+                                    <td>54.8</td>
+                                    <td>1256</td>
+                                    <td>O(n log n)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Documentation Section -->
+    <section id="docs" class="docs">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Documentation</h2>
+                <p class="section-subtitle">Comprehensive guides and API reference</p>
+            </div>
+            <div class="docs-grid">
+                <div class="doc-card">
+                    <div class="doc-icon">🚀</div>
+                    <h3>Quick Start</h3>
+                    <p>Get up and running with MultiLineDiff in minutes. Installation, basic usage, and first examples.</p>
+                    <a href="https://github.com/codefreezeai/swift-multi-line-diff#quick-start" target="_blank" class="doc-link">Read Guide →</a>
+                </div>
+                <div class="doc-card">
+                    <div class="doc-icon">📖</div>
+                    <h3>API Reference</h3>
+                    <p>Complete API documentation with all methods, parameters, and return types for the Swift library.</p>
+                    <a href="https://github.com/codefreezeai/swift-multi-line-diff#api-reference" target="_blank" class="doc-link">View API →</a>
+                </div>
+                <div class="doc-card">
+                    <div class="doc-icon">🤖</div>
+                    <h3>AI Integration</h3>
+                    <p>Learn how to integrate MultiLineDiff with AI systems using ASCII diffs and round-trip workflows.</p>
+                    <a href="#showcase" class="doc-link">Learn More →</a>
+                </div>
+                <div class="doc-card">
+                    <div class="doc-icon">⚡</div>
+                    <h3>Performance Guide</h3>
+                    <p>Optimize performance with algorithm selection, memory management, and best practices.</p>
+                    <a href="#performance" class="doc-link">Optimize →</a>
+                </div>
+                <div class="doc-card">
+                    <div class="doc-icon">🔧</div>
+                    <h3>Advanced Features</h3>
+                    <p>Truncated diffs, metadata, verification, undo operations, and enterprise features.</p>
+                    <a href="https://github.com/codefreezeai/swift-multi-line-diff#advanced-features" target="_blank" class="doc-link">Explore →</a>
+                </div>
+                <div class="doc-card">
+                    <div class="doc-icon">📊</div>
+                    <h3>Examples</h3>
+                    <p>Real-world examples, code samples, and use cases for different scenarios and applications.</p>
+                    <a href="#demo" class="doc-link">See Examples →</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div class="footer-logo">
+                        <svg class="logo-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M8 12L20 24L32 12" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M8 28L20 16L32 28" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span>MultiLineDiff</span>
+                    </div>
+                    <p>The world's most advanced diffing system</p>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-section">
+                        <h4>Product</h4>
+                        <a href="#showcase">Showcase</a>
+                        <a href="#features">Features</a>
+                        <a href="#algorithms">Algorithms</a>
+                        <a href="#demo">Demo</a>
+                        <a href="#performance">Performance</a>
+                    </div>
+                    <div class="footer-section">
+                        <h4>Documentation</h4>
+                        <a href="https://github.com/codefreezeai/swift-multi-line-diff#quick-start" target="_blank">Getting Started</a>
+                        <a href="https://github.com/codefreezeai/swift-multi-line-diff#api-reference" target="_blank">API Reference</a>
+                        <a href="#demo">Examples</a>
+                        <a href="#showcase">AI Integration</a>
+                    </div>
+                    <div class="footer-section">
+                        <h4>Resources</h4>
+                        <a href="https://github.com/codefreezeai/swift-multi-line-diff" target="_blank">GitHub</a>
+                        <a href="https://xcf.ai" target="_blank">XCF.ai</a>
+                        <a href="https://github.com/codefreezeai/swift-multi-line-diff/releases" target="_blank">Changelog</a>
+                        <a href="https://github.com/codefreezeai/swift-multi-line-diff/issues" target="_blank">Support</a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <div class="footer-copyright">
+                    <p>&copy; 2025 Todd Bruss, XCF.ai. All rights reserved.</p>
+                </div>
+                <div class="footer-social">
+                    <a href="https://github.com/codefreezeai/swift-multi-line-diff" target="_blank" class="social-link">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                        </svg>
+                    </a>
+                    <a href="https://xcf.ai" target="_blank" class="social-link">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="m9 18 6-6-6-6"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/demo.js"></script>
+    <script src="js/performance.js"></script>
+</body>
+</html> 

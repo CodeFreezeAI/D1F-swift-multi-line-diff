@@ -1,0 +1,28 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="32" height="32" rx="6" fill="#0f0f23"/>
+  
+  <!-- Diff lines -->
+  <g stroke-width="2" stroke-linecap="round">
+    <!-- Retained line (paperclip style) -->
+    <path d="M6 8L26 8" stroke="#cbd5e1"/>
+    <circle cx="4" cy="8" r="1.5" fill="#6366f1"/>
+    
+    <!-- Deleted line (red X style) -->
+    <path d="M6 16L26 16" stroke="#ef4444" stroke-dasharray="2,2"/>
+    <path d="M2 14L6 18M6 14L2 18" stroke="#ef4444" stroke-width="1.5"/>
+    
+    <!-- Added line (green checkmark style) -->
+    <path d="M6 24L26 24" stroke="#10b981"/>
+    <path d="M2 22L4 24L6 20" stroke="#10b981" stroke-width="1.5" fill="none"/>
+  </g>
+  
+  <!-- Accent gradient -->
+  <defs>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:0.3"/>
+      <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:0.1"/>
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="6" fill="url(#accent)"/>
+</svg> 
