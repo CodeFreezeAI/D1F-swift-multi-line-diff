@@ -2086,12 +2086,182 @@ func showcaseEnhancedASCIIParser() {
     print("🏁 Enhanced ASCII Parser Metadata Showcase Completed")
 }
 
+// MARK: - Enhanced ASCII Parser with Exact Line Numbers
+
+func showcaseEnhancedASCIIParserExactLines() {
+    print("\n🎯 Enhanced ASCII Parser with Exact Line Numbers")
+    print(String(repeating: "=", count: 70))
+    print("🚀 Demonstrating source and destination on exact line positions!")
+    
+    // Create a comprehensive ASCII diff example
+    let asciiDiff = """
+    📎 class Calculator {
+    📎     private var result: Double = 0
+    📎     private var history: [String] = []
+    📎     
+    ❌     func add(_ value: Double) {
+    ❌         result += value
+    ❌     }
+    ❌     
+    ❌     func subtract(_ value: Double) {
+    ❌         result -= value
+    ❌     }
+    ✅     func add(_ value: Double) -> Double {
+    ✅         result += value
+    ✅         history.append("Added \\(value)")
+    ✅         return result
+    ✅     }
+    ✅     
+    ✅     func subtract(_ value: Double) -> Double {
+    ✅         result -= value
+    ✅         history.append("Subtracted \\(value)")
+    ✅         return result
+    ✅     }
+    ✅     
+    ✅     func multiply(_ value: Double) -> Double {
+    ✅         result *= value
+    ✅         history.append("Multiplied by \\(value)")
+    ✅         return result
+    ✅     }
+    📎     
+    📎     func getResult() -> Double {
+    📎         return result
+    📎     }
+    ✅     
+    ✅     func getHistory() -> [String] {
+    ✅         return history
+    ✅     }
+    ✅     
+    ✅     func clearHistory() {
+    ✅         history.removeAll()
+    ✅     }
+    📎 }
+    """
+    
+    print("\n📄 ASCII Diff Input:")
+    print(asciiDiff)
+    
+    do {
+        print("\n🔄 Parsing ASCII diff with enhanced metadata...")
+        let diffResult = try MultiLineDiff.parseDiffFromASCII(asciiDiff)
+        
+        print("✅ Successfully parsed \(diffResult.operations.count) operations")
+        
+        // Showcase the enhanced metadata
+        guard let metadata = diffResult.metadata else {
+            print("❌ No metadata found!")
+            return
+        }
+        
+        print("\n✨ ENHANCED METADATA SHOWCASE:")
+        print(String(repeating: "-", count: 50))
+        
+        // 1. Source Start Line
+        print("\n1. 🎯 SOURCE START LINE (NEW!):")
+        let displayStartLine = (metadata.sourceStartLine ?? -1) + 1
+        print("   Where modifications begin: Line \(displayStartLine)")
+        print("   This tells us exactly where the changes start in the source!")
+        
+        // 2. Source and Destination Content Side-by-Side with Exact Line Numbers
+        print("\n2. 📝 SOURCE & DESTINATION CONTENT RECONSTRUCTION (EXACT LINES):")
+        if let sourceContent = metadata.sourceContent,
+           let destContent = metadata.destinationContent {
+            
+            print("   📄 SOURCE (\(sourceContent.count) chars) | 📄 DESTINATION (\(destContent.count) chars)")
+            print("   " + String(repeating: "─", count: 80))
+            
+            // Parse the original ASCII diff to understand what each line represents
+            let asciiLines = asciiDiff.components(separatedBy: .newlines)
+            var sourceLineNum = 1
+            var destLineNum = 1
+            
+            for asciiLine in asciiLines {
+                // Skip completely empty lines (no content at all)
+                if asciiLine.isEmpty {
+                    continue
+                }
+                
+                let lineContent: String
+                let symbol: String
+                
+                if asciiLine.hasPrefix("📎 ") {
+                    symbol = "📎"
+                    lineContent = String(asciiLine.dropFirst(2))
+                } else if asciiLine.hasPrefix("❌ ") {
+                    symbol = "❌"
+                    lineContent = String(asciiLine.dropFirst(2))
+                } else if asciiLine.hasPrefix("✅ ") {
+                    symbol = "✅"
+                    lineContent = String(asciiLine.dropFirst(2))
+                } else if asciiLine.hasPrefix("📎") && asciiLine.count == 1 {
+                    // Handle lines that are just the symbol (empty content lines)
+                    symbol = "📎"
+                    lineContent = ""
+                } else {
+                    // Handle lines without symbols (shouldn't happen in well-formed input)
+                    continue
+                }
+                
+                let sourceMarker = sourceLineNum == (metadata.sourceStartLine ?? -1) + 1 ? " ← MODS START" : ""
+                let destMarker = destLineNum == (metadata.sourceStartLine ?? -1) + 1 ? " ← MODS START" : ""
+                
+                switch symbol {
+                case "📎":
+                    // Retained line - appears in both source and destination at same line numbers
+                    let sourceDisplay = lineContent.padding(toLength: 60, withPad: " ", startingAt: 0)
+                    let sourceNumStr = String(format: "%4d", sourceLineNum)
+                    let destNumStr = String(format: "%4d", destLineNum)
+                    print("   \(sourceNumStr): \(sourceDisplay) | \(destNumStr): \(lineContent)\(sourceMarker)")
+                    sourceLineNum += 1
+                    destLineNum += 1
+                    
+                case "❌":
+                    // Deleted line - only in source, destination shows empty at different line
+                    let sourceDisplay = lineContent.padding(toLength: 60, withPad: " ", startingAt: 0)
+                    let sourceNumStr = String(format: "%4d", sourceLineNum)
+                    let emptyDest = "".padding(toLength: 60, withPad: " ", startingAt: 0)
+                    print("   \(sourceNumStr)- \(sourceDisplay) | ----: \(emptyDest)\(sourceMarker)")
+                    sourceLineNum += 1
+                    // Don't increment destLineNum for deleted lines
+                    
+                case "✅":
+                    // Inserted line - only in destination, source shows empty at different line
+                    let emptySource = "".padding(toLength: 60, withPad: " ", startingAt: 0)
+                    let destNumStr = String(format: "%4d", destLineNum)
+                    print("   ----: \(emptySource) | \(destNumStr)+ \(lineContent)\(destMarker)")
+                    destLineNum += 1
+                    // Don't increment sourceLineNum for inserted lines
+                    
+                default:
+                    break
+                }
+            }
+            
+            print("   " + String(repeating: "─", count: 80))
+            print("   Legend: - = Deleted/Changed, + = Added/Changed, : = Unchanged, ---- = No line")
+        }
+        
+        print("\n💡 This view shows the exact line numbers where content appears in source vs destination!")
+        print("🔍 Notice how deleted lines don't consume destination line numbers")
+        print("🔍 Notice how inserted lines don't consume source line numbers")
+        
+    } catch {
+        print("❌ Error during ASCII parsing: \(error)")
+    }
+    
+    print("\n" + String(repeating: "=", count: 70))
+    print("🏁 Enhanced ASCII Parser with Exact Line Numbers Completed")
+}
+
 // Run the main function
 do {
     try main()
     
     // Run the enhanced ASCII parser showcase
     showcaseEnhancedASCIIParser()
+    
+    // Run the exact line numbers version
+    showcaseEnhancedASCIIParserExactLines()
     
 } catch {
     print("Error in main function: \(error)")
