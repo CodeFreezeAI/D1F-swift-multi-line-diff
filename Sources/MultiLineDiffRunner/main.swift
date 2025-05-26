@@ -1899,39 +1899,64 @@ func showcaseEnhancedASCIIParser() {
         if let sourceContent = metadata.sourceContent,
            let destContent = metadata.destinationContent {
             
-            let sourceLines = sourceContent.components(separatedBy: .newlines)
-            let destLines = destContent.components(separatedBy: .newlines)
-            
             print("   📄 SOURCE (\(sourceContent.count) chars) | 📄 DESTINATION (\(destContent.count) chars)")
             print("   " + String(repeating: "─", count: 80))
             
-            let maxLines = max(sourceLines.count, destLines.count)
+            // Parse the original ASCII diff to understand what each line represents
+            let asciiLines = asciiDiff.components(separatedBy: .newlines)
+            var lineNum = 1
             
-            for i in 0..<maxLines {
-                let sourceLine = i < sourceLines.count ? sourceLines[i] : ""
-                let destLine = i < destLines.count ? destLines[i] : ""
-                
-                let marker = i == (metadata.sourceStartLine ?? -1) ? " ← MODS START" : ""
-                let lineNum = String(i + 1).padding(toLength: 2, withPad: " ", startingAt: 0)
-                
-                // No truncation - use full lines with wider columns
-                let sourceDisplay = sourceLine.padding(toLength: 60, withPad: " ", startingAt: 0)
-                let destDisplay = destLine
-                
-                if sourceLine == destLine && !sourceLine.isEmpty {
-                    // Same line in both
-                    print("   \(lineNum): \(sourceDisplay) | \(lineNum): \(destDisplay)\(marker)")
-                } else if sourceLine.isEmpty && !destLine.isEmpty {
-                    // Only in destination (insert)
-                    let emptySource = "".padding(toLength: 60, withPad: " ", startingAt: 0)
-                    print("   \(lineNum): \(emptySource) | \(lineNum)+ \(destDisplay)")
-                } else if !sourceLine.isEmpty && destLine.isEmpty {
-                    // Only in source (delete)
-                    print("   \(lineNum)- \(sourceDisplay) | \(lineNum):")
-                } else if sourceLine != destLine {
-                    // Different lines (modify)
-                    print("   \(lineNum)- \(sourceDisplay) | \(lineNum)+ \(destDisplay)\(marker)")
+            for asciiLine in asciiLines {
+                // Skip completely empty lines (no content at all)
+                if asciiLine.isEmpty {
+                    continue
                 }
+                
+                let lineContent: String
+                let symbol: String
+                
+                if asciiLine.hasPrefix("📎 ") {
+                    symbol = "📎"
+                    lineContent = String(asciiLine.dropFirst(2))
+                } else if asciiLine.hasPrefix("❌ ") {
+                    symbol = "❌"
+                    lineContent = String(asciiLine.dropFirst(2))
+                } else if asciiLine.hasPrefix("✅ ") {
+                    symbol = "✅"
+                    lineContent = String(asciiLine.dropFirst(2))
+                } else if asciiLine.hasPrefix("📎") && asciiLine.count == 1 {
+                    // Handle lines that are just the symbol (empty content lines)
+                    symbol = "📎"
+                    lineContent = ""
+                } else {
+                    // Handle lines without symbols (shouldn't happen in well-formed input)
+                    continue
+                }
+                
+                let marker = lineNum == (metadata.sourceStartLine ?? -1) + 1 ? " ← MODS START" : ""
+                let lineNumStr = String(format: "%4d", lineNum)
+                
+                switch symbol {
+                case "📎":
+                    // Retained line - appears in both source and destination
+                    let sourceDisplay = lineContent.padding(toLength: 60, withPad: " ", startingAt: 0)
+                    print("   \(lineNumStr): \(sourceDisplay) | \(lineNumStr): \(lineContent)\(marker)")
+                    
+                case "❌":
+                    // Deleted line - only in source
+                    let sourceDisplay = lineContent.padding(toLength: 60, withPad: " ", startingAt: 0)
+                    print("   \(lineNumStr)- \(sourceDisplay) | \(lineNumStr):\(marker)")
+                    
+                case "✅":
+                    // Inserted line - only in destination
+                    let emptySource = "".padding(toLength: 60, withPad: " ", startingAt: 0)
+                    print("   \(lineNumStr): \(emptySource) | \(lineNumStr)+ \(lineContent)\(marker)")
+                    
+                default:
+                    break
+                }
+                
+                lineNum += 1
             }
             
             print("   " + String(repeating: "─", count: 80))
