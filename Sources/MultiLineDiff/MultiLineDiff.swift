@@ -559,9 +559,59 @@ import CryptoKit
             }
         }
         
+        // Reconstruct source and modified strings from the parsed lines
+        var sourceLines: [String] = []
+        var modifiedLines: [String] = []
+        var sourceStartLine: Int? = nil
+        var currentLineNumber = 0
+        
+        // Re-parse the ASCII diff to capture the strings and find first insert
+        let diffLines = asciiDiff.components(separatedBy: .newlines)
+        for line in diffLines {
+            guard !line.isEmpty, line.count >= 2 else { continue }
+            
+            let prefix = String(line.prefix(2))
+            let content = String(line.dropFirst(2))
+            
+            switch prefix {
+            case "\(DiffSymbols.retain) ":
+                sourceLines.append(content)
+                modifiedLines.append(content)
+                currentLineNumber += 1
+            case "\(DiffSymbols.delete) ":
+                // First delete or insert marks where modifications start
+                if sourceStartLine == nil {
+                    sourceStartLine = currentLineNumber
+                }
+                sourceLines.append(content)
+                currentLineNumber += 1
+            case "\(DiffSymbols.insert) ":
+                // First delete or insert marks where modifications start
+                if sourceStartLine == nil {
+                    sourceStartLine = currentLineNumber
+                }
+                modifiedLines.append(content)
+            default:
+                continue
+            }
+        }
+        
+        let sourceString = sourceLines.joined(separator: "\n")
+        let modifiedString = modifiedLines.joined(separator: "\n")
+        
+        // Extract preceding and following context (first and last lines)
+        let precedingContext = sourceLines.first
+        let followingContext = sourceLines.last
+        
         return DiffResult(
             operations: operations,
             metadata: DiffMetadata(
+                sourceStartLine: sourceStartLine,
+                sourceTotalLines: sourceLines.count,
+                precedingContext: precedingContext,
+                followingContext: followingContext,
+                sourceContent: sourceString,
+                destinationContent: modifiedString,
                 algorithmUsed: .megatron,
                 applicationType: .requiresFullSource
             )
