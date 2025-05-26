@@ -344,18 +344,18 @@ import CryptoKit
     /// 
          /// **Terminal Format:**
      /// ```swift
-     /// = class UserManager {
-     /// -     private var users: [String: User] = [:]
-     /// +     private var users: [String: User] = [:]
-     /// +     private var userCount: Int = 0
+     /// 📎 class UserManager {
+     /// ❌     private var users: [String: User] = [:]
+     /// ✅     private var users: [String: User] = [:]
+     /// ✅     private var userCount: Int = 0
      /// ```
     /// 
          /// **AI Format:**
      /// ```swift
-     /// = class UserManager {
-     /// -     private var users: [String: User] = [:]
-     /// +     private var users: [String: User] = [:]
-     /// +     private var userCount: Int = 0
+     /// 📎 class UserManager {
+     /// ❌     private var users: [String: User] = [:]
+     /// ✅     private var users: [String: User] = [:]
+     /// ✅     private var userCount: Int = 0
      /// ```
     ///
     /// - Parameters:
@@ -434,26 +434,26 @@ import CryptoKit
     /// Parses ASCII diff text back into a DiffResult
     /// 
     /// This method allows AI models and users to submit diffs in a readable ASCII format
-    /// using standard diff prefixes:
-    /// - `=` for retained content (unchanged lines)
-    /// - `-` for deleted content (removed from source)
-    /// - `+` for inserted content (added to destination)
+    /// using emoji diff prefixes:
+    /// - `\(DiffSymbols.retain)` for retained content (unchanged lines)
+    /// - `\(DiffSymbols.delete)` for deleted content (removed from source)
+    /// - `\(DiffSymbols.insert)` for inserted content (added to destination)
     ///
     /// # Format Examples
     /// 
     /// **Input ASCII Diff:**
     /// ```swift
-    /// = class UserManager {
-    /// =     private var users: [String: User] = [:]
-    /// +     private var userCount: Int = 0
-    /// =     
-    /// -     func addUser(name: String, email: String) -> Bool {
-    /// +     func addUser(name: String, email: String, age: Int = 0) -> Result<User, UserError> {
-    /// =         guard !name.isEmpty && !email.isEmpty else {
-    /// -             return false
-    /// +             return .failure(.invalidInput)
-    /// =         }
-    /// = }
+    /// 📎 class UserManager {
+    /// 📎     private var users: [String: User] = [:]
+    /// ✅     private var userCount: Int = 0
+    /// 📎     
+    /// ❌     func addUser(name: String, email: String) -> Bool {
+    /// ✅     func addUser(name: String, email: String, age: Int = 0) -> Result<User, UserError> {
+    /// 📎         guard !name.isEmpty && !email.isEmpty else {
+    /// ❌             return false
+    /// ✅             return .failure(.invalidInput)
+    /// 📎         }
+    /// 📎 }
     /// ```
     ///
     /// **Output:** A `DiffResult` with operations that can be applied to recreate the changes
@@ -463,17 +463,17 @@ import CryptoKit
     /// **Parse AI-submitted diff:**
     /// ```swift
     /// let aiDiffText = """
-    /// = func greet() {
-    /// -     print("Hello")
-    /// +     print("Hello, World!")
-    /// = }
+    /// 📎 func greet() {
+    /// ❌     print("Hello")
+    /// ✅     print("Hello, World!")
+    /// 📎 }
     /// """
     /// 
     /// let diffResult = try MultiLineDiff.parseDiffFromASCII(aiDiffText)
     /// let result = try MultiLineDiff.applyDiff(to: sourceCode, diff: diffResult)
     /// ```
     ///
-    /// - Parameter asciiDiff: The ASCII diff text with =, -, + prefixes
+    /// - Parameter asciiDiff: The ASCII diff text with 📎, ❌, ✅ prefixes
     /// - Returns: A `DiffResult` containing the parsed diff operations
     /// - Throws: `DiffParsingError` if the ASCII diff format is invalid
     public static func parseDiffFromASCII(_ asciiDiff: String) throws -> DiffResult {
@@ -511,25 +511,25 @@ import CryptoKit
                 throw DiffParsingError.invalidFormat(line: lineNumber + 1, content: line)
             }
             
-            let prefix = String(line.prefix(2)) // Get "= ", "- ", or "+ "
+            let prefix = String(line.prefix(2)) // Get "📎 ", "❌ ", or "✅ "
             let content = String(line.dropFirst(2)) // Remove prefix
             
             switch prefix {
-            case "= ":
+            case "\(DiffSymbols.retain) ":
                 // Flush deletes/inserts, then add to retain
                 if !deleteLines.isEmpty || !insertLines.isEmpty {
                     flushOperations()
                 }
                 retainLines.append(content)
                 
-            case "- ":
+            case "\(DiffSymbols.delete) ":
                 // Flush retains/inserts, then add to delete
                 if !retainLines.isEmpty || !insertLines.isEmpty {
                     flushOperations()
                 }
                 deleteLines.append(content)
                 
-            case "+ ":
+            case "\(DiffSymbols.insert) ":
                 // Flush retains only (keep deletes for delete+insert pairs)
                 if !retainLines.isEmpty {
                     let text = retainLines.joined(separator: "\n") + "\n"
@@ -577,10 +577,10 @@ import CryptoKit
     /// **AI workflow:**
     /// ```swift
     /// let aiSubmittedDiff = """
-    /// = func calculate() -> Int {
-    /// -     return 42
-    /// +     return 100
-    /// = }
+    /// 📎 func calculate() -> Int {
+    /// ❌     return 42
+    /// ✅     return 100
+    /// 📎 }
     /// """
     /// 
     /// let result = try MultiLineDiff.applyASCIIDiff(
@@ -591,7 +591,7 @@ import CryptoKit
     ///
     /// - Parameters:
     ///   - source: The original source text to apply the diff to
-    ///   - asciiDiff: The ASCII diff text with =, -, + prefixes
+    ///   - asciiDiff: The ASCII diff text with 📎, ❌, ✅ prefixes
     /// - Returns: The resulting text after applying the parsed diff
     /// - Throws: `DiffParsingError` or `DiffApplicationError` if parsing or application fails
     public static func applyASCIIDiff(
@@ -713,10 +713,10 @@ import CryptoKit
     /// **AI submits a diff:**
     /// ```swift
     /// let aiDiff = """
-    /// = func calculate() -> Int {
-    /// -     return 42
-    /// +     return 100
-    /// = }
+    /// 📎 func calculate() -> Int {
+    /// ❌     return 42
+    /// ✅     return 100
+    /// 📎 }
     /// """
     /// 
     /// let result = try MultiLineDiff.createAIGeneratedDiff(
@@ -794,13 +794,13 @@ import CryptoKit
             let content = String(line.dropFirst(2))
             
             switch prefix {
-            case "= ":
+            case "\(DiffSymbols.retain) ":
                 retainLines.append(content)
                 patchLineCount += 1
-            case "- ":
+            case "\(DiffSymbols.delete) ":
                 deleteCount += 1
                 patchLineCount += 1
-            case "+ ":
+            case "\(DiffSymbols.insert) ":
                 insertCount += 1
                 patchLineCount += 1
             default:
@@ -932,7 +932,7 @@ public enum DiffParsingError: Error, LocalizedError {
         case .invalidFormat(let line, let content):
             return "Invalid diff format at line \(line): '\(content)'"
         case .invalidPrefix(let line, let prefix):
-            return "Invalid diff prefix '\(prefix)' at line \(line). Expected '=', '-', or '+'"
+            return "Invalid diff prefix '\(prefix)' at line \(line). Expected '📎', '❌', or '✅'"
         case .emptyDiff:
             return "Empty diff provided"
         }

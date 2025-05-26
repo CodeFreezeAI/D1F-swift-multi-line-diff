@@ -8,6 +8,14 @@
 import Foundation
 import SwiftUI
 
+// MARK: - Centralized Emoji Symbol Definitions
+public struct DiffSymbols {
+    public static let retain = "📎"
+    public static let delete = "❌"
+    public static let insert = "✅"
+    public static let unknown = "❓"
+}
+
 struct DiffLine: Identifiable {
     let id = UUID()
     let content: String
@@ -15,49 +23,68 @@ struct DiffLine: Identifiable {
 }
 
 enum DiffLineType {
-    case retained
-    case inserted
-    case deleted
+    case retain
+    case insert
+    case delete
     case unchanged
 }
 
-enum DiffOperationToText: String {
-    case retained = "="
-    case deleted  = "-"
-    case inserted = "+"
-    case unknown  = "?"
+enum DiffOperationToText {
+    case retain
+    case delete
+    case insert
+    case unknown
+    
+    var rawValue: String {
+        switch self {
+        case .retain: return DiffSymbols.retain
+        case .delete: return DiffSymbols.delete
+        case .insert: return DiffSymbols.insert
+        case .unknown: return DiffSymbols.unknown
+        }
+    }
     
     init(from operation: String) {
         guard let firstChar = operation.first?.description else {
             self = .unknown
             return
         }
-        self = DiffOperationToText(rawValue: firstChar) ?? .unknown
+        
+        switch firstChar {
+        case DiffSymbols.retain:
+            self = .retain
+        case DiffSymbols.delete:
+            self = .delete
+        case DiffSymbols.insert:
+            self = .insert
+        default:
+            self = .unknown
+        }
     }
     
     var textColor: Color {
         switch self {
-        case .retained: return .blue
-        case .deleted: return .red
-        case .inserted: return .green
+        case .retain: return .blue
+        case .delete: return .red
+        case .insert: return .green
         case .unknown: return .primary
         }
     }
     
     var numberBackground: Color {
         switch self {
-        case .retained: return .blue
-        case .deleted: return .red
-        case .inserted: return .green
+        case .retain: return .blue
+        case .delete: return .red
+        case .insert: return .green
         case .unknown: return .gray
         }
     }
     
     var background: Color {
         switch self {
-        case .retained: return Color(red: 0.1, green: 0.1, blue: 0.3)
-        case .deleted: return Color(red: 0.3, green: 0.1, blue: 0.1)
-        case .inserted: return Color(red: 0.1, green: 0.3, blue: 0.1)
+        case .retain: return Color(red: 0.1, green: 0.1, blue: 0.3)
+        case .delete: return Color(red: 0.3, green: 0.1, blue: 0.1)
+        case .insert: return Color(red: 0.1, green: 0.3, blue: 0.1)
         case .unknown: return Color.gray.opacity(0.1)
         }
     }
@@ -96,22 +123,22 @@ struct DiffOperationToTextModel {
 typealias DiffOperationModel = DiffOperationToTextModel
 
 class DiffProcessor {
-    static func generateDetailedDiffLines(from diffResult: DiffResult, sourceText: String) -> [String] {
+    static func generateDetailDiffLines(from diffResult: DiffResult, sourceText: String) -> [String] {
         var result: [String] = []
         var sourceIndex = 0
         
         for operation in diffResult.operations {
             switch operation {
             case .retain(let count):
-                let retainedText = StringHelper.extractSubstring(
+                let retainText = StringHelper.extractSubstring(
                     from: sourceText,
                     start: sourceIndex,
                     length: count
                 )
-                // Use prefixLines to format each line with "="
-                let prefixedLines = StringHelper.prefixLines(retainedText, with: "=")
+                // Use prefixLines to format each line with retain symbol
+                let prefixLines = StringHelper.prefixLines(retainText, with: DiffSymbols.retain)
                 // Split into individual lines and add to result
-                prefixedLines.enumerateLines { line, _ in
+                prefixLines.enumerateLines { line, _ in
                     if !line.isEmpty {
                         result.append(line)
                     }
@@ -119,15 +146,15 @@ class DiffProcessor {
                 sourceIndex += count
                 
             case .delete(let count):
-                let deletedText = StringHelper.extractSubstring(
+                let deleteText = StringHelper.extractSubstring(
                     from: sourceText,
                     start: sourceIndex,
                     length: count
                 )
-                // Use prefixLines to format each line with "-"
-                let prefixedLines = StringHelper.prefixLines(deletedText, with: "-")
+                // Use prefixLines to format each line with delete symbol
+                let prefixLines = StringHelper.prefixLines(deleteText, with: DiffSymbols.delete)
                 // Split into individual lines and add to result
-                prefixedLines.enumerateLines { line, _ in
+                prefixLines.enumerateLines { line, _ in
                     if !line.isEmpty {
                         result.append(line)
                     }
@@ -135,10 +162,10 @@ class DiffProcessor {
                 sourceIndex += count
                 
             case .insert(let insertText):
-                // Use prefixLines to format each line with "+"
-                let prefixedLines = StringHelper.prefixLines(insertText, with: "+")
+                // Use prefixLines to format each line with insert symbol
+                let prefixLines = StringHelper.prefixLines(insertText, with: DiffSymbols.insert)
                 // Split into individual lines and add to result
-                prefixedLines.enumerateLines { line, _ in
+                prefixLines.enumerateLines { line, _ in
                     if !line.isEmpty {
                         result.append(line)
                     }
@@ -150,11 +177,11 @@ class DiffProcessor {
     }
     
     private static func processOperation(type: String, text: String,
-                                         detailedLines: inout [String],
+                                         detailLines: inout [String],
                                          debugText: inout String) {
-        let prefixedLines = StringHelper.prefixLines(text, with: type)
-        detailedLines.append("\(type)\(text)")
-        debugText += prefixedLines
+        let prefixLines = StringHelper.prefixLines(text, with: type)
+        detailLines.append("\(type)\(text)")
+        debugText += prefixLines
     }
 }
 
@@ -261,7 +288,7 @@ class DiffViewModel: ObservableObject {
     }
     """
     
-    @Published var detailedDiffLines: [String] = []
+    @Published var detailDiffLines: [String] = []
     @Published var diffResult: DiffResult?
     
     func generateDiff() {
@@ -285,7 +312,7 @@ class DiffViewModel: ObservableObject {
                 includeMetadata: true
             )
             
-            detailedDiffLines = DiffProcessor.generateDetailedDiffLines(
+            detailDiffLines = DiffProcessor.generateDetailDiffLines(
                 from: diffResult, 
                 sourceText: normalizedSource
             )
@@ -304,7 +331,7 @@ class DiffViewModel: ObservableObject {
             print("Reconstructed Text Matches: \(reconstructedText == normalizedDestination)")
         } catch {
             print("Diff generation error: \(error)")
-            detailedDiffLines = ["Error generating diff"]
+            detailDiffLines = ["Error generating diff"]
         }
     }
 }
@@ -395,7 +422,7 @@ struct DiffVisualizationView: View {
                         
                         ScrollView {
                             VStack(alignment: .leading, spacing: 0) {
-                                ForEach(Array(viewModel.detailedDiffLines.enumerated()), id: \.offset) { index, line in
+                                ForEach(Array(viewModel.detailDiffLines.enumerated()), id: \.offset) { index, line in
                                     DiffOperationView(
                                         model: DiffOperationModel(
                                             operation: line, 
@@ -463,13 +490,13 @@ public struct TerminalDiffFormatter {
     
     /// Generate ASCII text diff representation (no colors)
     public static func generateASCIIDiff(from diffResult: DiffResult, sourceText: String) -> String {
-        let formattedLines = DiffProcessor.generateDetailedDiffLines(from: diffResult, sourceText: sourceText)
+        let formattedLines = DiffProcessor.generateDetailDiffLines(from: diffResult, sourceText: sourceText)
         return formattedLines.joined(separator: "\n")
     }
     
     /// Generate colored terminal diff representation
     public static func generateColoredTerminalDiff(from diffResult: DiffResult, sourceText: String) -> String {
-        let formattedLines = DiffProcessor.generateDetailedDiffLines(from: diffResult, sourceText: sourceText)
+        let formattedLines = DiffProcessor.generateDetailDiffLines(from: diffResult, sourceText: sourceText)
         var coloredOutput = ""
         
         for line in formattedLines {
@@ -486,7 +513,7 @@ public struct TerminalDiffFormatter {
     
     /// Generate colored terminal diff with background highlighting
     public static func generateHighlightedTerminalDiff(from diffResult: DiffResult, sourceText: String) -> String {
-        let formattedLines = DiffProcessor.generateDetailedDiffLines(from: diffResult, sourceText: sourceText)
+        let formattedLines = DiffProcessor.generateDetailDiffLines(from: diffResult, sourceText: sourceText)
         var highlightedOutput = ""
         
         for line in formattedLines {
@@ -535,11 +562,11 @@ public struct TerminalDiffFormatter {
     
     private static func getTerminalColor(for operation: DiffOperationToText) -> String {
         switch operation {
-        case .retained:
+        case .retain:
             return ANSIColor.blue.rawValue
-        case .deleted:
+        case .delete:
             return ANSIColor.red.rawValue
-        case .inserted:
+        case .insert:
             return ANSIColor.green.rawValue
         case .unknown:
             return ANSIColor.gray.rawValue
@@ -548,11 +575,11 @@ public struct TerminalDiffFormatter {
     
     private static func getTerminalHighlightColors(for operation: DiffOperationToText) -> (text: String, background: String) {
         switch operation {
-        case .retained:
+        case .retain:
             return (ANSIColor.blue.rawValue, ANSIColor.grayBg.rawValue)
-        case .deleted:
+        case .delete:
             return (ANSIColor.red.rawValue, ANSIColor.redBg.rawValue)
-        case .inserted:
+        case .insert:
             return (ANSIColor.green.rawValue, ANSIColor.greenBg.rawValue)
         case .unknown:
             return (ANSIColor.gray.rawValue, ANSIColor.grayBg.rawValue)

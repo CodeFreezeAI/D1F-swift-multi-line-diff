@@ -56,7 +56,7 @@ struct DiffDisplayTests {
         #expect(!aiOutput.contains("\u{001B}"))
         
         // Should contain diff markers
-        #expect(aiOutput.contains("=") || aiOutput.contains("+") || aiOutput.contains("-"))
+        #expect(aiOutput.contains(DiffSymbols.retain) || aiOutput.contains(DiffSymbols.insert) || aiOutput.contains(DiffSymbols.delete))
         
         // Should contain some of the source content
         #expect(aiOutput.contains("UserManager"))
@@ -97,7 +97,7 @@ struct DiffDisplayTests {
         #expect(terminalOutput.contains("\u{001B}"))
         
         // Should contain diff markers
-        #expect(terminalOutput.contains("=") || terminalOutput.contains("+") || terminalOutput.contains("-"))
+        #expect(terminalOutput.contains(DiffSymbols.retain) || terminalOutput.contains(DiffSymbols.insert) || terminalOutput.contains(DiffSymbols.delete))
         
         // Should contain some of the source content
         #expect(terminalOutput.contains("greet"))
@@ -166,8 +166,8 @@ struct DiffDisplayTests {
         )
         
         // Should contain insertion markers
-        #expect(aiOutput.contains("+"))
-        #expect(terminalOutput.contains("+"))
+        #expect(aiOutput.contains(DiffSymbols.insert))
+        #expect(terminalOutput.contains(DiffSymbols.insert))
         
         // Should contain the new content
         #expect(aiOutput.contains("NewClass"))
@@ -208,8 +208,8 @@ struct DiffDisplayTests {
         )
         
         // Should contain deletion markers
-        #expect(aiOutput.contains("-"))
-        #expect(terminalOutput.contains("-"))
+        #expect(aiOutput.contains(DiffSymbols.delete))
+        #expect(terminalOutput.contains(DiffSymbols.delete))
         
         // Should contain the old content
         #expect(aiOutput.contains("OldClass"))
@@ -357,7 +357,7 @@ struct DiffDisplayTests {
         #expect(!output.contains("\u{001B}"))
         
         // Should contain diff markers
-        #expect(output.contains("=") || output.contains("+") || output.contains("-"))
+        #expect(output.contains(DiffSymbols.retain) || output.contains(DiffSymbols.insert) || output.contains(DiffSymbols.delete))
         
         // Should contain the struct content
         #expect(output.contains("Point"))
@@ -398,7 +398,7 @@ struct DiffDisplayTests {
         #expect(output.contains("\u{001B}"))
         
         // Should contain diff markers
-        #expect(output.contains("=") || output.contains("+") || output.contains("-"))
+        #expect(output.contains(DiffSymbols.retain) || output.contains(DiffSymbols.insert) || output.contains(DiffSymbols.delete))
         
         // Should contain the enum content
         #expect(output.contains("Status"))
@@ -472,7 +472,7 @@ struct DiffDisplayTests {
             destination: String(repeating: "line\n", count: 100),
             format: .ai
         )
-        #expect(largeInsertOutput.contains("+"))
+        #expect(largeInsertOutput.contains(DiffSymbols.insert))
         #expect(largeInsertOutput.contains("line"))
         
         // Test large deletion
@@ -481,7 +481,7 @@ struct DiffDisplayTests {
             destination: "",
             format: .terminal
         )
-        #expect(largeDeletionOutput.contains("-"))
+        #expect(largeDeletionOutput.contains(DiffSymbols.delete))
         #expect(largeDeletionOutput.contains("delete"))
         
         print("✅ Edge case tests completed")

@@ -9,9 +9,9 @@
 public struct AlgorithmNames {
     public static let zoom = "Zoom"
     public static let megatron = "Megatron"
-    public static let flash = "Flash"
+    public static let flash = "Flash" // fastest least detailed diff (3-4 ops)
     public static let starscream = "Starscream"
-    public static let optimus = "Optimus"
+    public static let optimus = "Optimus" // fastest most detailed diff (ops based on number of lines)
     
     /// Legacy names for backward compatibility
     public struct Legacy {

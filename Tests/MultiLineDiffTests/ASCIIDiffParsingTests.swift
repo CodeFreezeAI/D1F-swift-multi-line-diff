@@ -7,10 +7,10 @@ struct ASCIIDiffParsingTests {
     @Test("Parse simple ASCII diff")
     func testParseSimpleASCIIDiff() throws {
         let asciiDiff = """
-        = func greet() {
-        -     print("Hello")
-        +     print("Hello, World!")
-        = }
+        \(DiffSymbols.retain) func greet() {
+        \(DiffSymbols.delete)     print("Hello")
+        \(DiffSymbols.insert)     print("Hello, World!")
+        \(DiffSymbols.retain) }
         """
         
         let diffResult = try MultiLineDiff.parseDiffFromASCII(asciiDiff)
@@ -61,13 +61,13 @@ struct ASCIIDiffParsingTests {
     @Test("Parse ASCII diff with only additions")
     func testParseASCIIDiffOnlyAdditions() throws {
         let asciiDiff = """
-        = class Example {
-        +     var newProperty: String = "value"
-        +     
-        +     func newMethod() {
-        +         print("New functionality")
-        +     }
-        = }
+        \(DiffSymbols.retain) class Example {
+        \(DiffSymbols.insert)     var newProperty: String = "value"
+        \(DiffSymbols.insert)     
+        \(DiffSymbols.insert)     func newMethod() {
+        \(DiffSymbols.insert)         print("New functionality")
+        \(DiffSymbols.insert)     }
+        \(DiffSymbols.retain) }
         """
         
         let diffResult = try MultiLineDiff.parseDiffFromASCII(asciiDiff)
@@ -94,13 +94,13 @@ struct ASCIIDiffParsingTests {
     @Test("Parse ASCII diff with only deletions")
     func testParseASCIIDiffOnlyDeletions() throws {
         let asciiDiff = """
-        = class Example {
-        -     var oldProperty: String = "old"
-        -     
-        -     func oldMethod() {
-        -         print("Old functionality")
-        -     }
-        = }
+        \(DiffSymbols.retain) class Example {
+        \(DiffSymbols.delete)     var oldProperty: String = "old"
+        \(DiffSymbols.delete)     
+        \(DiffSymbols.delete)     func oldMethod() {
+        \(DiffSymbols.delete)         print("Old functionality")
+        \(DiffSymbols.delete)     }
+        \(DiffSymbols.retain) }
         """
         
         let diffResult = try MultiLineDiff.parseDiffFromASCII(asciiDiff)
@@ -134,23 +134,23 @@ struct ASCIIDiffParsingTests {
     @Test("Parse complex ASCII diff with mixed operations")
     func testParseComplexASCIIDiff() throws {
         let asciiDiff = """
-        = struct User {
-        =     let id: UUID
-        -     let name: String
-        -     let email: String
-        +     let fullName: String
-        +     let emailAddress: String
-        +     let age: Int
-        =     
-        =     init(name: String, email: String) {
-        =         self.id = UUID()
-        -         self.name = name
-        -         self.email = email
-        +         self.fullName = name
-        +         self.emailAddress = email
-        +         self.age = 0
-        =     }
-        = }
+        \(DiffSymbols.retain) struct User {
+        \(DiffSymbols.retain)     let id: UUID
+        \(DiffSymbols.delete)     let name: String
+        \(DiffSymbols.delete)     let email: String
+        \(DiffSymbols.insert)     let fullName: String
+        \(DiffSymbols.insert)     let emailAddress: String
+        \(DiffSymbols.insert)     let age: Int
+        \(DiffSymbols.retain)     
+        \(DiffSymbols.retain)     init(name: String, email: String) {
+        \(DiffSymbols.retain)         self.id = UUID()
+        \(DiffSymbols.delete)         self.name = name
+        \(DiffSymbols.delete)         self.email = email
+        \(DiffSymbols.insert)         self.fullName = name
+        \(DiffSymbols.insert)         self.emailAddress = email
+        \(DiffSymbols.insert)         self.age = 0
+        \(DiffSymbols.retain)     }
+        \(DiffSymbols.retain) }
         """
         
         let diffResult = try MultiLineDiff.parseDiffFromASCII(asciiDiff)
@@ -182,10 +182,10 @@ struct ASCIIDiffParsingTests {
         """
         
         let asciiDiff = """
-        = func greet() {
-        -     print("Hello")
-        +     print("Hello, World!")
-        = }
+        \(DiffSymbols.retain) func greet() {
+        \(DiffSymbols.delete)     print("Hello")
+        \(DiffSymbols.insert)     print("Hello, World!")
+        \(DiffSymbols.retain) }
         """
         
         let result = try MultiLineDiff.applyASCIIDiff(
@@ -261,13 +261,13 @@ struct ASCIIDiffParsingTests {
     
     @Test("Parse ASCII diff with empty lines")
     func testParseASCIIDiffWithEmptyLines() throws {
-        let asciiDiff = """
-        = func example() {
-        =     let x = 1
-        
-        =     let y = 2
-        +     let z = 3
-        = }
+                let asciiDiff = """
+        \(DiffSymbols.retain) func example() {
+        \(DiffSymbols.retain)     let x = 1
+
+        \(DiffSymbols.retain)     let y = 2
+        \(DiffSymbols.insert)     let z = 3
+        \(DiffSymbols.retain) }
         """
         
         let diffResult = try MultiLineDiff.parseDiffFromASCII(asciiDiff)
@@ -281,9 +281,9 @@ struct ASCIIDiffParsingTests {
     @Test("Error handling: invalid prefix")
     func testInvalidPrefix() throws {
         let invalidDiff = """
-        = func example() {
+        \(DiffSymbols.retain) func example() {
         *     invalid prefix
-        = }
+        \(DiffSymbols.retain) }
         """
         
         do {
@@ -303,9 +303,9 @@ struct ASCIIDiffParsingTests {
     @Test("Error handling: invalid format")
     func testInvalidFormat() throws {
         let invalidDiff = """
-        = func example() {
+        \(DiffSymbols.retain) func example() {
         x
-        = }
+        \(DiffSymbols.retain) }
         """
         
         do {
@@ -325,10 +325,10 @@ struct ASCIIDiffParsingTests {
     @Test("Parse ASCII diff with special characters")
     func testParseASCIIDiffWithSpecialCharacters() throws {
         let asciiDiff = """
-        = func greet(name: String) {
-        -     print("Hello, \\(name)!")
-        +     print("👋 Hello, \\(name)! 🎉")
-        = }
+        \(DiffSymbols.retain) func greet(name: String) {
+        \(DiffSymbols.delete)     print("Hello, \\(name)!")
+        \(DiffSymbols.insert)     print("👋 Hello, \\(name)! 🎉")
+        \(DiffSymbols.retain) }
         """
         
         let diffResult = try MultiLineDiff.parseDiffFromASCII(asciiDiff)
@@ -350,10 +350,10 @@ struct ASCIIDiffParsingTests {
         let sourceCode = "let x = 1\nlet y = 2\n"
         
         let asciiDiff = """
-        = let x = 1
-        - let y = 2
-        + let y = 20
-        + let z = 3
+        \(DiffSymbols.retain) let x = 1
+        \(DiffSymbols.delete) let y = 2
+        \(DiffSymbols.insert) let y = 20
+        \(DiffSymbols.insert) let z = 3
         """
         
         let result = try MultiLineDiff.applyASCIIDiff(
@@ -386,15 +386,15 @@ struct ASCIIDiffParsingTests {
         
         // AI submits this diff
         let aiSubmittedDiff = """
-        = class UserManager {
-        =     private var users: [User] = []
-        +     private var userCount: Int = 0
-        =     
-        =     func addUser(_ user: User) {
-        =         users.append(user)
-        +         userCount += 1
-        =     }
-        = }
+        \(DiffSymbols.retain) class UserManager {
+        \(DiffSymbols.retain)     private var users: [User] = []
+        \(DiffSymbols.insert)     private var userCount: Int = 0
+        \(DiffSymbols.retain)     
+        \(DiffSymbols.retain)     func addUser(_ user: User) {
+        \(DiffSymbols.retain)         users.append(user)
+        \(DiffSymbols.insert)         userCount += 1
+        \(DiffSymbols.retain)     }
+        \(DiffSymbols.retain) }
         """
         
         // Apply the AI's diff
@@ -434,7 +434,7 @@ struct ASCIIDiffParsingTests {
             to: originalCode,
             diff: verificationDiff
         )
-        
+ 
         #expect(verificationResult == modifiedCode)
         print("   Round-trip verification: ✅")
     }
