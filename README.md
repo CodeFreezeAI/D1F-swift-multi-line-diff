@@ -2,7 +2,7 @@
 
 [![Swift 6.1](https://img.shields.io/badge/Swift-6.1-orange.svg)](https://swift.org)
 [![Website](https://img.shields.io/badge/website-xcf.ai-blue.svg)](https://xcf.ai)
-[![Version](https://img.shields.io/badge/version-2.0.0-green.svg)](https://github.com/toddbruss/swift-multi-line-diff)
+[![Version](https://img.shields.io/badge/version-2.0.1-green.svg)](https://github.com/toddbruss/swift-multi-line-diff)
 [![GitHub stars](https://img.shields.io/github/stars/codefreezeai/swift-multi-line-diff.svg?style=social)](https://github.com/codefreezeai/swift-multi-line-diff/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/codefreezeai/swift-multi-line-diff.svg?style=social)](https://github.com/codefreezeai/swift-multi-line-diff/network)
 
@@ -13,7 +13,7 @@
 **Repository**: [CodeFreezeAI/swift-multi-line-diff](https://github.com/CodeFreezeAI/swift-multi-line-diff.git)  
 **License**: MIT  
 **Language**: Swift 100%  
-**Latest Release**: v2.0.0 (May 26, 2025)  
+**Latest Release**: v2.0.1 (May 26, 2025)  
 **Creator**: Todd Bruss © xcf.ai
 
 ---
@@ -29,7 +29,7 @@
    ```
    https://github.com/CodeFreezeAI/swift-multi-line-diff.git
    ```
-4. Select version `1.3.3` or **Up to Next Major Version**
+4. Select version `2.0.1` or **Up to Next Major Version**
 5. Click **Add Package**
 6. Select **MultiLineDiff** target and click **Add Package**
 
@@ -51,7 +51,7 @@ let package = Package(
     dependencies: [
         .package(
             url: "https://github.com/CodeFreezeAI/swift-multi-line-diff.git",
-            from: "1.3.3"
+            from: "2.0.1"
         )
     ],
     targets: [
