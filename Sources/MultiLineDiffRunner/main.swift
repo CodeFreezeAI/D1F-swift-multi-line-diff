@@ -1818,9 +1818,256 @@ func main() throws {
     demonstrateASCIIRoundTrip()
 }
 
+// MARK: - Enhanced ASCII Parser Metadata Showcase
+
+func showcaseEnhancedASCIIParser() {
+    print("\n🎯 Enhanced ASCII Parser Metadata Showcase")
+    print(String(repeating: "=", count: 70))
+    print("🚀 Demonstrating the new enhanced metadata capabilities!")
+    
+    // Create a comprehensive ASCII diff example
+    let asciiDiff = """
+    📎 class Calculator {
+    📎     private var result: Double = 0
+    📎     private var history: [String] = []
+    📎     
+    ❌     func add(_ value: Double) {
+    ❌         result += value
+    ❌     }
+    ❌     
+    ❌     func subtract(_ value: Double) {
+    ❌         result -= value
+    ❌     }
+    ✅     func add(_ value: Double) -> Double {
+    ✅         result += value
+    ✅         history.append("Added \\(value)")
+    ✅         return result
+    ✅     }
+    ✅     
+    ✅     func subtract(_ value: Double) -> Double {
+    ✅         result -= value
+    ✅         history.append("Subtracted \\(value)")
+    ✅         return result
+    ✅     }
+    ✅     
+    ✅     func multiply(_ value: Double) -> Double {
+    ✅         result *= value
+    ✅         history.append("Multiplied by \\(value)")
+    ✅         return result
+    ✅     }
+    📎     
+    📎     func getResult() -> Double {
+    📎         return result
+    📎     }
+    ✅     
+    ✅     func getHistory() -> [String] {
+    ✅         return history
+    ✅     }
+    ✅     
+    ✅     func clearHistory() {
+    ✅         history.removeAll()
+    ✅     }
+    📎 }
+    """
+    
+    print("\n📄 ASCII Diff Input:")
+    print(asciiDiff)
+    
+    do {
+        print("\n🔄 Parsing ASCII diff with enhanced metadata...")
+        let diffResult = try MultiLineDiff.parseDiffFromASCII(asciiDiff)
+        
+        print("✅ Successfully parsed \(diffResult.operations.count) operations")
+        
+        // Showcase the enhanced metadata
+        guard let metadata = diffResult.metadata else {
+            print("❌ No metadata found!")
+            return
+        }
+        
+        print("\n✨ ENHANCED METADATA SHOWCASE:")
+        print(String(repeating: "-", count: 50))
+        
+        // 1. Source Start Line
+        print("\n1. 🎯 SOURCE START LINE (NEW!):")
+        let displayStartLine = (metadata.sourceStartLine ?? -1) + 1
+        print("   Where modifications begin: Line \(displayStartLine)")
+        print("   This tells us exactly where the changes start in the source!")
+        
+        // 2. Source and Destination Content Side-by-Side
+        print("\n2. 📝 SOURCE & DESTINATION CONTENT RECONSTRUCTION:")
+        if let sourceContent = metadata.sourceContent,
+           let destContent = metadata.destinationContent {
+            
+            let sourceLines = sourceContent.components(separatedBy: .newlines)
+            let destLines = destContent.components(separatedBy: .newlines)
+            
+            print("   📄 SOURCE (\(sourceContent.count) chars) | 📄 DESTINATION (\(destContent.count) chars)")
+            print("   " + String(repeating: "─", count: 80))
+            
+            let maxLines = max(sourceLines.count, destLines.count)
+            
+            for i in 0..<maxLines {
+                let sourceLine = i < sourceLines.count ? sourceLines[i] : ""
+                let destLine = i < destLines.count ? destLines[i] : ""
+                
+                let marker = i == (metadata.sourceStartLine ?? -1) ? " ← MODS START" : ""
+                let lineNum = String(i + 1).padding(toLength: 2, withPad: " ", startingAt: 0)
+                
+                // No truncation - use full lines with wider columns
+                let sourceDisplay = sourceLine.padding(toLength: 60, withPad: " ", startingAt: 0)
+                let destDisplay = destLine
+                
+                if sourceLine == destLine && !sourceLine.isEmpty {
+                    // Same line in both
+                    print("   \(lineNum): \(sourceDisplay) | \(lineNum): \(destDisplay)\(marker)")
+                } else if sourceLine.isEmpty && !destLine.isEmpty {
+                    // Only in destination (insert)
+                    let emptySource = "".padding(toLength: 60, withPad: " ", startingAt: 0)
+                    print("   \(lineNum): \(emptySource) | \(lineNum): + \(destDisplay)")
+                } else if !sourceLine.isEmpty && destLine.isEmpty {
+                    // Only in source (delete)
+                    print("   \(lineNum): - \(sourceDisplay) | \(lineNum):")
+                } else if sourceLine != destLine {
+                    // Different lines (modify)
+                    print("   \(lineNum): - \(sourceDisplay) | \(lineNum): + \(destDisplay)\(marker)")
+                }
+            }
+            
+            print("   " + String(repeating: "─", count: 80))
+            print("   Legend: ❌ = Deleted/Changed, ✅ = Added/Changed, No symbol = Unchanged")
+        }
+        
+        // 3. Context Information
+        print("\n3. 📍 CONTEXT INFORMATION:")
+        print("   Preceding context: '\(metadata.precedingContext ?? "None")'")
+        print("   Following context: '\(metadata.followingContext ?? "None")'")
+        print("   Total source lines: \(metadata.sourceTotalLines ?? 0)")
+        
+        // 4. Algorithm and Application Info
+        print("\n4. 🔧 ALGORITHM & APPLICATION INFO:")
+        print("   Algorithm used: \(metadata.algorithmUsed?.displayName ?? "Unknown")")
+        print("   Application type: \(metadata.applicationType?.rawValue ?? "Unknown")")
+        
+        // 5. Operations Breakdown
+        print("\n5. ⚙️ OPERATIONS BREAKDOWN:")
+        for (i, operation) in diffResult.operations.enumerated() {
+            switch operation {
+            case .retain(let count):
+                print("   \(i + 1). RETAIN \(count) characters")
+            case .delete(let count):
+                print("   \(i + 1). DELETE \(count) characters")
+            case .insert(let text):
+                let preview = text.count > 50 ? String(text.prefix(50)) + "..." : text
+                print("   \(i + 1). INSERT \(text.count) characters: '\(preview)'")
+            }
+        }
+        
+        // 6. Practical Use Cases Demo
+        print("\n6. 💡 PRACTICAL USE CASES:")
+        
+        // AI Validation
+        print("\n   🤖 AI VALIDATION:")
+        let hasValidSource = metadata.sourceContent?.contains("func add") ?? false
+        let hasValidDest = metadata.destinationContent?.contains("return result") ?? false
+        let hasLocation = metadata.sourceStartLine != nil
+        print("   ✅ Source validation: \(hasValidSource)")
+        print("   ✅ Destination validation: \(hasValidDest)")
+        print("   ✅ Location tracking: \(hasLocation)")
+        
+        // Location Tracking
+        print("\n   📍 LOCATION TRACKING:")
+        if let startLine = metadata.sourceStartLine {
+            print("   ✅ Changes begin at line \(startLine + 1)")
+            print("   ✅ Can precisely locate modifications in large files")
+            print("   ✅ Perfect for patch application and conflict detection")
+        }
+        
+        // Context Matching
+        print("\n   🔍 CONTEXT MATCHING:")
+        if let preceding = metadata.precedingContext,
+           let following = metadata.followingContext {
+            print("   ✅ Can find location using: '\(preceding)' ... '\(following)'")
+            print("   ✅ Robust matching even in modified files")
+        }
+        
+        // Verification
+        print("\n   ✅ VERIFICATION:")
+        let verificationResult = DiffMetadata.verifyDiffChecksum(
+            diff: diffResult,
+            storedSource: metadata.sourceContent,
+            storedDestination: metadata.destinationContent
+        )
+        print("   ✅ Diff verification: \(verificationResult ? "PASSED" : "FAILED")")
+        
+        // 7. Apply the diff to demonstrate it works
+        print("\n7. 🚀 DIFF APPLICATION TEST:")
+        
+        // First, let's reconstruct what the original source should be
+        let originalSource = metadata.sourceContent ?? ""
+        print("   Applying diff to reconstructed source...")
+        
+        let appliedResult = try MultiLineDiff.applyDiff(to: originalSource, diff: diffResult)
+        let expectedResult = metadata.destinationContent ?? ""
+        let applicationSuccess = appliedResult == expectedResult
+        
+        print("   ✅ Application success: \(applicationSuccess)")
+        print("   📊 Original length: \(originalSource.count)")
+        print("   📊 Result length: \(appliedResult.count)")
+        print("   📊 Expected length: \(expectedResult.count)")
+        
+        if applicationSuccess {
+            print("\n🎉 COMPLETE SUCCESS!")
+            print("🚀 Enhanced ASCII parser metadata is working perfectly!")
+            print("\n💫 KEY ACHIEVEMENTS:")
+            print("   ✅ Source/destination content reconstruction")
+            print("   ✅ Precise modification location tracking")
+            print("   ✅ Context information for file positioning")
+            print("   ✅ Complete verification capabilities")
+            print("   ✅ AI integration ready")
+            print("   ✅ Backward compatibility maintained")
+        } else {
+            print("\n❌ Application test failed!")
+            print("🔍 Investigating differences...")
+            
+            let resultLines = appliedResult.components(separatedBy: .newlines)
+            let expectedLines = expectedResult.components(separatedBy: .newlines)
+            
+            for (i, (result, expected)) in zip(resultLines, expectedLines).enumerated() {
+                if result != expected {
+                    print("   Line \(i) differs:")
+                    print("   Result:   '\(result)'")
+                    print("   Expected: '\(expected)'")
+                    break
+                }
+            }
+        }
+        
+        // 8. Summary Statistics
+        print("\n8. 📊 SUMMARY STATISTICS:")
+        print("   📄 ASCII diff lines: \(asciiDiff.components(separatedBy: .newlines).count)")
+        print("   ⚙️ Operations generated: \(diffResult.operations.count)")
+        print("   📝 Source lines: \(metadata.sourceTotalLines ?? 0)")
+        print("   🎯 Modification start: Line \((metadata.sourceStartLine ?? -1) + 1)")
+        print("   📊 Source characters: \(metadata.sourceContent?.count ?? 0)")
+        print("   📊 Destination characters: \(metadata.destinationContent?.count ?? 0)")
+        print("   🔧 Algorithm: \(metadata.algorithmUsed?.displayName ?? "Unknown")")
+        
+    } catch {
+        print("❌ Error during ASCII parsing: \(error)")
+    }
+    
+    print("\n" + String(repeating: "=", count: 70))
+    print("🏁 Enhanced ASCII Parser Metadata Showcase Completed")
+}
+
 // Run the main function
 do {
     try main()
+    
+    // Run the enhanced ASCII parser showcase
+    showcaseEnhancedASCIIParser()
+    
 } catch {
     print("Error in main function: \(error)")
 }

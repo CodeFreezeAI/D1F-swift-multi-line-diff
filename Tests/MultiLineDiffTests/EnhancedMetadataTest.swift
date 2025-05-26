@@ -91,9 +91,10 @@ struct EnhancedMetadataTest {
         
         // Test source start line (where modifications begin)
         print("\n5. 📍 Source Start Line (where modifications begin):")
-        print("Expected: 2 (after 2 retain lines, first delete/insert occurs)")
+        print("Expected: 2 (0-indexed, after 2 retain lines, first delete/insert occurs)")
         print("Actual: \(metadata.sourceStartLine ?? -1)")
-        #expect(metadata.sourceStartLine == 2, "Should start at line 2 where modifications begin")
+        print("Display: Line \((metadata.sourceStartLine ?? -1) + 1) (1-indexed for users)")
+        #expect(metadata.sourceStartLine == 2, "Should start at line 2 (0-indexed) where modifications begin")
         
         // Test source total lines
         print("\n6. 📊 Source Total Lines:")
