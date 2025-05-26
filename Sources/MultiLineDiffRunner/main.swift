@@ -124,6 +124,219 @@ runTest("Round Trip Tests") {
 }
 
 
+func runUserManagerASCIIDiffTest() {
+    print("\n🚀 UserManager ASCII Diff Test")
+    print(String(repeating: "=", count: 50))
+    
+    let sourceCode = """
+    class UserManager {
+        private var users: [String: User] = [:]
+        
+        func addUser(name: String, email: String) -> Bool {
+            guard !name.isEmpty && !email.isEmpty else {
+                return false
+            }
+            
+            let user = User(name: name, email: email)
+            users[email] = user
+            return true
+        }
+        
+        func getUser(by email: String) -> User? {
+            return users[email]
+        }
+        
+        func removeUser(email: String) {
+            users.removeValue(forKey: email)
+        }
+    }
+    
+    struct User {
+        let name: String
+        let email: String
+    }
+    """
+    
+    let destinationCode = """
+    class UserManager {
+        private var users: [String: User] = [:]
+        private var userCount: Int = 0
+        
+        func addUser(name: String, email: String, age: Int = 0) -> Result<User, UserError> {
+            guard !name.isEmpty && !email.isEmpty else {
+                return .failure(.invalidInput)
+            }
+            
+            let user = User(id: UUID(), name: name, email: email, age: age)
+            users[email] = user
+            userCount += 1
+            return .success(user)
+        }
+        
+        func getUser(by email: String) -> User? {
+            return users[email]
+        }
+        
+        func removeUser(email: String) -> Bool {
+            guard users[email] != nil else { return false }
+            users.removeValue(forKey: email)
+            userCount -= 1
+            return true
+        }
+        
+        func getAllUsers() -> [User] {
+            return Array(users.values).sorted { $0.name < $1.name }
+        }
+        
+        var count: Int {
+            return userCount
+        }
+    }
+    
+    struct User {
+        let id: UUID
+        let name: String
+        let email: String
+        let age: Int
+    }
+    
+    enum UserError: Error {
+        case invalidInput
+        case userAlreadyExists
+    }
+    """
+    
+    print("\n📝 Source Code:")
+    print(sourceCode)
+    
+    print("\n📝 Destination Code:")
+    print(destinationCode)
+    
+    do {
+        // Step 1: Create diff and display as ASCII
+        print("\n🔄 Step 1: Creating diff and converting to ASCII...")
+        let diff = MultiLineDiff.createDiff(
+            source: sourceCode,
+            destination: destinationCode,
+            algorithm: .megatron
+        )
+        
+        let asciiDiff = MultiLineDiff.displayDiff(
+            diff: diff,
+            source: sourceCode,
+            format: .ai
+        )
+        
+        print("✅ Generated ASCII diff (\(asciiDiff.count) characters)")
+        print("\n📄 ASCII Diff:")
+        print(asciiDiff)
+        
+        // Step 2: Parse the ASCII diff back
+        print("\n🔄 Step 2: Parsing ASCII diff back to operations...")
+        let parsedDiff = try MultiLineDiff.parseDiffFromASCII(asciiDiff)
+        print("✅ Parsed \(parsedDiff.operations.count) operations")
+        
+        // Step 3: Apply the parsed diff
+        print("\n🔄 Step 3: Applying parsed diff to source...")
+        let result = try MultiLineDiff.applyDiff(to: sourceCode, diff: parsedDiff)
+        print("✅ Applied diff successfully")
+        
+        // Step 4: Verify result
+        print("\n🔄 Step 4: Verifying result...")
+        let success = result == destinationCode
+        print("✅ Result matches destination: \(success)")
+        
+        if success {
+            print("\n🎉 ASCII diff workflow completed successfully!")
+            print("🚀 The ASCII diff parsing is working perfectly!")
+        } else {
+            print("\n❌ Workflow failed!")
+            print("Expected length: \(destinationCode.count)")
+            print("Result length: \(result.count)")
+            
+            // Show first difference
+            let expectedLines = destinationCode.components(separatedBy: .newlines)
+            let resultLines = result.components(separatedBy: .newlines)
+            
+            for (i, (expected, actual)) in zip(expectedLines, resultLines).enumerated() {
+                if expected != actual {
+                    print("First difference at line \(i + 1):")
+                    print("Expected: '\(expected)'")
+                    print("Actual:   '\(actual)'")
+                    break
+                }
+            }
+        }
+        
+        // Step 5: Test AI submission workflow with complete diff
+        print("\n" + String(repeating: "-", count: 50))
+        print("🤖 AI Submission Test (Complete Diff)")
+        
+        // Use the same complete ASCII diff that was generated above
+        print("AI submits the complete diff:")
+        print(asciiDiff)
+        
+        print("\n🔄 Applying AI's complete diff...")
+        let aiResult = try MultiLineDiff.applyASCIIDiff(
+            to: sourceCode,
+            asciiDiff: asciiDiff
+        )
+        
+        print("✅ AI diff applied successfully!")
+        print("Result contains 'userCount': \(aiResult.contains("userCount"))")
+        print("Result contains 'Result<User, UserError>': \(aiResult.contains("Result<User, UserError>"))")
+        print("Result contains '.failure(.invalidInput)': \(aiResult.contains(".failure(.invalidInput)"))")
+        print("Result matches destination: \(aiResult == destinationCode)")
+        
+        // Step 6: Test simple AI submission workflow
+        print("\n" + String(repeating: "-", count: 50))
+        print("🤖 Simple AI Submission Test")
+        
+        let simpleSource = """
+        func greet() {
+            print("Hello")
+        }
+        """
+        
+        let simpleAIDiff = """
+        = func greet() {
+        -     print("Hello")
+        +     print("Hello, World!")
+        = }
+        """
+        
+        print("Simple source:")
+        print(simpleSource)
+        print("\nAI submits simple diff:")
+        print(simpleAIDiff)
+        
+        print("\n🔄 Applying simple AI diff...")
+        let simpleResult = try MultiLineDiff.applyASCIIDiff(
+            to: simpleSource,
+            asciiDiff: simpleAIDiff
+        )
+        
+        print("✅ Simple AI diff applied successfully!")
+        print("Result:")
+        print(simpleResult)
+        
+        let expectedSimple = """
+        func greet() {
+            print("Hello, World!")
+        }
+        """
+        
+        print("Matches expected: \(simpleResult == expectedSimple)")
+        
+        print("\n🎯 AI workflow tests completed!")
+        
+    } catch {
+        print("❌ Error: \(error)")
+    }
+    
+    print("\n" + String(repeating: "=", count: 50))
+    print("🏁 UserManager ASCII Diff Test Completed")
+}
 
 // Example: Working with actual source code files
 func demonstrateCodeFileDiff() -> Bool {
@@ -1818,58 +2031,16 @@ func main() throws {
     demonstrateASCIIRoundTrip()
 }
 
+
+
+
 // MARK: - Enhanced ASCII Parser Metadata Showcase
 
-func showcaseEnhancedASCIIParser() {
+func showcaseEnhancedASCIIParser(asciiDiff: String) {
     print("\n🎯 Enhanced ASCII Parser Metadata Showcase")
     print(String(repeating: "=", count: 70))
     print("🚀 Demonstrating the new enhanced metadata capabilities!")
-    
-    // Create a comprehensive ASCII diff example
-    let asciiDiff = """
-    📎 class Calculator {
-    📎     private var result: Double = 0
-    📎     private var history: [String] = []
-    📎     
-    ❌     func add(_ value: Double) {
-    ❌         result += value
-    ❌     }
-    ❌     
-    ❌     func subtract(_ value: Double) {
-    ❌         result -= value
-    ❌     }
-    ✅     func add(_ value: Double) -> Double {
-    ✅         result += value
-    ✅         history.append("Added \\(value)")
-    ✅         return result
-    ✅     }
-    ✅     
-    ✅     func subtract(_ value: Double) -> Double {
-    ✅         result -= value
-    ✅         history.append("Subtracted \\(value)")
-    ✅         return result
-    ✅     }
-    ✅     
-    ✅     func multiply(_ value: Double) -> Double {
-    ✅         result *= value
-    ✅         history.append("Multiplied by \\(value)")
-    ✅         return result
-    ✅     }
-    📎     
-    📎     func getResult() -> Double {
-    📎         return result
-    📎     }
-    ✅     
-    ✅     func getHistory() -> [String] {
-    ✅         return history
-    ✅     }
-    ✅     
-    ✅     func clearHistory() {
-    ✅         history.removeAll()
-    ✅     }
-    📎 }
-    """
-    
+        
     print("\n📄 ASCII Diff Input:")
     print(asciiDiff)
     
@@ -2086,328 +2257,6 @@ func showcaseEnhancedASCIIParser() {
     print("🏁 Enhanced ASCII Parser Metadata Showcase Completed")
 }
 
-// MARK: - Enhanced ASCII Parser with Exact Line Numbers
-
-func showcaseEnhancedASCIIParserExactLines() {
-    print("\n🎯 Enhanced ASCII Parser with Exact Line Numbers")
-    print(String(repeating: "=", count: 70))
-    print("🚀 Demonstrating source and destination on exact line positions!")
-    
-    // Create a comprehensive ASCII diff example
-    let asciiDiff = """
-    📎 class Calculator {
-    📎     private var result: Double = 0
-    📎     private var history: [String] = []
-    📎     
-    ❌     func add(_ value: Double) {
-    ❌         result += value
-    ❌     }
-    ❌     
-    ❌     func subtract(_ value: Double) {
-    ❌         result -= value
-    ❌     }
-    ✅     func add(_ value: Double) -> Double {
-    ✅         result += value
-    ✅         history.append("Added \\(value)")
-    ✅         return result
-    ✅     }
-    ✅     
-    ✅     func subtract(_ value: Double) -> Double {
-    ✅         result -= value
-    ✅         history.append("Subtracted \\(value)")
-    ✅         return result
-    ✅     }
-    ✅     
-    ✅     func multiply(_ value: Double) -> Double {
-    ✅         result *= value
-    ✅         history.append("Multiplied by \\(value)")
-    ✅         return result
-    ✅     }
-    📎     
-    📎     func getResult() -> Double {
-    📎         return result
-    📎     }
-    ✅     
-    ✅     func getHistory() -> [String] {
-    ✅         return history
-    ✅     }
-    ✅     
-    ✅     func clearHistory() {
-    ✅         history.removeAll()
-    ✅     }
-    📎 }
-    """
-    
-    print("\n📄 ASCII Diff Input:")
-    print(asciiDiff)
-    
-    do {
-        print("\n🔄 Parsing ASCII diff with enhanced metadata...")
-        let diffResult = try MultiLineDiff.parseDiffFromASCII(asciiDiff)
-        
-        print("✅ Successfully parsed \(diffResult.operations.count) operations")
-        
-        // Showcase the enhanced metadata
-        guard let metadata = diffResult.metadata else {
-            print("❌ No metadata found!")
-            return
-        }
-        
-        print("\n✨ ENHANCED METADATA SHOWCASE:")
-        print(String(repeating: "-", count: 50))
-        
-        // 1. Source Start Line
-        print("\n1. 🎯 SOURCE START LINE (NEW!):")
-        let displayStartLine = (metadata.sourceStartLine ?? -1) + 1
-        print("   Where modifications begin: Line \(displayStartLine)")
-        print("   This tells us exactly where the changes start in the source!")
-        
-                 // 2. Source and Destination Content Side-by-Side with Exact Line Numbers
-         print("\n2. 📝 SOURCE & DESTINATION CONTENT RECONSTRUCTION (EXACT LINES):")
-         if let sourceContent = metadata.sourceContent,
-            let destContent = metadata.destinationContent {
-             
-             print("   📄 SOURCE (\(sourceContent.count) chars) | 📄 DESTINATION (\(destContent.count) chars)")
-             print("   " + String(repeating: "─", count: 80))
-             
-             // Split the actual source and destination content into lines
-             let sourceLines = sourceContent.components(separatedBy: .newlines)
-             let destLines = destContent.components(separatedBy: .newlines)
-             
-             // Find the maximum number of lines to display
-             let maxLines = max(sourceLines.count, destLines.count)
-             
-             for i in 0..<maxLines {
-                 let sourceLineNum = i + 1
-                 let destLineNum = i + 1
-                 
-                 var sourceDisplay = ""
-                 var destDisplay = ""
-                 
-                 // Source side
-                 if i < sourceLines.count {
-                     let sourceLine = sourceLines[i]
-                     let marker = sourceLineNum == (metadata.sourceStartLine ?? -1) + 1 ? " ← MODS START" : ""
-                     
-                     // Determine if this line was deleted, modified, or unchanged
-                     var lineMarker = ":"
-                     if i < destLines.count {
-                         let destLine = destLines[i]
-                         if sourceLine != destLine {
-                             lineMarker = "-"
-                         }
-                     } else {
-                         lineMarker = "-" // Source line with no corresponding dest line
-                     }
-                     
-                     sourceDisplay = String(format: "%4d%s %s", sourceLineNum, lineMarker, sourceLine).padding(toLength: 70, withPad: " ", startingAt: 0) + marker
-                 } else {
-                     // No source line, just empty space
-                     sourceDisplay = String(repeating: " ", count: 70)
-                 }
-                 
-                 // Destination side
-                 if i < destLines.count {
-                     let destLine = destLines[i]
-                     let marker = destLineNum == (metadata.sourceStartLine ?? -1) + 1 ? " ← MODS START" : ""
-                     
-                     // Determine if this line was added, modified, or unchanged
-                     var lineMarker = ":"
-                     if i < sourceLines.count {
-                         let sourceLine = sourceLines[i]
-                         if sourceLine != destLine {
-                             lineMarker = "+"
-                         }
-                     } else {
-                         lineMarker = "+" // Dest line with no corresponding source line
-                     }
-                     
-                     destDisplay = String(format: "%4d%s %s", destLineNum, lineMarker, destLine) + marker
-                 }
-                 
-                 print("   \(sourceDisplay) | \(destDisplay)")
-             }
-             
-             print("   " + String(repeating: "─", count: 80))
-         }
-        
-        print("\n💡 This view shows the exact line numbers where content appears in source vs destination!")
-        print("🔍 Notice how deleted lines don't consume destination line numbers")
-        print("🔍 Notice how inserted lines don't consume source line numbers")
-        
-    } catch {
-        print("❌ Error during ASCII parsing: \(error)")
-    }
-    
-    print("\n" + String(repeating: "=", count: 70))
-    print("🏁 Enhanced ASCII Parser with Exact Line Numbers Completed")
-}
-
-func showcaseEnhancedASCIIParsera_SOURCE_AND_DESTINATION_ON_ACTUAL_LINE_POSITIONS_WITHOUT_PLACERHOLDERLINES() {
-    print("\n🎯 Enhanced ASCII Parser WITHOUT PLACEHOLDERS")
-    print(String(repeating: "=", count: 70))
-    print("🚀 Demonstrating source and destination WITHOUT ----: placeholders!")
-    
-    // Create a comprehensive ASCII diff example
-    let asciiDiff = """
-    📎 class Calculator {
-    📎     private var result: Double = 0
-    📎     private var history: [String] = []
-    📎     
-    ❌     func add(_ value: Double) {
-    ❌         result += value
-    ❌     }
-    ❌     
-    ❌     func subtract(_ value: Double) {
-    ❌         result -= value
-    ❌     }
-    ✅     func add(_ value: Double) -> Double {
-    ✅         result += value
-    ✅         history.append("Added \\(value)")
-    ✅         return result
-    ✅     }
-    ✅     
-    ✅     func subtract(_ value: Double) -> Double {
-    ✅         result -= value
-    ✅         history.append("Subtracted \\(value)")
-    ✅         return result
-    ✅     }
-    ✅     
-    ✅     func multiply(_ value: Double) -> Double {
-    ✅         result *= value
-    ✅         history.append("Multiplied by \\(value)")
-    ✅         return result
-    ✅     }
-    📎     
-    📎     func getResult() -> Double {
-    📎         return result
-    📎     }
-    ✅     
-    ✅     func getHistory() -> [String] {
-    ✅         return history
-    ✅     }
-    ✅     
-    ✅     func clearHistory() {
-    ✅         history.removeAll()
-    ✅     }
-    📎 }
-    """
-    
-    print("\n📄 ASCII Diff Input:")
-    print(asciiDiff)
-    
-    do {
-        print("\n🔄 Parsing ASCII diff with enhanced metadata...")
-        let diffResult = try MultiLineDiff.parseDiffFromASCII(asciiDiff)
-        
-        print("✅ Successfully parsed \(diffResult.operations.count) operations")
-        
-        // Showcase the enhanced metadata
-        guard let metadata = diffResult.metadata else {
-            print("❌ No metadata found!")
-            return
-        }
-        
-        print("\n✨ ENHANCED METADATA SHOWCASE:")
-        print(String(repeating: "-", count: 50))
-        
-        // 1. Source Start Line
-        print("\n1. 🎯 SOURCE START LINE (NEW!):")
-        let displayStartLine = (metadata.sourceStartLine ?? -1) + 1
-        print("   Where modifications begin: Line \(displayStartLine)")
-        print("   This tells us exactly where the changes start in the source!")
-        
-        // 2. Source and Destination Content Side-by-Side with Exact Line Numbers
-        print("\n2. 📝 SOURCE & DESTINATION CONTENT RECONSTRUCTION (EXACT LINES):")
-        if let sourceContent = metadata.sourceContent,
-           let destContent = metadata.destinationContent {
-            
-            print("   📄 SOURCE (\(sourceContent.count) chars) | 📄 DESTINATION (\(destContent.count) chars)")
-            print("   " + String(repeating: "─", count: 80))
-            
-            // Parse the original ASCII diff to understand what each line represents
-            let asciiLines = asciiDiff.components(separatedBy: .newlines)
-            var sourceLineNum = 1
-            var destLineNum = 1
-            
-            for asciiLine in asciiLines {
-                // Skip completely empty lines (no content at all)
-                if asciiLine.isEmpty {
-                    continue
-                }
-                
-                let lineContent: String
-                let symbol: String
-                
-                if asciiLine.hasPrefix("📎 ") {
-                    symbol = "📎"
-                    lineContent = String(asciiLine.dropFirst(2))
-                } else if asciiLine.hasPrefix("❌ ") {
-                    symbol = "❌"
-                    lineContent = String(asciiLine.dropFirst(2))
-                } else if asciiLine.hasPrefix("✅ ") {
-                    symbol = "✅"
-                    lineContent = String(asciiLine.dropFirst(2))
-                } else if asciiLine.hasPrefix("📎") && asciiLine.count == 1 {
-                    // Handle lines that are just the symbol (empty content lines)
-                    symbol = "📎"
-                    lineContent = ""
-                } else {
-                    // Handle lines without symbols (shouldn't happen in well-formed input)
-                    continue
-                }
-                
-                let sourceMarker = sourceLineNum == (metadata.sourceStartLine ?? -1) + 1 ? " ← MODS START" : ""
-                let destMarker = destLineNum == (metadata.sourceStartLine ?? -1) + 1 ? " ← MODS START" : ""
-                
-                switch symbol {
-                case "📎":
-                    // Retained line - appears in both source and destination at same line numbers
-                    let sourceDisplay = lineContent.padding(toLength: 60, withPad: " ", startingAt: 0)
-                    let sourceNumStr = String(format: "%4d", sourceLineNum)
-                    let destNumStr = String(format: "%4d", destLineNum)
-                    print("   \(sourceNumStr): \(sourceDisplay) | \(destNumStr): \(lineContent)\(sourceMarker)")
-                    sourceLineNum += 1
-                    destLineNum += 1
-                    
-                case "❌":
-                    // Deleted line - only in source, destination shows empty at different line
-                    let sourceDisplay = lineContent.padding(toLength: 60, withPad: " ", startingAt: 0)
-                    let sourceNumStr = String(format: "%4d", sourceLineNum)
-                    let emptyDest = "".padding(toLength: 60, withPad: " ", startingAt: 0)
-                    print("   \(sourceNumStr)- \(sourceDisplay) | ----: \(emptyDest)\(sourceMarker)")
-                    sourceLineNum += 1
-                    // Don't increment destLineNum for deleted lines
-                    
-                case "✅":
-                    // Inserted line - only in destination, source shows empty at different line
-                    let emptySource = "".padding(toLength: 60, withPad: " ", startingAt: 0)
-                    let destNumStr = String(format: "%4d", destLineNum)
-                    print("   ----: \(emptySource) | \(destNumStr)+ \(lineContent)\(destMarker)")
-                    destLineNum += 1
-                    // Don't increment sourceLineNum for inserted lines
-                    
-                default:
-                    break
-                }
-            }
-            
-            print("   " + String(repeating: "─", count: 80))
-            print("   Legend: - = Deleted/Changed, + = Added/Changed, : = Unchanged, ---- = No line")
-        }
-        
-        print("\n💡 This view shows the exact line numbers where content appears in source vs destination!")
-        print("🔍 Notice how deleted lines don't consume destination line numbers")
-        print("🔍 Notice how inserted lines don't consume source line numbers")
-        
-    } catch {
-        print("❌ Error during ASCII parsing: \(error)")
-    }
-    
-    print("\n" + String(repeating: "=", count: 70))
-    print("🏁 Enhanced ASCII Parser with Exact Line Numbers Completed")
-}
-
 // Run the main function
 do {
     try main()
@@ -2456,17 +2305,9 @@ do {
     ✅     }
     📎 }
     """
-
     
-    // Run the enhanced ASCII parser showcase
-    
-    //
+    showcaseEnhancedASCIIParser(asciiDiff: asciiDiff)
     showcaseAllDiffFormats(asciiDiff: asciiDiff)
-    // Run the clean version without placeholders
-   //showcaseEnhancedASCIIParsera_SOURCE_AND_DESTINATION_ON_ACTUAL_LINE_POSITIONS_WITH_PLACERHOLDERLINES()
-   // showcaseEnhancedASCIIParsera_SOURCE_AND_DESTINATION_ON_ACTUAL_LINE_POSITIONS_WITHOUT_PLACERHOLDERLINES_III()
-   // showcaseEnhancedASCIIParsera_SOURCE_AND_DESTINATION_ON_ACTUAL_LINE_POSITIONS_WITHOUT_PLACERHOLDERLINES_IV(asciiDiff: asciiDiff)
-
 } catch {
     print("Error in main function: \(error)")
 }
@@ -2535,219 +2376,6 @@ func showcaseAllDiffFormats(asciiDiff: String) {
 }
 
 
-func runUserManagerASCIIDiffTest() {
-    print("\n🚀 UserManager ASCII Diff Test")
-    print(String(repeating: "=", count: 50))
-    
-    let sourceCode = """
-    class UserManager {
-        private var users: [String: User] = [:]
-        
-        func addUser(name: String, email: String) -> Bool {
-            guard !name.isEmpty && !email.isEmpty else {
-                return false
-            }
-            
-            let user = User(name: name, email: email)
-            users[email] = user
-            return true
-        }
-        
-        func getUser(by email: String) -> User? {
-            return users[email]
-        }
-        
-        func removeUser(email: String) {
-            users.removeValue(forKey: email)
-        }
-    }
-    
-    struct User {
-        let name: String
-        let email: String
-    }
-    """
-    
-    let destinationCode = """
-    class UserManager {
-        private var users: [String: User] = [:]
-        private var userCount: Int = 0
-        
-        func addUser(name: String, email: String, age: Int = 0) -> Result<User, UserError> {
-            guard !name.isEmpty && !email.isEmpty else {
-                return .failure(.invalidInput)
-            }
-            
-            let user = User(id: UUID(), name: name, email: email, age: age)
-            users[email] = user
-            userCount += 1
-            return .success(user)
-        }
-        
-        func getUser(by email: String) -> User? {
-            return users[email]
-        }
-        
-        func removeUser(email: String) -> Bool {
-            guard users[email] != nil else { return false }
-            users.removeValue(forKey: email)
-            userCount -= 1
-            return true
-        }
-        
-        func getAllUsers() -> [User] {
-            return Array(users.values).sorted { $0.name < $1.name }
-        }
-        
-        var count: Int {
-            return userCount
-        }
-    }
-    
-    struct User {
-        let id: UUID
-        let name: String
-        let email: String
-        let age: Int
-    }
-    
-    enum UserError: Error {
-        case invalidInput
-        case userAlreadyExists
-    }
-    """
-    
-    print("\n📝 Source Code:")
-    print(sourceCode)
-    
-    print("\n📝 Destination Code:")
-    print(destinationCode)
-    
-    do {
-        // Step 1: Create diff and display as ASCII
-        print("\n🔄 Step 1: Creating diff and converting to ASCII...")
-        let diff = MultiLineDiff.createDiff(
-            source: sourceCode,
-            destination: destinationCode,
-            algorithm: .megatron
-        )
-        
-        let asciiDiff = MultiLineDiff.displayDiff(
-            diff: diff,
-            source: sourceCode,
-            format: .ai
-        )
-        
-        print("✅ Generated ASCII diff (\(asciiDiff.count) characters)")
-        print("\n📄 ASCII Diff:")
-        print(asciiDiff)
-        
-        // Step 2: Parse the ASCII diff back
-        print("\n🔄 Step 2: Parsing ASCII diff back to operations...")
-        let parsedDiff = try MultiLineDiff.parseDiffFromASCII(asciiDiff)
-        print("✅ Parsed \(parsedDiff.operations.count) operations")
-        
-        // Step 3: Apply the parsed diff
-        print("\n🔄 Step 3: Applying parsed diff to source...")
-        let result = try MultiLineDiff.applyDiff(to: sourceCode, diff: parsedDiff)
-        print("✅ Applied diff successfully")
-        
-        // Step 4: Verify result
-        print("\n🔄 Step 4: Verifying result...")
-        let success = result == destinationCode
-        print("✅ Result matches destination: \(success)")
-        
-        if success {
-            print("\n🎉 ASCII diff workflow completed successfully!")
-            print("🚀 The ASCII diff parsing is working perfectly!")
-        } else {
-            print("\n❌ Workflow failed!")
-            print("Expected length: \(destinationCode.count)")
-            print("Result length: \(result.count)")
-            
-            // Show first difference
-            let expectedLines = destinationCode.components(separatedBy: .newlines)
-            let resultLines = result.components(separatedBy: .newlines)
-            
-            for (i, (expected, actual)) in zip(expectedLines, resultLines).enumerated() {
-                if expected != actual {
-                    print("First difference at line \(i + 1):")
-                    print("Expected: '\(expected)'")
-                    print("Actual:   '\(actual)'")
-                    break
-                }
-            }
-        }
-        
-        // Step 5: Test AI submission workflow with complete diff
-        print("\n" + String(repeating: "-", count: 50))
-        print("🤖 AI Submission Test (Complete Diff)")
-        
-        // Use the same complete ASCII diff that was generated above
-        print("AI submits the complete diff:")
-        print(asciiDiff)
-        
-        print("\n🔄 Applying AI's complete diff...")
-        let aiResult = try MultiLineDiff.applyASCIIDiff(
-            to: sourceCode,
-            asciiDiff: asciiDiff
-        )
-        
-        print("✅ AI diff applied successfully!")
-        print("Result contains 'userCount': \(aiResult.contains("userCount"))")
-        print("Result contains 'Result<User, UserError>': \(aiResult.contains("Result<User, UserError>"))")
-        print("Result contains '.failure(.invalidInput)': \(aiResult.contains(".failure(.invalidInput)"))")
-        print("Result matches destination: \(aiResult == destinationCode)")
-        
-        // Step 6: Test simple AI submission workflow
-        print("\n" + String(repeating: "-", count: 50))
-        print("🤖 Simple AI Submission Test")
-        
-        let simpleSource = """
-        func greet() {
-            print("Hello")
-        }
-        """
-        
-        let simpleAIDiff = """
-        = func greet() {
-        -     print("Hello")
-        +     print("Hello, World!")
-        = }
-        """
-        
-        print("Simple source:")
-        print(simpleSource)
-        print("\nAI submits simple diff:")
-        print(simpleAIDiff)
-        
-        print("\n🔄 Applying simple AI diff...")
-        let simpleResult = try MultiLineDiff.applyASCIIDiff(
-            to: simpleSource,
-            asciiDiff: simpleAIDiff
-        )
-        
-        print("✅ Simple AI diff applied successfully!")
-        print("Result:")
-        print(simpleResult)
-        
-        let expectedSimple = """
-        func greet() {
-            print("Hello, World!")
-        }
-        """
-        
-        print("Matches expected: \(simpleResult == expectedSimple)")
-        
-        print("\n🎯 AI workflow tests completed!")
-        
-    } catch {
-        print("❌ Error: \(error)")
-    }
-    
-    print("\n" + String(repeating: "=", count: 50))
-    print("🏁 UserManager ASCII Diff Test Completed")
-}
 
 // MARK: - Data Structures
 struct DiffLineMapping {
@@ -2854,20 +2482,21 @@ func formatDiffOutput(_ mapping: DiffLineMapping, sourceCharCount: Int = 0, dest
     // Track virtual line numbers for empty sides (only used if fillLineNumbers is true)
     var sourceVirtualLine = 1
     var destVirtualLine = 1
+    var extraPadding = 6
     
     for i in 0..<maxLines {
         let sourceDisplay: String
         if i < mapping.sourceLines.count {
             // Source line exists - show it
             let (lineNum, content) = mapping.sourceLines[i]
-            sourceDisplay = formatSourceDisplay(lineNum: lineNum, content: content)
+            sourceDisplay = formatSourceDisplay(lineNum: lineNum, content: content, padToWidth: DiffFormatConstants.sourceColumnWidth + extraPadding)
             sourceVirtualLine = lineNum + 1
         } else {
             // Source line missing
             if fillLineNumbers {
                 // Fill with virtual line number: "17: ", "18: ", etc.
                 let emptySourceText = formatLineNumber(sourceVirtualLine) + ": "
-                sourceDisplay = emptySourceText.padding(toLength: DiffFormatConstants.sourceColumnWidth, withPad: " ", startingAt: 0)
+                sourceDisplay = emptySourceText.padding(toLength: DiffFormatConstants.sourceColumnWidth + extraPadding, withPad: " ", startingAt: 0)
                 sourceVirtualLine += 1
             } else {
                 // Leave completely empty (traditional compact)
@@ -3043,81 +2672,7 @@ func generateSideBySideDiff(from asciiDiff: String,
     }
 }
 
-// MARK: - Convenience Functions
 
-/// Quick compact diff generation
-/// - Parameters:
-///   - asciiDiff: ASCII diff string
-///   - sourceCharCount: Source character count
-///   - destCharCount: Destination character count
-/// - Returns: Compact format diff string
-func generateCompactDiff(from asciiDiff: String,
-                        sourceCharCount: Int = 0,
-                        destCharCount: Int = 0) -> String {
-    return generateSideBySideDiff(from: asciiDiff,
-                                format: .compactLines,
-                                sourceCharCount: sourceCharCount,
-                                destCharCount: destCharCount)
-}
-
-/// Quick expanded diff with line numbers
-/// - Parameters:
-///   - asciiDiff: ASCII diff string
-///   - sourceCharCount: Source character count
-///   - destCharCount: Destination character count
-/// - Returns: Expanded format diff string with line numbers
-func generateExpandedDiff(from asciiDiff: String,
-                         sourceCharCount: Int = 0,
-                         destCharCount: Int = 0) -> String {
-    return generateSideBySideDiff(from: asciiDiff,
-                                format: .expandedLines,
-                                sourceCharCount: sourceCharCount,
-                                destCharCount: destCharCount)
-}
-
-/// Quick expanded diff with placeholders
-/// - Parameters:
-///   - asciiDiff: ASCII diff string
-///   - sourceCharCount: Source character count
-///   - destCharCount: Destination character count
-/// - Returns: Expanded format diff string with ----: placeholders
-func generatePlaceholderDiff(from asciiDiff: String,
-                           sourceCharCount: Int = 0,
-                           destCharCount: Int = 0) -> String {
-    return generateSideBySideDiff(from: asciiDiff,
-                                format: .expandedPlaceholders,
-                                sourceCharCount: sourceCharCount,
-                                destCharCount: destCharCount)
-}
-
-// MARK: - Usage Examples
-
-/*
-// Example usage in your showcase functions:
-
-// Compact format (original clean version)
-let compactOutput = generateSideBySideDiff(from: asciiDiff,
-                                          format: .compactLines,
-                                          sourceCharCount: 299,
-                                          destCharCount: 738)
-
-// Expanded with line numbers (new vertical space version)
-let expandedOutput = generateSideBySideDiff(from: asciiDiff,
-                                           format: .expandedLines,
-                                           sourceCharCount: 299,
-                                           destCharCount: 738)
-
-// Expanded with placeholders (original placeholder version)
-let placeholderOutput = generateSideBySideDiff(from: asciiDiff,
-                                              format: .expandedPlaceholders,
-                                              sourceCharCount: 299,
-                                              destCharCount: 738)
-
-// Or use the convenience functions:
-let quickCompact = generateCompactDiff(from: asciiDiff, sourceCharCount: 299, destCharCount: 738)
-let quickExpanded = generateExpandedDiff(from: asciiDiff, sourceCharCount: 299, destCharCount: 738)
-let quickPlaceholder = generatePlaceholderDiff(from: asciiDiff, sourceCharCount: 299, destCharCount: 738)
-*/
 
 
 // MARK: - Sample ASCII Diff Data
@@ -3126,7 +2681,7 @@ let quickPlaceholder = generatePlaceholderDiff(from: asciiDiff, sourceCharCount:
 // MARK: - Common Constants and Helper Functions
 
 private struct DiffFormatConstants {
-    static let sourceColumnWidth = 60
+    static let sourceColumnWidth = 80
     static let lineNumberFormat = "%4d"
     static let separatorCount = 80
     static let placeholderText = "----"
