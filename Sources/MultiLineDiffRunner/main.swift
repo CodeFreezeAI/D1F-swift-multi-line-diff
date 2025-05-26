@@ -2812,77 +2812,98 @@ func parseASCIIDiff(_ asciiDiff: String) -> DiffLineMapping {
     return DiffLineMapping(sourceLines: sourceLines, destLines: destLines)
 }
 
-// Formats diff line mappings into a side-by-side string representation (clean version with line numbers filled)
-/// - Parameters:
-///   - mapping: DiffLineMapping containing source and destination lines
-///   - sourceCharCount: Character count for source (for header)
-///   - destCharCount: Character count for destination (for header)
-/// - Returns: Formatted string with side-by-side diff display
-func formatDiffOutput(_ mapping: DiffLineMapping, sourceCharCount: Int = 0, destCharCount: Int = 0) -> String {
-    var output = ""
+
+// MARK: - Refactored Diff Formatters
+
+/// Formats diff line mappings - COMPACT version (only existing lines)
+func formatDiffOutputx(_ mapping: DiffLineMapping, sourceCharCount: Int = 0, destCharCount: Int = 0) -> String {
+   var output = generateDiffHeader(sourceCharCount: sourceCharCount, destCharCount: destCharCount)
+   
+   let maxLines = max(mapping.sourceLines.count, mapping.destLines.count)
+   
+   for i in 0..<maxLines {
+       let sourceDisplay: String
+       if i < mapping.sourceLines.count {
+           let (lineNum, content) = mapping.sourceLines[i]
+           sourceDisplay = formatSourceDisplay(lineNum: lineNum, content: content)
+       } else {
+           sourceDisplay = createEmptyPadding()
+       }
+       
+       let destDisplay: String
+       if i < mapping.destLines.count {
+           let (lineNum, content) = mapping.destLines[i]
+           destDisplay = formatDestDisplay(lineNum: lineNum, content: content)
+       } else {
+           destDisplay = ""
+       }
+       
+       output += "   \(sourceDisplay) | \(destDisplay)\n"
+   }
+   
+   output += generateDiffFooter()
+   return output
+}
+
+/// Formats diff line mappings - COMPACT version with optional line number filling
+func formatDiffOutput(_ mapping: DiffLineMapping, sourceCharCount: Int = 0, destCharCount: Int = 0, fillLineNumbers: Bool = true) -> String {
+    var output = generateDiffHeader(sourceCharCount: sourceCharCount, destCharCount: destCharCount)
     
-    // Header
-    output += "2. 📝 SOURCE & DESTINATION CONTENT RECONSTRUCTION (EXACT LINES):\n"
-    output += "   📄 SOURCE (\(sourceCharCount) chars) | 📄 DESTINATION (\(destCharCount) chars)\n"
-    output += "   " + String(repeating: "─", count: 80) + "\n"
+    let maxLines = max(mapping.sourceLines.count, mapping.destLines.count)
     
-    // Track virtual line numbers for empty sides
+    // Track virtual line numbers for empty sides (only used if fillLineNumbers is true)
     var sourceVirtualLine = 1
     var destVirtualLine = 1
     
-    // Content lines
-    let maxLines = max(mapping.sourceLines.count, mapping.destLines.count)
-    
     for i in 0..<maxLines {
         let sourceDisplay: String
-        let destDisplay: String
-        
         if i < mapping.sourceLines.count {
+            // Source line exists - show it
             let (lineNum, content) = mapping.sourceLines[i]
-            let sourceText = String(format: "%4d", lineNum) + content
-            sourceDisplay = sourceText.padding(toLength: 70, withPad: " ", startingAt: 0)
+            sourceDisplay = formatSourceDisplay(lineNum: lineNum, content: content)
             sourceVirtualLine = lineNum + 1
         } else {
-            // Fill empty source side with virtual line number
-            let emptySourceText = String(format: "%4d", sourceVirtualLine) + ": " + String(repeating: " ", count: 60)
-            sourceDisplay = emptySourceText.padding(toLength: 70, withPad: " ", startingAt: 0)
-            sourceVirtualLine += 1
+            // Source line missing
+            if fillLineNumbers {
+                // Fill with virtual line number: "17: ", "18: ", etc.
+                let emptySourceText = formatLineNumber(sourceVirtualLine) + ": "
+                sourceDisplay = emptySourceText.padding(toLength: DiffFormatConstants.sourceColumnWidth, withPad: " ", startingAt: 0)
+                sourceVirtualLine += 1
+            } else {
+                // Leave completely empty (traditional compact)
+                sourceDisplay = createEmptyPadding()
+            }
         }
         
+        let destDisplay: String
         if i < mapping.destLines.count {
+            // Destination line exists - show it
             let (lineNum, content) = mapping.destLines[i]
-            destDisplay = String(format: "%4d", lineNum) + content
+            destDisplay = formatDestDisplay(lineNum: lineNum, content: content)
             destVirtualLine = lineNum + 1
         } else {
-            // Fill empty destination side with virtual line number
-            destDisplay = String(format: "%4d", destVirtualLine) + ": "
-            destVirtualLine += 1
+            // Destination line missing
+            if fillLineNumbers {
+                // Fill with virtual line number: "25: ", "26: ", etc.
+                destDisplay = formatLineNumber(destVirtualLine) + ": "
+                destVirtualLine += 1
+            } else {
+                // Leave completely empty (traditional compact)
+                destDisplay = ""
+            }
         }
         
         output += "   \(sourceDisplay) | \(destDisplay)\n"
     }
     
-    // Footer
-    output += "   " + String(repeating: "─", count: 80) + "\n"
-    output += "   Legend: - = Deleted/Changed, + = Added/Changed, : = Unchanged\n"
-    
+    output += generateDiffFooter()
     return output
 }
-/// Formats diff line mappings with original ----: placeholder format (FIXED VERSION)
-/// - Parameters:
-///   - mapping: DiffLineMapping containing source and destination lines
-///   - sourceCharCount: Character count for source (for header)
-///   - destCharCount: Character count for destination (for header)
-/// - Returns: Formatted string with original ----: placeholder format
+
+/// Formats diff line mappings - PLACEHOLDER version (with ----: for empty spaces)
 func formatDiffOutputWithPlaceholders(_ mapping: DiffLineMapping, sourceCharCount: Int = 0, destCharCount: Int = 0) -> String {
-    var output = ""
+    var output = generateDiffHeader(sourceCharCount: sourceCharCount, destCharCount: destCharCount)
     
-    // Header
-    output += "2. 📝 SOURCE & DESTINATION CONTENT RECONSTRUCTION (EXACT LINES):\n"
-    output += "   📄 SOURCE (\(sourceCharCount) chars) | 📄 DESTINATION (\(destCharCount) chars)\n"
-    output += "   " + String(repeating: "─", count: 80) + "\n"
-    
-    // Process each line from the original sequential approach
     var sourceIndex = 0
     var destIndex = 0
     
@@ -2894,30 +2915,25 @@ func formatDiffOutputWithPlaceholders(_ mapping: DiffLineMapping, sourceCharCoun
             let (sourceNum, sourceContent) = mapping.sourceLines[sourceIndex]
             let (destNum, destContent) = mapping.destLines[destIndex]
             
-            // Check if they should be on the same row (both retained lines with same content)
-            if sourceContent.hasPrefix(": ") && destContent.hasPrefix(": ") &&
-               sourceContent == destContent {
-                // Same retained line - FIX: Remove the extra colon
+            if sourceContent.hasPrefix(": ") && destContent.hasPrefix(": ") && sourceContent == destContent {
+                // Same retained line
                 let actualContent = String(sourceContent.dropFirst(2))
-                let sourceDisplay = actualContent.padding(toLength: 60, withPad: " ", startingAt: 0)
-                output += "   \(String(format: "%4d", sourceNum)): \(sourceDisplay) | \(String(format: "%4d", destNum)): \(actualContent)\n"
+                let sourceDisplay = actualContent.padding(toLength: DiffFormatConstants.sourceColumnWidth, withPad: " ", startingAt: 0)
+                output += "   \(formatLineNumber(sourceNum)): \(sourceDisplay) | \(formatLineNumber(destNum)): \(actualContent)\n"
                 sourceIndex += 1
                 destIndex += 1
             } else if sourceContent.hasPrefix("- ") {
-                // Deleted line - show source only
+                // Deleted line
                 let actualContent = String(sourceContent.dropFirst(2))
-                let sourceDisplay = actualContent.padding(toLength: 60, withPad: " ", startingAt: 0)
-                let emptyDest = "".padding(toLength: 60, withPad: " ", startingAt: 0)
-                output += "   \(String(format: "%4d", sourceNum))- \(sourceDisplay) | ----: \(emptyDest)\n"
+                let sourceDisplay = actualContent.padding(toLength: DiffFormatConstants.sourceColumnWidth, withPad: " ", startingAt: 0)
+                output += "   \(formatLineNumber(sourceNum))- \(sourceDisplay) | \(DiffFormatConstants.placeholderText): \(createEmptyPadding())\n"
                 sourceIndex += 1
             } else if destContent.hasPrefix("+ ") {
-                // Added line - show dest only
-                let emptySource = "".padding(toLength: 60, withPad: " ", startingAt: 0)
+                // Added line
                 let actualContent = String(destContent.dropFirst(2))
-                output += "   ----: \(emptySource) | \(String(format: "%4d", destNum))+ \(actualContent)\n"
+                output += "   \(DiffFormatConstants.placeholderText): \(createEmptyPadding()) | \(formatLineNumber(destNum))+ \(actualContent)\n"
                 destIndex += 1
             } else {
-                // Fallback - advance both
                 sourceIndex += 1
                 destIndex += 1
             }
@@ -2926,82 +2942,27 @@ func formatDiffOutputWithPlaceholders(_ mapping: DiffLineMapping, sourceCharCoun
             let (sourceNum, sourceContent) = mapping.sourceLines[sourceIndex]
             let symbol = String(sourceContent.prefix(1))
             let actualContent = String(sourceContent.dropFirst(2))
-            let sourceDisplay = actualContent.padding(toLength: 60, withPad: " ", startingAt: 0)
-            let emptyDest = "".padding(toLength: 60, withPad: " ", startingAt: 0)
-            output += "   \(String(format: "%4d", sourceNum))\(symbol) \(sourceDisplay) | ----: \(emptyDest)\n"
+            let sourceDisplay = actualContent.padding(toLength: DiffFormatConstants.sourceColumnWidth, withPad: " ", startingAt: 0)
+            output += "   \(formatLineNumber(sourceNum))\(symbol) \(sourceDisplay) | \(DiffFormatConstants.placeholderText): \(createEmptyPadding())\n"
             sourceIndex += 1
         } else if destLineExists {
             // Only dest line left
             let (destNum, destContent) = mapping.destLines[destIndex]
             let symbol = String(destContent.prefix(1))
             let actualContent = String(destContent.dropFirst(2))
-            let emptySource = "".padding(toLength: 60, withPad: " ", startingAt: 0)
-            output += "   ----: \(emptySource) | \(String(format: "%4d", destNum))\(symbol) \(actualContent)\n"
+            output += "   \(DiffFormatConstants.placeholderText): \(createEmptyPadding()) | \(formatLineNumber(destNum))\(symbol) \(actualContent)\n"
             destIndex += 1
         }
     }
     
-    // Footer
-    output += "   " + String(repeating: "─", count: 80) + "\n"
-    output += "   Legend: - = Deleted/Changed, + = Added/Changed, : = Unchanged, ---- = No line\n"
-    
+    output += generateDiffFooter(includePlaceholderLegend: true)
     return output
 }
 
-/// Convenience function that combines parsing and formatting (clean version)
-/// - Parameters:
-///   - asciiDiff: String containing ASCII diff with 📎, ❌, ✅ symbols
-///   - sourceCharCount: Character count for source (for header)
-///   - destCharCount: Character count for destination (for header)
-/// - Returns: Formatted string with side-by-side diff display
-func generateDiffOutput(from asciiDiff: String, sourceCharCount: Int = 0, destCharCount: Int = 0) -> String {
-    let mapping = parseASCIIDiff(asciiDiff)
-    return formatDiffOutput(mapping, sourceCharCount: sourceCharCount, destCharCount: destCharCount)
-}
-
-/// Convenience function that combines parsing and formatting (original version with placeholders)
-/// - Parameters:
-///   - asciiDiff: String containing ASCII diff with 📎, ❌, ✅ symbols
-///   - sourceCharCount: Character count for source (for header)
-///   - destCharCount: Character count for destination (for header)
-/// - Returns: Formatted string with original ----: placeholder format
-func generateDiffOutputWithPlaceholders(from asciiDiff: String, sourceCharCount: Int = 0, destCharCount: Int = 0) -> String {
-    let mapping = parseASCIIDiff(asciiDiff)
-    return formatDiffOutputWithPlaceholders(mapping, sourceCharCount: sourceCharCount, destCharCount: destCharCount)
-}
-
-
-// MARK: - Usage Examples
-
-// Example 1: Just parse the ASCII diff
-// let mapping = parseASCIIDiff(asciiDiffString)
-
-// Example 2: Generate clean formatted output string
-// let cleanOutput = generateDiffOutput(from: asciiDiffString, sourceCharCount: 299, destCharCount: 738)
-
-// Example 3: Generate original formatted output string with placeholders
-// let originalOutput = generateDiffOutputWithPlaceholders(from: asciiDiffString, sourceCharCount: 299, destCharCount: 738)
-
-// Example 4: Use in existing workflow
-// showcaseEnhancedASCIIParsera_SOURCE_AND_DESTINATION_ON_ACTUAL_LINE_POSITIONS_WITHOUT_PLACERHOLDERLINES_III() // Clean version
-// showcaseEnhancedASCIIParsera_SOURCE_AND_DESTINATION_ON_ACTUAL_LINE_POSITIONS_WITH_PLACERHOLDERLINES() // Original version
-
-/// Formats diff line mappings with empty lines filled with line numbers (vertical diff space)
-/// Same logic as placeholder version but with line numbers instead of ----:
-/// - Parameters:
-///   - mapping: DiffLineMapping containing source and destination lines
-///   - sourceCharCount: Character count for source (for header)
-///   - destCharCount: Character count for destination (for header)
-/// - Returns: Formatted string with vertical diff space and empty line numbers
+/// Formats diff line mappings - VERTICAL SPACE version (with line numbers for empty spaces)
 func formatDiffOutputWithVerticalSpace(_ mapping: DiffLineMapping, sourceCharCount: Int = 0, destCharCount: Int = 0) -> String {
-    var output = ""
+    var output = generateDiffHeader(sourceCharCount: sourceCharCount, destCharCount: destCharCount)
     
-    // Header
-    output += "2. 📝 SOURCE & DESTINATION CONTENT RECONSTRUCTION:\n"
-    output += "   📄 SOURCE (\(sourceCharCount) chars) | 📄 DESTINATION (\(destCharCount) chars)\n"
-    output += "   " + String(repeating: "─", count: 80) + "\n"
-    
-    // Process each line using the same logic as placeholder version
     var sourceIndex = 0
     var destIndex = 0
     var virtualSourceLine = 1
@@ -3015,36 +2976,31 @@ func formatDiffOutputWithVerticalSpace(_ mapping: DiffLineMapping, sourceCharCou
             let (sourceNum, sourceContent) = mapping.sourceLines[sourceIndex]
             let (destNum, destContent) = mapping.destLines[destIndex]
             
-            // Check if they should be on the same row (both retained lines with same content)
-            if sourceContent.hasPrefix(": ") && destContent.hasPrefix(": ") &&
-               sourceContent == destContent {
+            if sourceContent.hasPrefix(": ") && destContent.hasPrefix(": ") && sourceContent == destContent {
                 // Same retained line
                 let actualContent = String(sourceContent.dropFirst(2))
-                let sourceDisplay = actualContent.padding(toLength: 60, withPad: " ", startingAt: 0)
-                output += "   \(String(format: "%4d", sourceNum)): \(sourceDisplay) | \(String(format: "%4d", destNum)): \(actualContent)\n"
+                let sourceDisplay = actualContent.padding(toLength: DiffFormatConstants.sourceColumnWidth, withPad: " ", startingAt: 0)
+                output += "   \(formatLineNumber(sourceNum)): \(sourceDisplay) | \(formatLineNumber(destNum)): \(actualContent)\n"
                 sourceIndex += 1
                 destIndex += 1
                 virtualSourceLine = sourceNum + 1
                 virtualDestLine = destNum + 1
             } else if sourceContent.hasPrefix("- ") {
-                // Deleted line - show source only, fill dest with line number
+                // Deleted line - fill dest with virtual line number
                 let actualContent = String(sourceContent.dropFirst(2))
-                let sourceDisplay = actualContent.padding(toLength: 60, withPad: " ", startingAt: 0)
-                let emptyDest = "".padding(toLength: 60, withPad: " ", startingAt: 0)
-                output += "   \(String(format: "%4d", sourceNum))- \(sourceDisplay) | \(String(format: "%4d", virtualDestLine)): \(emptyDest)\n"
+                let sourceDisplay = actualContent.padding(toLength: DiffFormatConstants.sourceColumnWidth, withPad: " ", startingAt: 0)
+                output += "   \(formatLineNumber(sourceNum))- \(sourceDisplay) | \(formatLineNumber(virtualDestLine)): \(createEmptyPadding())\n"
                 sourceIndex += 1
                 virtualSourceLine = sourceNum + 1
                 virtualDestLine += 1
             } else if destContent.hasPrefix("+ ") {
-                // Added line - show dest only, fill source with line number
-                let emptySource = "".padding(toLength: 60, withPad: " ", startingAt: 0)
+                // Added line - fill source with virtual line number
                 let actualContent = String(destContent.dropFirst(2))
-                output += "   \(String(format: "%4d", virtualSourceLine)): \(emptySource) | \(String(format: "%4d", destNum))+ \(actualContent)\n"
+                output += "   \(formatLineNumber(virtualSourceLine)): \(createEmptyPadding()) | \(formatLineNumber(destNum))+ \(actualContent)\n"
                 destIndex += 1
                 virtualSourceLine += 1
                 virtualDestLine = destNum + 1
             } else {
-                // Fallback - advance both
                 sourceIndex += 1
                 destIndex += 1
             }
@@ -3053,9 +3009,8 @@ func formatDiffOutputWithVerticalSpace(_ mapping: DiffLineMapping, sourceCharCou
             let (sourceNum, sourceContent) = mapping.sourceLines[sourceIndex]
             let symbol = String(sourceContent.prefix(1))
             let actualContent = String(sourceContent.dropFirst(2))
-            let sourceDisplay = actualContent.padding(toLength: 60, withPad: " ", startingAt: 0)
-            let emptyDest = "".padding(toLength: 60, withPad: " ", startingAt: 0)
-            output += "   \(String(format: "%4d", sourceNum))\(symbol) \(sourceDisplay) | \(String(format: "%4d", virtualDestLine)): \(emptyDest)\n"
+            let sourceDisplay = actualContent.padding(toLength: DiffFormatConstants.sourceColumnWidth, withPad: " ", startingAt: 0)
+            output += "   \(formatLineNumber(sourceNum))\(symbol) \(sourceDisplay) | \(formatLineNumber(virtualDestLine)): \(createEmptyPadding())\n"
             sourceIndex += 1
             virtualDestLine += 1
         } else if destLineExists {
@@ -3063,32 +3018,35 @@ func formatDiffOutputWithVerticalSpace(_ mapping: DiffLineMapping, sourceCharCou
             let (destNum, destContent) = mapping.destLines[destIndex]
             let symbol = String(destContent.prefix(1))
             let actualContent = String(destContent.dropFirst(2))
-            let emptySource = "".padding(toLength: 60, withPad: " ", startingAt: 0)
-            output += "   \(String(format: "%4d", virtualSourceLine)): \(emptySource) | \(String(format: "%4d", destNum))\(symbol) \(actualContent)\n"
+            output += "   \(formatLineNumber(virtualSourceLine)): \(createEmptyPadding()) | \(formatLineNumber(destNum))\(symbol) \(actualContent)\n"
             destIndex += 1
             virtualSourceLine += 1
         }
     }
     
-    // Footer
-    output += "   " + String(repeating: "─", count: 80) + "\n"
-    output += "   Legend: - = Deleted/Changed, + = Added/Changed, : = Unchanged\n"
-    
+    output += generateDiffFooter()
     return output
 }
 
-/// Convenience function that combines parsing and formatting (vertical space version)
-/// - Parameters:
-///   - asciiDiff: String containing ASCII diff with 📎, ❌, ✅ symbols
-///   - sourceCharCount: Character count for source (for header)
-///   - destCharCount: Character count for destination (for header)
-/// - Returns: Formatted string with vertical diff space format
+// MARK: - Convenience Functions (Updated)
+
+/// Convenience function - generates compact diff output
+func generateDiffOutput(from asciiDiff: String, sourceCharCount: Int = 0, destCharCount: Int = 0) -> String {
+    let mapping = parseASCIIDiff(asciiDiff)
+    return formatDiffOutput(mapping, sourceCharCount: sourceCharCount, destCharCount: destCharCount)
+}
+
+/// Convenience function - generates placeholder diff output
+func generateDiffOutputWithPlaceholders(from asciiDiff: String, sourceCharCount: Int = 0, destCharCount: Int = 0) -> String {
+    let mapping = parseASCIIDiff(asciiDiff)
+    return formatDiffOutputWithPlaceholders(mapping, sourceCharCount: sourceCharCount, destCharCount: destCharCount)
+}
+
+/// Convenience function - generates vertical space diff output
 func generateDiffOutputWithVerticalSpace(from asciiDiff: String, sourceCharCount: Int = 0, destCharCount: Int = 0) -> String {
     let mapping = parseASCIIDiff(asciiDiff)
     return formatDiffOutputWithVerticalSpace(mapping, sourceCharCount: sourceCharCount, destCharCount: destCharCount)
 }
-
-
 
 
 // MARK: - Side-by-Side Diff Display Options
@@ -3216,5 +3174,57 @@ let quickPlaceholder = generatePlaceholderDiff(from: asciiDiff, sourceCharCount:
 
 
 // MARK: - Sample ASCII Diff Data
+
+
+// MARK: - Common Constants and Helper Functions
+
+private struct DiffFormatConstants {
+    static let sourceColumnWidth = 60
+    static let lineNumberFormat = "%4d"
+    static let separatorCount = 80
+    static let placeholderText = "----"
+}
+
+/// Common header generation for all diff formats
+private func generateDiffHeader(sourceCharCount: Int, destCharCount: Int) -> String {
+    var output = ""
+    output += "2. 📝 SOURCE & DESTINATION CONTENT RECONSTRUCTION (EXACT LINES):\n"
+    output += "   📄 SOURCE (\(sourceCharCount) chars) | 📄 DESTINATION (\(destCharCount) chars)\n"
+    output += "   " + String(repeating: "─", count: DiffFormatConstants.separatorCount) + "\n"
+    return output
+}
+
+/// Common footer generation for all diff formats
+private func generateDiffFooter(includePlaceholderLegend: Bool = false) -> String {
+    var output = ""
+    output += "   " + String(repeating: "─", count: DiffFormatConstants.separatorCount) + "\n"
+    output += "   Legend: - = Deleted/Changed, + = Added/Changed, : = Unchanged"
+    if includePlaceholderLegend {
+        output += ", ---- = No line"
+    }
+    output += "\n"
+    return output
+}
+
+/// Common line formatting helper
+private func formatLineNumber(_ lineNum: Int) -> String {
+    return String(format: DiffFormatConstants.lineNumberFormat, lineNum)
+}
+
+/// Common source display formatting
+private func formatSourceDisplay(lineNum: Int, content: String, padToWidth: Int = DiffFormatConstants.sourceColumnWidth) -> String {
+    let formattedLine = formatLineNumber(lineNum) + content
+    return formattedLine.padding(toLength: padToWidth, withPad: " ", startingAt: 0)
+}
+
+/// Common destination display formatting
+private func formatDestDisplay(lineNum: Int, content: String) -> String {
+    return formatLineNumber(lineNum) + content
+}
+
+/// Common empty padding helper
+private func createEmptyPadding(width: Int = DiffFormatConstants.sourceColumnWidth) -> String {
+    return String(repeating: " ", count: width)
+}
 
 
