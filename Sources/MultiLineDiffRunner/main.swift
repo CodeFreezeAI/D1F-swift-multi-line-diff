@@ -2412,20 +2412,128 @@ func showcaseEnhancedASCIIParsera_SOURCE_AND_DESTINATION_ON_ACTUAL_LINE_POSITION
 do {
     try main()
     
+    
+    let asciiDiff = """
+    📎 class Calculator {
+    📎     private var result: Double = 0
+    📎     private var history: [String] = []
+    📎     
+    ❌     func add(_ value: Double) {
+    ❌         result += value
+    ❌     }
+    ❌     
+    ❌     func subtract(_ value: Double) {
+    ❌         result -= value
+    ❌     }
+    ✅     func add(_ value: Double) -> Double {
+    ✅         result += value
+    ✅         history.append("Added \\(value)")
+    ✅         return result
+    ✅     }
+    ✅     
+    ✅     func subtract(_ value: Double) -> Double {
+    ✅         result -= value
+    ✅         history.append("Subtracted \\(value)")
+    ✅         return result
+    ✅     }
+    ✅     
+    ✅     func multiply(_ value: Double) -> Double {
+    ✅         result *= value
+    ✅         history.append("Multiplied by \\(value)")
+    ✅         return result
+    ✅     }
+    📎     
+    📎     func getResult() -> Double {
+    📎         return result
+    📎     }
+    ✅     
+    ✅     func getHistory() -> [String] {
+    ✅         return history
+    ✅     }
+    ✅     
+    ✅     func clearHistory() {
+    ✅         history.removeAll()
+    ✅     }
+    📎 }
+    """
+
+    
     // Run the enhanced ASCII parser showcase
-    showcaseEnhancedASCIIParser()
     
-    // Run the exact line numbers version
-    //showcaseEnhancedASCIIParserExactLines()
-    
+    //
+    showcaseAllDiffFormats(asciiDiff: asciiDiff)
     // Run the clean version without placeholders
-    showcaseEnhancedASCIIParsera_SOURCE_AND_DESTINATION_ON_ACTUAL_LINE_POSITIONS_WITHOUT_PLACERHOLDERLINES()
-    
+   //showcaseEnhancedASCIIParsera_SOURCE_AND_DESTINATION_ON_ACTUAL_LINE_POSITIONS_WITH_PLACERHOLDERLINES()
+   // showcaseEnhancedASCIIParsera_SOURCE_AND_DESTINATION_ON_ACTUAL_LINE_POSITIONS_WITHOUT_PLACERHOLDERLINES_III()
+   // showcaseEnhancedASCIIParsera_SOURCE_AND_DESTINATION_ON_ACTUAL_LINE_POSITIONS_WITHOUT_PLACERHOLDERLINES_IV(asciiDiff: asciiDiff)
+
 } catch {
     print("Error in main function: \(error)")
 }
 
 // MARK: - UserManager ASCII Diff Test
+// MARK: - Showcase All Format Options
+
+func showcaseAllDiffFormats(asciiDiff: String) {
+    print("\n🎨 SHOWCASING ALL DIFF FORMATS")
+    print(String(repeating: "=", count: 70))
+    
+    print()
+    print(asciiDiff)
+    print()
+    
+    do {
+        let diffResult = try MultiLineDiff.parseDiffFromASCII(asciiDiff)
+        guard let metadata = diffResult.metadata else {
+            print("❌ No metadata found!")
+            return
+        }
+        
+        let sourceContent = metadata.sourceContent ?? ""
+        let destContent = metadata.destinationContent ?? ""
+        
+        // Format 1: Compact Lines
+        print("\n🔸 FORMAT 1: COMPACT LINES")
+        print(String(repeating: "-", count: 40))
+        let compactOutput = generateSideBySideDiff(from: asciiDiff,
+                                                 format: .compactLines,
+                                                 sourceCharCount: sourceContent.count,
+                                                 destCharCount: destContent.count)
+        print(compactOutput)
+        
+        // Format 2: Expanded Lines
+        print("\n🔸 FORMAT 2: EXPANDED LINES")
+        print(String(repeating: "-", count: 40))
+        let expandedOutput = generateSideBySideDiff(from: asciiDiff,
+                                                  format: .expandedLines,
+                                                  sourceCharCount: sourceContent.count,
+                                                  destCharCount: destContent.count)
+        print(expandedOutput)
+        
+        // Format 3: Expanded Placeholders
+        print("\n🔸 FORMAT 3: EXPANDED PLACEHOLDERS")
+        print(String(repeating: "-", count: 40))
+        let placeholderOutput = generateSideBySideDiff(from: asciiDiff,
+                                                     format: .expandedPlaceholders,
+                                                     sourceCharCount: sourceContent.count,
+                                                     destCharCount: destContent.count)
+        print(placeholderOutput)
+        
+        print("\n💡 This view shows perfect vertical alignment with clean line numbers!")
+        print("🔍 Empty lines show just line numbers (no placeholders)")
+        print("🔍 Every line number from 1 to max is displayed for perfect alignment")
+
+        print("\n" + String(repeating: "=", count: 70))
+        print("🏁 Enhanced ASCII Parser with Vertical Space Alignment Completed")
+        
+    } catch {
+        print("❌ Error during ASCII parsing: \(error)")
+    }
+    
+    print("\n" + String(repeating: "=", count: 70))
+    print("🏁 All Diff Formats Showcase Completed")
+}
+
 
 func runUserManagerASCIIDiffTest() {
     print("\n🚀 UserManager ASCII Diff Test")
@@ -2640,4 +2748,473 @@ func runUserManagerASCIIDiffTest() {
     print("\n" + String(repeating: "=", count: 50))
     print("🏁 UserManager ASCII Diff Test Completed")
 }
+
+// MARK: - Data Structures
+struct DiffLineMapping {
+    let sourceLines: [(lineNumber: Int, content: String)]
+    let destLines: [(lineNumber: Int, content: String)]
+}
+
+// MARK: - Core Functions
+
+/// Parses ASCII diff format and creates side-by-side line mappings
+/// - Parameter asciiDiff: String containing ASCII diff with 📎, ❌, ✅ symbols
+/// - Returns: DiffLineMapping with separate source and destination line arrays
+func parseASCIIDiff(_ asciiDiff: String) -> DiffLineMapping {
+    let asciiLines = asciiDiff.components(separatedBy: .newlines)
+    var sourceLines: [(Int, String)] = []
+    var destLines: [(Int, String)] = []
+    var sourceLineNum = 1
+    var destLineNum = 1
+    
+    for asciiLine in asciiLines {
+        if asciiLine.isEmpty {
+            continue
+        }
+        
+        let trimmedLine = asciiLine.trimmingCharacters(in: .whitespaces)
+        let lineContent: String
+        
+        if asciiLine.hasPrefix("📎 ") {
+            // Retained line - goes to both source and destination
+            lineContent = String(asciiLine.dropFirst(2))
+            sourceLines.append((sourceLineNum, ": " + lineContent))
+            destLines.append((destLineNum, ": " + lineContent))
+            sourceLineNum += 1
+            destLineNum += 1
+        } else if asciiLine.hasPrefix("❌ ") {
+            // Deleted line - only in source
+            lineContent = String(asciiLine.dropFirst(2))
+            sourceLines.append((sourceLineNum, "- " + lineContent))
+            sourceLineNum += 1
+        } else if asciiLine.hasPrefix("✅ ") {
+            // Added line - only in destination
+            lineContent = String(asciiLine.dropFirst(2))
+            destLines.append((destLineNum, "+ " + lineContent))
+            destLineNum += 1
+        } else if trimmedLine == "📎" {
+            // Empty retained line
+            sourceLines.append((sourceLineNum, ": "))
+            destLines.append((destLineNum, ": "))
+            sourceLineNum += 1
+            destLineNum += 1
+        } else if trimmedLine == "❌" {
+            // Empty deleted line
+            sourceLines.append((sourceLineNum, "- "))
+            sourceLineNum += 1
+        } else if trimmedLine == "✅" {
+            // Empty added line
+            destLines.append((destLineNum, "+ "))
+            destLineNum += 1
+        }
+    }
+    
+    return DiffLineMapping(sourceLines: sourceLines, destLines: destLines)
+}
+
+// Formats diff line mappings into a side-by-side string representation (clean version with line numbers filled)
+/// - Parameters:
+///   - mapping: DiffLineMapping containing source and destination lines
+///   - sourceCharCount: Character count for source (for header)
+///   - destCharCount: Character count for destination (for header)
+/// - Returns: Formatted string with side-by-side diff display
+func formatDiffOutput(_ mapping: DiffLineMapping, sourceCharCount: Int = 0, destCharCount: Int = 0) -> String {
+    var output = ""
+    
+    // Header
+    output += "2. 📝 SOURCE & DESTINATION CONTENT RECONSTRUCTION (EXACT LINES):\n"
+    output += "   📄 SOURCE (\(sourceCharCount) chars) | 📄 DESTINATION (\(destCharCount) chars)\n"
+    output += "   " + String(repeating: "─", count: 80) + "\n"
+    
+    // Track virtual line numbers for empty sides
+    var sourceVirtualLine = 1
+    var destVirtualLine = 1
+    
+    // Content lines
+    let maxLines = max(mapping.sourceLines.count, mapping.destLines.count)
+    
+    for i in 0..<maxLines {
+        let sourceDisplay: String
+        let destDisplay: String
+        
+        if i < mapping.sourceLines.count {
+            let (lineNum, content) = mapping.sourceLines[i]
+            let sourceText = String(format: "%4d", lineNum) + content
+            sourceDisplay = sourceText.padding(toLength: 70, withPad: " ", startingAt: 0)
+            sourceVirtualLine = lineNum + 1
+        } else {
+            // Fill empty source side with virtual line number
+            let emptySourceText = String(format: "%4d", sourceVirtualLine) + ": " + String(repeating: " ", count: 60)
+            sourceDisplay = emptySourceText.padding(toLength: 70, withPad: " ", startingAt: 0)
+            sourceVirtualLine += 1
+        }
+        
+        if i < mapping.destLines.count {
+            let (lineNum, content) = mapping.destLines[i]
+            destDisplay = String(format: "%4d", lineNum) + content
+            destVirtualLine = lineNum + 1
+        } else {
+            // Fill empty destination side with virtual line number
+            destDisplay = String(format: "%4d", destVirtualLine) + ": "
+            destVirtualLine += 1
+        }
+        
+        output += "   \(sourceDisplay) | \(destDisplay)\n"
+    }
+    
+    // Footer
+    output += "   " + String(repeating: "─", count: 80) + "\n"
+    output += "   Legend: - = Deleted/Changed, + = Added/Changed, : = Unchanged\n"
+    
+    return output
+}
+/// Formats diff line mappings with original ----: placeholder format (FIXED VERSION)
+/// - Parameters:
+///   - mapping: DiffLineMapping containing source and destination lines
+///   - sourceCharCount: Character count for source (for header)
+///   - destCharCount: Character count for destination (for header)
+/// - Returns: Formatted string with original ----: placeholder format
+func formatDiffOutputWithPlaceholders(_ mapping: DiffLineMapping, sourceCharCount: Int = 0, destCharCount: Int = 0) -> String {
+    var output = ""
+    
+    // Header
+    output += "2. 📝 SOURCE & DESTINATION CONTENT RECONSTRUCTION (EXACT LINES):\n"
+    output += "   📄 SOURCE (\(sourceCharCount) chars) | 📄 DESTINATION (\(destCharCount) chars)\n"
+    output += "   " + String(repeating: "─", count: 80) + "\n"
+    
+    // Process each line from the original sequential approach
+    var sourceIndex = 0
+    var destIndex = 0
+    
+    while sourceIndex < mapping.sourceLines.count || destIndex < mapping.destLines.count {
+        let sourceLineExists = sourceIndex < mapping.sourceLines.count
+        let destLineExists = destIndex < mapping.destLines.count
+        
+        if sourceLineExists && destLineExists {
+            let (sourceNum, sourceContent) = mapping.sourceLines[sourceIndex]
+            let (destNum, destContent) = mapping.destLines[destIndex]
+            
+            // Check if they should be on the same row (both retained lines with same content)
+            if sourceContent.hasPrefix(": ") && destContent.hasPrefix(": ") &&
+               sourceContent == destContent {
+                // Same retained line - FIX: Remove the extra colon
+                let actualContent = String(sourceContent.dropFirst(2))
+                let sourceDisplay = actualContent.padding(toLength: 60, withPad: " ", startingAt: 0)
+                output += "   \(String(format: "%4d", sourceNum)): \(sourceDisplay) | \(String(format: "%4d", destNum)): \(actualContent)\n"
+                sourceIndex += 1
+                destIndex += 1
+            } else if sourceContent.hasPrefix("- ") {
+                // Deleted line - show source only
+                let actualContent = String(sourceContent.dropFirst(2))
+                let sourceDisplay = actualContent.padding(toLength: 60, withPad: " ", startingAt: 0)
+                let emptyDest = "".padding(toLength: 60, withPad: " ", startingAt: 0)
+                output += "   \(String(format: "%4d", sourceNum))- \(sourceDisplay) | ----: \(emptyDest)\n"
+                sourceIndex += 1
+            } else if destContent.hasPrefix("+ ") {
+                // Added line - show dest only
+                let emptySource = "".padding(toLength: 60, withPad: " ", startingAt: 0)
+                let actualContent = String(destContent.dropFirst(2))
+                output += "   ----: \(emptySource) | \(String(format: "%4d", destNum))+ \(actualContent)\n"
+                destIndex += 1
+            } else {
+                // Fallback - advance both
+                sourceIndex += 1
+                destIndex += 1
+            }
+        } else if sourceLineExists {
+            // Only source line left
+            let (sourceNum, sourceContent) = mapping.sourceLines[sourceIndex]
+            let symbol = String(sourceContent.prefix(1))
+            let actualContent = String(sourceContent.dropFirst(2))
+            let sourceDisplay = actualContent.padding(toLength: 60, withPad: " ", startingAt: 0)
+            let emptyDest = "".padding(toLength: 60, withPad: " ", startingAt: 0)
+            output += "   \(String(format: "%4d", sourceNum))\(symbol) \(sourceDisplay) | ----: \(emptyDest)\n"
+            sourceIndex += 1
+        } else if destLineExists {
+            // Only dest line left
+            let (destNum, destContent) = mapping.destLines[destIndex]
+            let symbol = String(destContent.prefix(1))
+            let actualContent = String(destContent.dropFirst(2))
+            let emptySource = "".padding(toLength: 60, withPad: " ", startingAt: 0)
+            output += "   ----: \(emptySource) | \(String(format: "%4d", destNum))\(symbol) \(actualContent)\n"
+            destIndex += 1
+        }
+    }
+    
+    // Footer
+    output += "   " + String(repeating: "─", count: 80) + "\n"
+    output += "   Legend: - = Deleted/Changed, + = Added/Changed, : = Unchanged, ---- = No line\n"
+    
+    return output
+}
+
+/// Convenience function that combines parsing and formatting (clean version)
+/// - Parameters:
+///   - asciiDiff: String containing ASCII diff with 📎, ❌, ✅ symbols
+///   - sourceCharCount: Character count for source (for header)
+///   - destCharCount: Character count for destination (for header)
+/// - Returns: Formatted string with side-by-side diff display
+func generateDiffOutput(from asciiDiff: String, sourceCharCount: Int = 0, destCharCount: Int = 0) -> String {
+    let mapping = parseASCIIDiff(asciiDiff)
+    return formatDiffOutput(mapping, sourceCharCount: sourceCharCount, destCharCount: destCharCount)
+}
+
+/// Convenience function that combines parsing and formatting (original version with placeholders)
+/// - Parameters:
+///   - asciiDiff: String containing ASCII diff with 📎, ❌, ✅ symbols
+///   - sourceCharCount: Character count for source (for header)
+///   - destCharCount: Character count for destination (for header)
+/// - Returns: Formatted string with original ----: placeholder format
+func generateDiffOutputWithPlaceholders(from asciiDiff: String, sourceCharCount: Int = 0, destCharCount: Int = 0) -> String {
+    let mapping = parseASCIIDiff(asciiDiff)
+    return formatDiffOutputWithPlaceholders(mapping, sourceCharCount: sourceCharCount, destCharCount: destCharCount)
+}
+
+
+// MARK: - Usage Examples
+
+// Example 1: Just parse the ASCII diff
+// let mapping = parseASCIIDiff(asciiDiffString)
+
+// Example 2: Generate clean formatted output string
+// let cleanOutput = generateDiffOutput(from: asciiDiffString, sourceCharCount: 299, destCharCount: 738)
+
+// Example 3: Generate original formatted output string with placeholders
+// let originalOutput = generateDiffOutputWithPlaceholders(from: asciiDiffString, sourceCharCount: 299, destCharCount: 738)
+
+// Example 4: Use in existing workflow
+// showcaseEnhancedASCIIParsera_SOURCE_AND_DESTINATION_ON_ACTUAL_LINE_POSITIONS_WITHOUT_PLACERHOLDERLINES_III() // Clean version
+// showcaseEnhancedASCIIParsera_SOURCE_AND_DESTINATION_ON_ACTUAL_LINE_POSITIONS_WITH_PLACERHOLDERLINES() // Original version
+
+/// Formats diff line mappings with empty lines filled with line numbers (vertical diff space)
+/// Same logic as placeholder version but with line numbers instead of ----:
+/// - Parameters:
+///   - mapping: DiffLineMapping containing source and destination lines
+///   - sourceCharCount: Character count for source (for header)
+///   - destCharCount: Character count for destination (for header)
+/// - Returns: Formatted string with vertical diff space and empty line numbers
+func formatDiffOutputWithVerticalSpace(_ mapping: DiffLineMapping, sourceCharCount: Int = 0, destCharCount: Int = 0) -> String {
+    var output = ""
+    
+    // Header
+    output += "2. 📝 SOURCE & DESTINATION CONTENT RECONSTRUCTION:\n"
+    output += "   📄 SOURCE (\(sourceCharCount) chars) | 📄 DESTINATION (\(destCharCount) chars)\n"
+    output += "   " + String(repeating: "─", count: 80) + "\n"
+    
+    // Process each line using the same logic as placeholder version
+    var sourceIndex = 0
+    var destIndex = 0
+    var virtualSourceLine = 1
+    var virtualDestLine = 1
+    
+    while sourceIndex < mapping.sourceLines.count || destIndex < mapping.destLines.count {
+        let sourceLineExists = sourceIndex < mapping.sourceLines.count
+        let destLineExists = destIndex < mapping.destLines.count
+        
+        if sourceLineExists && destLineExists {
+            let (sourceNum, sourceContent) = mapping.sourceLines[sourceIndex]
+            let (destNum, destContent) = mapping.destLines[destIndex]
+            
+            // Check if they should be on the same row (both retained lines with same content)
+            if sourceContent.hasPrefix(": ") && destContent.hasPrefix(": ") &&
+               sourceContent == destContent {
+                // Same retained line
+                let actualContent = String(sourceContent.dropFirst(2))
+                let sourceDisplay = actualContent.padding(toLength: 60, withPad: " ", startingAt: 0)
+                output += "   \(String(format: "%4d", sourceNum)): \(sourceDisplay) | \(String(format: "%4d", destNum)): \(actualContent)\n"
+                sourceIndex += 1
+                destIndex += 1
+                virtualSourceLine = sourceNum + 1
+                virtualDestLine = destNum + 1
+            } else if sourceContent.hasPrefix("- ") {
+                // Deleted line - show source only, fill dest with line number
+                let actualContent = String(sourceContent.dropFirst(2))
+                let sourceDisplay = actualContent.padding(toLength: 60, withPad: " ", startingAt: 0)
+                let emptyDest = "".padding(toLength: 60, withPad: " ", startingAt: 0)
+                output += "   \(String(format: "%4d", sourceNum))- \(sourceDisplay) | \(String(format: "%4d", virtualDestLine)): \(emptyDest)\n"
+                sourceIndex += 1
+                virtualSourceLine = sourceNum + 1
+                virtualDestLine += 1
+            } else if destContent.hasPrefix("+ ") {
+                // Added line - show dest only, fill source with line number
+                let emptySource = "".padding(toLength: 60, withPad: " ", startingAt: 0)
+                let actualContent = String(destContent.dropFirst(2))
+                output += "   \(String(format: "%4d", virtualSourceLine)): \(emptySource) | \(String(format: "%4d", destNum))+ \(actualContent)\n"
+                destIndex += 1
+                virtualSourceLine += 1
+                virtualDestLine = destNum + 1
+            } else {
+                // Fallback - advance both
+                sourceIndex += 1
+                destIndex += 1
+            }
+        } else if sourceLineExists {
+            // Only source line left
+            let (sourceNum, sourceContent) = mapping.sourceLines[sourceIndex]
+            let symbol = String(sourceContent.prefix(1))
+            let actualContent = String(sourceContent.dropFirst(2))
+            let sourceDisplay = actualContent.padding(toLength: 60, withPad: " ", startingAt: 0)
+            let emptyDest = "".padding(toLength: 60, withPad: " ", startingAt: 0)
+            output += "   \(String(format: "%4d", sourceNum))\(symbol) \(sourceDisplay) | \(String(format: "%4d", virtualDestLine)): \(emptyDest)\n"
+            sourceIndex += 1
+            virtualDestLine += 1
+        } else if destLineExists {
+            // Only dest line left
+            let (destNum, destContent) = mapping.destLines[destIndex]
+            let symbol = String(destContent.prefix(1))
+            let actualContent = String(destContent.dropFirst(2))
+            let emptySource = "".padding(toLength: 60, withPad: " ", startingAt: 0)
+            output += "   \(String(format: "%4d", virtualSourceLine)): \(emptySource) | \(String(format: "%4d", destNum))\(symbol) \(actualContent)\n"
+            destIndex += 1
+            virtualSourceLine += 1
+        }
+    }
+    
+    // Footer
+    output += "   " + String(repeating: "─", count: 80) + "\n"
+    output += "   Legend: - = Deleted/Changed, + = Added/Changed, : = Unchanged\n"
+    
+    return output
+}
+
+/// Convenience function that combines parsing and formatting (vertical space version)
+/// - Parameters:
+///   - asciiDiff: String containing ASCII diff with 📎, ❌, ✅ symbols
+///   - sourceCharCount: Character count for source (for header)
+///   - destCharCount: Character count for destination (for header)
+/// - Returns: Formatted string with vertical diff space format
+func generateDiffOutputWithVerticalSpace(from asciiDiff: String, sourceCharCount: Int = 0, destCharCount: Int = 0) -> String {
+    let mapping = parseASCIIDiff(asciiDiff)
+    return formatDiffOutputWithVerticalSpace(mapping, sourceCharCount: sourceCharCount, destCharCount: destCharCount)
+}
+
+
+
+
+// MARK: - Side-by-Side Diff Display Options
+
+/// Enum defining different side-by-side diff display formats
+enum SideBySideDiffFormat {
+    /// Compact format - only shows lines that exist, no placeholders
+    case compactLines
+    /// Expanded format - fills empty spaces with line numbers (clean vertical alignment)
+    case expandedLines
+    /// Expanded format with placeholders - uses ----: for empty spaces (original format)
+    case expandedPlaceholders
+}
+
+// MARK: - Helper Function
+
+/// Universal side-by-side diff formatter that supports multiple display formats
+/// - Parameters:
+///   - asciiDiff: String containing ASCII diff with 📎, ❌, ✅ symbols
+///   - format: SideBySideDiffFormat enum specifying the desired output format
+///   - sourceCharCount: Character count for source (for header display)
+///   - destCharCount: Character count for destination (for header display)
+/// - Returns: Formatted string with side-by-side diff in the specified format
+func generateSideBySideDiff(from asciiDiff: String,
+                           format: SideBySideDiffFormat,
+                           sourceCharCount: Int = 0,
+                           destCharCount: Int = 0) -> String {
+    
+    switch format {
+    case .compactLines:
+        // Uses the original clean formatter - only shows existing lines
+        return generateDiffOutput(from: asciiDiff,
+                                sourceCharCount: sourceCharCount,
+                                destCharCount: destCharCount)
+        
+    case .expandedLines:
+        // Uses vertical space formatter - fills empty spaces with line numbers
+        return generateDiffOutputWithVerticalSpace(from: asciiDiff,
+                                                 sourceCharCount: sourceCharCount,
+                                                 destCharCount: destCharCount)
+        
+    case .expandedPlaceholders:
+        // Uses placeholder formatter - fills empty spaces with ----: placeholders
+        return generateDiffOutputWithPlaceholders(from: asciiDiff,
+                                                sourceCharCount: sourceCharCount,
+                                                destCharCount: destCharCount)
+    }
+}
+
+// MARK: - Convenience Functions
+
+/// Quick compact diff generation
+/// - Parameters:
+///   - asciiDiff: ASCII diff string
+///   - sourceCharCount: Source character count
+///   - destCharCount: Destination character count
+/// - Returns: Compact format diff string
+func generateCompactDiff(from asciiDiff: String,
+                        sourceCharCount: Int = 0,
+                        destCharCount: Int = 0) -> String {
+    return generateSideBySideDiff(from: asciiDiff,
+                                format: .compactLines,
+                                sourceCharCount: sourceCharCount,
+                                destCharCount: destCharCount)
+}
+
+/// Quick expanded diff with line numbers
+/// - Parameters:
+///   - asciiDiff: ASCII diff string
+///   - sourceCharCount: Source character count
+///   - destCharCount: Destination character count
+/// - Returns: Expanded format diff string with line numbers
+func generateExpandedDiff(from asciiDiff: String,
+                         sourceCharCount: Int = 0,
+                         destCharCount: Int = 0) -> String {
+    return generateSideBySideDiff(from: asciiDiff,
+                                format: .expandedLines,
+                                sourceCharCount: sourceCharCount,
+                                destCharCount: destCharCount)
+}
+
+/// Quick expanded diff with placeholders
+/// - Parameters:
+///   - asciiDiff: ASCII diff string
+///   - sourceCharCount: Source character count
+///   - destCharCount: Destination character count
+/// - Returns: Expanded format diff string with ----: placeholders
+func generatePlaceholderDiff(from asciiDiff: String,
+                           sourceCharCount: Int = 0,
+                           destCharCount: Int = 0) -> String {
+    return generateSideBySideDiff(from: asciiDiff,
+                                format: .expandedPlaceholders,
+                                sourceCharCount: sourceCharCount,
+                                destCharCount: destCharCount)
+}
+
+// MARK: - Usage Examples
+
+/*
+// Example usage in your showcase functions:
+
+// Compact format (original clean version)
+let compactOutput = generateSideBySideDiff(from: asciiDiff,
+                                          format: .compactLines,
+                                          sourceCharCount: 299,
+                                          destCharCount: 738)
+
+// Expanded with line numbers (new vertical space version)
+let expandedOutput = generateSideBySideDiff(from: asciiDiff,
+                                           format: .expandedLines,
+                                           sourceCharCount: 299,
+                                           destCharCount: 738)
+
+// Expanded with placeholders (original placeholder version)
+let placeholderOutput = generateSideBySideDiff(from: asciiDiff,
+                                              format: .expandedPlaceholders,
+                                              sourceCharCount: 299,
+                                              destCharCount: 738)
+
+// Or use the convenience functions:
+let quickCompact = generateCompactDiff(from: asciiDiff, sourceCharCount: 299, destCharCount: 738)
+let quickExpanded = generateExpandedDiff(from: asciiDiff, sourceCharCount: 299, destCharCount: 738)
+let quickPlaceholder = generatePlaceholderDiff(from: asciiDiff, sourceCharCount: 299, destCharCount: 738)
+*/
+
+
+// MARK: - Sample ASCII Diff Data
+
 
