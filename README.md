@@ -1,16 +1,32 @@
 # MultiLineDiff
 
 [![Swift 6.1](https://img.shields.io/badge/Swift-6.1-orange.svg)](https://swift.org)
-[![Website](https://img.shields.io/badge/website-xcf.ai-blue.svg)](https://xcf.ai)
-[![Version](https://img.shields.io/badge/version-2.0.1-green.svg)](https://github.com/toddbruss/swift-multi-line-diff)
+[![Website](https://img.shields.io/badge/website-d1f.ai-blue.svg)](https://d1f.ai)
+[![Live Demo](https://img.shields.io/badge/demo-interactive-green.svg)](https://d1f.ai#demo)
+[![Version](https://img.shields.io/badge/version-2.0.1-green.svg)](https://github.com/codefreezeai/swift-multi-line-diff)
 [![GitHub stars](https://img.shields.io/github/stars/codefreezeai/swift-multi-line-diff.svg?style=social)](https://github.com/codefreezeai/swift-multi-line-diff/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/codefreezeai/swift-multi-line-diff.svg?style=social)](https://github.com/codefreezeai/swift-multi-line-diff/network)
 
 # Swift MultiLineDiff Package Usage Guide
 
+## 🌐 Interactive Demo
+
+**🚀 Try the Live Demo**: [d1f.ai](https://d1f.ai)
+
+Experience the power of MultiLineDiff algorithms in real-time with our interactive JavaScript implementation:
+
+- **⚡ Flash Algorithm**: Lightning-fast prefix/suffix detection (14.5ms)
+- **🤖 Optimus Algorithm**: Line-aware CollectionDifference processing (43.7ms)  
+- **🧠 Megatron Algorithm**: Semantic analysis with balanced performance (47.8ms)
+- **🌟 Starscream Algorithm**: Swift-native line processing (45.1ms)
+- **🔍 Zoom Algorithm**: Simple character-based diffing (23.9ms)
+
+**Real-time Performance Monitoring**: Watch actual algorithm execution times as you type!
+
 ## 📦 Package Information
 
 **Repository**: [CodeFreezeAI/swift-multi-line-diff](https://github.com/CodeFreezeAI/swift-multi-line-diff.git)  
+**Website**: [d1f.ai](https://d1f.ai) - Interactive Demo & Documentation  
 **License**: MIT  
 **Language**: Swift 100%  
 **Latest Release**: v2.0.1 (May 26, 2025)  
@@ -525,12 +541,15 @@ This Swift library enables creating and applying diffs to multi-line text conten
 
 ## 🌟 Key Features
 
+- **🌐 Interactive Website Demo**: [d1f.ai](https://d1f.ai) with real JavaScript algorithms
+- **⚡ Five Powerful Algorithms**: Flash, Optimus, Megatron, Starscream, Zoom
+- **🎯 Real-time Performance**: Live timing display showing actual execution speeds
 - Create diffs between two strings
 - Apply diffs to transform source text
 - Handle multi-line content properly
 - Support for Unicode/UTF-8 strings
-- Multiple diff formats (JSON, Base64)
-- Two superior diff algorithms (Flash and Optimus)
+- Multiple diff formats (JSON, Base64, ASCII)
+- **🤖 AI-Native ASCII Format**: Perfect for LLM integration
 - **Automatic algorithm fallback with verification** 🛡️
 - **Auto-detection of truncated vs full source** 🤖
 - **Intelligent application without manual parameters** 🧠

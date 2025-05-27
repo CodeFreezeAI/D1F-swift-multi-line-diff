@@ -368,34 +368,7 @@ function initShowcaseInteractions() {
         });
     }
     
-    // Terminal view toggle
-    const terminalBtn = document.querySelector('.code-action-btn[title="View in terminal"]');
-    if (terminalBtn) {
-        terminalBtn.addEventListener('click', () => {
-            const codeContent = document.querySelector('.showcase-visual .code-content');
-            if (codeContent) {
-                // Toggle terminal styling
-                codeContent.classList.toggle('terminal-view');
-                
-                if (codeContent.classList.contains('terminal-view')) {
-                    // Apply terminal colors
-                    codeContent.style.background = '#000';
-                    codeContent.style.color = '#00ff00';
-                    terminalBtn.style.color = 'var(--secondary)';
-                } else {
-                    // Restore original styling
-                    codeContent.style.background = '';
-                    codeContent.style.color = '';
-                    terminalBtn.style.color = '';
-                }
-                
-                trackEvent('showcase_terminal_toggle', {
-                    section: 'showcase',
-                    terminal_mode: codeContent.classList.contains('terminal-view')
-                });
-            }
-        });
-    }
+
     
     // Animate showcase features on scroll
     const showcaseFeatures = document.querySelectorAll('.showcase-feature');

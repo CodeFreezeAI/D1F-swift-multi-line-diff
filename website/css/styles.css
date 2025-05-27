@@ -194,9 +194,11 @@ a:hover {
 }
 
 .btn-small {
-    padding: var(--space-sm) var(--space-md);
+    padding: var(--space-sm) var(--space-sm);
     font-size: 0.875rem;
     border-radius: var(--radius-md);
+    min-width: auto;
+    white-space: nowrap;
 }
 
 /* Navigation */
