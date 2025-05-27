@@ -1,7 +1,7 @@
 # MultiLineDiff
 
 [![Swift 6.1](https://img.shields.io/badge/Swift-6.1-orange.svg)](https://swift.org)
-[![Website](https://img.shields.io/badge/website-xcf.ai-blue.svg)]([diff.xci.ai](https://swift-multiline-diff-website.pages.dev))
+[![Website](https://img.shields.io/badge/website-diff-xcf.ai-blue.svg)](https://swift-multiline-diff-website.pages.dev)
 [![Version](https://img.shields.io/badge/version-2.0.1-green.svg)](https://github.com/toddbruss/swift-multi-line-diff)
 [![GitHub stars](https://img.shields.io/github/stars/codefreezeai/swift-multi-line-diff.svg?style=social)](https://github.com/codefreezeai/swift-multi-line-diff/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/codefreezeai/swift-multi-line-diff.svg?style=social)](https://github.com/codefreezeai/swift-multi-line-diff/network)
