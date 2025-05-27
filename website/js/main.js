@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initTypewriterEffect();
     initLoadingStates();
     initShowcaseInteractions();
+    initDocumentation();
 });
 
 // Navigation functionality
@@ -141,9 +142,73 @@ function initAlgorithmTabs() {
                     targetPanel.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
                     targetPanel.style.opacity = '1';
                     targetPanel.style.transform = 'translateY(0)';
+                    
+                    // Add copy buttons to algorithm code blocks
+                    addCopyButtonsToAlgorithmCode(targetPanel);
                 }, 50);
             }
         });
+    });
+    
+    // Add copy buttons to the initially active panel
+    const activePanel = document.querySelector('.algorithm-panel.active');
+    if (activePanel) {
+        addCopyButtonsToAlgorithmCode(activePanel);
+    }
+}
+
+// Add copy buttons to algorithm code blocks
+function addCopyButtonsToAlgorithmCode(panel) {
+    const codeBlocks = panel.querySelectorAll('.algorithm-code');
+    
+    codeBlocks.forEach(codeBlock => {
+        // Check if copy button already exists
+        if (codeBlock.querySelector('.algorithm-copy-btn')) {
+            return;
+        }
+        
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'algorithm-copy-btn';
+        copyBtn.innerHTML = `
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+        `;
+        copyBtn.title = 'Copy code';
+        
+        copyBtn.addEventListener('click', () => {
+            const codeElement = codeBlock.querySelector('code');
+            if (codeElement) {
+                const text = codeElement.textContent;
+                navigator.clipboard.writeText(text).then(() => {
+                    // Show success feedback
+                    const originalHTML = copyBtn.innerHTML;
+                    copyBtn.innerHTML = `
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20,6 9,17 4,12"></polyline>
+                        </svg>
+                    `;
+                    copyBtn.style.background = 'rgba(16, 185, 129, 0.2)';
+                    copyBtn.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+                    
+                    setTimeout(() => {
+                        copyBtn.innerHTML = originalHTML;
+                        copyBtn.style.background = 'rgba(255, 255, 255, 0.1)';
+                        copyBtn.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                    }, 2000);
+                    
+                    trackEvent('algorithm_code_copy', {
+                        algorithm: panel.id,
+                        code_type: 'algorithm_example'
+                    });
+                }).catch(err => {
+                    console.error('Failed to copy code: ', err);
+                });
+            }
+        });
+        
+        codeBlock.appendChild(copyBtn);
     });
 }
 
@@ -493,6 +558,227 @@ function trackEvent(eventName, properties = {}) {
     
     // Example: Custom analytics
     // analytics.track(eventName, properties);
+}
+
+// Documentation functionality
+function initDocumentation() {
+    const docCards = document.querySelectorAll('.doc-card[data-doc]');
+    const docContents = document.querySelectorAll('.doc-content');
+    const docCloses = document.querySelectorAll('.doc-close');
+    
+    // Handle doc card clicks (entire card is clickable)
+    docCards.forEach(card => {
+        // Make the entire card clickable
+        card.style.cursor = 'pointer';
+        
+        const handleCardClick = (e) => {
+            e.preventDefault();
+            const docType = card.getAttribute('data-doc');
+            const targetContent = document.getElementById(`${docType}-content`);
+            
+            if (targetContent) {
+                // Close all other doc contents
+                docContents.forEach(content => {
+                    if (content !== targetContent) {
+                        content.classList.remove('active');
+                    }
+                });
+                
+                // Toggle the clicked content
+                const isActive = targetContent.classList.contains('active');
+                if (isActive) {
+                    targetContent.classList.remove('active');
+                } else {
+                    targetContent.classList.add('active');
+                    
+                    // Scroll to the content
+                    setTimeout(() => {
+                        targetContent.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }, 100);
+                    
+                    // Re-initialize Prism.js for syntax highlighting
+                    if (window.Prism) {
+                        Prism.highlightAllUnder(targetContent);
+                    }
+                }
+                
+                // Track event
+                trackEvent('documentation_toggle', {
+                    doc_type: docType,
+                    action: isActive ? 'close' : 'open',
+                    click_target: 'card'
+                });
+            }
+        };
+        
+        // Add click handler to the entire card
+        card.addEventListener('click', handleCardClick);
+        
+        // Also handle the button click (for accessibility)
+        const toggleBtn = card.querySelector('.doc-toggle');
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', handleCardClick);
+        }
+        
+        // Add hover effects to indicate the card is clickable
+        card.addEventListener('mouseenter', () => {
+            card.style.transform = 'translateY(-2px)';
+            card.style.transition = 'transform 0.2s ease';
+        });
+        
+        card.addEventListener('mouseleave', () => {
+            card.style.transform = 'translateY(0)';
+        });
+    });
+    
+    // Handle close button clicks
+    docCloses.forEach(closeBtn => {
+        closeBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent event bubbling
+            const docContent = closeBtn.closest('.doc-content');
+            if (docContent) {
+                docContent.classList.remove('active');
+                
+                // Track event
+                const docType = docContent.id.replace('-content', '');
+                trackEvent('documentation_close', {
+                    doc_type: docType
+                });
+            }
+        });
+    });
+    
+    // Handle header clicks to close documentation
+    const docHeaders = document.querySelectorAll('.doc-header');
+    docHeaders.forEach(header => {
+        header.addEventListener('click', (e) => {
+            // Don't close if clicking the close button
+            if (e.target.closest('.doc-close')) {
+                return;
+            }
+            
+            const docContent = header.closest('.doc-content');
+            if (docContent) {
+                docContent.classList.remove('active');
+                
+                // Track event
+                const docType = docContent.id.replace('-content', '');
+                trackEvent('documentation_close', {
+                    doc_type: docType,
+                    click_target: 'header'
+                });
+            }
+        });
+    });
+    
+    // Close documentation when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.doc-content') && !e.target.closest('.doc-card')) {
+            docContents.forEach(content => {
+                content.classList.remove('active');
+            });
+        }
+    });
+    
+    // Handle external links in documentation
+    const externalLinks = document.querySelectorAll('.external-link');
+    externalLinks.forEach(link => {
+        link.addEventListener('click', () => {
+            trackEvent('documentation_external_link', {
+                url: link.href,
+                text: link.textContent.trim()
+            });
+        });
+    });
+    
+    // Keyboard navigation for documentation
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            // Close all open documentation
+            docContents.forEach(content => {
+                content.classList.remove('active');
+            });
+        }
+    });
+    
+    // Copy code functionality in documentation
+    const docCodeBlocks = document.querySelectorAll('.doc-body pre code');
+    docCodeBlocks.forEach(codeBlock => {
+        const pre = codeBlock.parentElement;
+        
+        // Add copy button
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'code-copy-btn';
+        copyBtn.innerHTML = `
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+        `;
+        copyBtn.title = 'Copy code';
+        
+        // Style the copy button
+        copyBtn.style.cssText = `
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            color: white;
+            padding: 0.5rem;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            z-index: 10;
+        `;
+        
+        // Make pre relative for absolute positioning
+        pre.style.position = 'relative';
+        
+        // Show/hide copy button on hover
+        pre.addEventListener('mouseenter', () => {
+            copyBtn.style.opacity = '1';
+        });
+        
+        pre.addEventListener('mouseleave', () => {
+            copyBtn.style.opacity = '0';
+        });
+        
+        // Copy functionality
+        copyBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent event bubbling to avoid closing documentation
+            const text = codeBlock.textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                // Show success feedback
+                const originalHTML = copyBtn.innerHTML;
+                copyBtn.innerHTML = `
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20,6 9,17 4,12"></polyline>
+                    </svg>
+                `;
+                copyBtn.style.background = 'rgba(16, 185, 129, 0.2)';
+                copyBtn.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+                
+                setTimeout(() => {
+                    copyBtn.innerHTML = originalHTML;
+                    copyBtn.style.background = 'rgba(255, 255, 255, 0.1)';
+                    copyBtn.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                }, 2000);
+                
+                trackEvent('documentation_code_copy', {
+                    code_type: codeBlock.className || 'unknown'
+                });
+            }).catch(err => {
+                console.error('Failed to copy code: ', err);
+            });
+        });
+        
+        pre.appendChild(copyBtn);
+    });
 }
 
 // Track page interactions

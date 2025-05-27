@@ -1,203 +1,237 @@
 # MultiLineDiff Website
 
-This is the official website for the MultiLineDiff Swift library, showcasing its revolutionary features and capabilities.
+The official website for MultiLineDiff - The World's Most Advanced Diffing System.
 
-## 🌐 Live Site
+## 🌟 Features
 
-**URL**: https://diff.xcf.ai
+- **Modern Design**: Dark theme with indigo/purple gradients
+- **Responsive**: Works perfectly on desktop, tablet, and mobile
+- **Interactive Documentation**: Expandable sections with comprehensive guides
+- **Live Demo**: Interactive algorithm comparison and diff generation
+- **Performance Charts**: Real benchmark data visualization
+- **Syntax Highlighting**: Prism.js integration for code examples
+- **Smooth Animations**: GPU-accelerated transitions and effects
 
 ## 📁 Project Structure
 
 ```
 website/
-├── index.html              # Main HTML page
+├── index.html              # Main page
 ├── css/
-│   ├── styles.css          # Main styles and layout
+│   ├── styles.css          # Main styles and variables
 │   ├── components.css      # Component-specific styles
 │   └── animations.css      # Animation definitions
 ├── js/
 │   ├── main.js            # Core functionality
 │   ├── demo.js            # Interactive demo
-│   └── performance.js     # Performance charts
+│   └── performance.js     # Chart.js performance charts
 ├── images/
-│   ├── favicon.svg        # Site favicon
-│   ├── og-image.png       # Social media preview (to be added)
-│   └── apple-touch-icon.png # iOS icon (to be added)
-├── fonts/                 # Custom fonts (if needed)
+│   └── favicon.svg        # Site favicon
+├── deploy.sh              # Deployment script
+├── package.json           # Dependencies
+├── .gitignore            # Git ignore rules
 └── README.md             # This file
 ```
 
-## 🚀 Features
-
-### Modern Design
-- **Dark Theme**: Professional dark color scheme
-- **Responsive Layout**: Works on all devices
-- **Smooth Animations**: Engaging user experience
-- **Performance Optimized**: Fast loading and smooth interactions
-
-### Interactive Components
-- **Algorithm Comparison**: Tabbed interface showing all 5 algorithms
-- **Live Demo**: Interactive diff generation with syntax highlighting
-- **Performance Charts**: Real-time performance visualization
-- **Scroll Animations**: Elements animate as they come into view
-
-### Technical Features
-- **Pure HTML/CSS/JS**: No framework dependencies
-- **Modern CSS**: CSS Grid, Flexbox, Custom Properties
-- **ES6+ JavaScript**: Modern JavaScript features
-- **Chart.js Integration**: Beautiful performance charts
-- **Prism.js**: Syntax highlighting for code examples
-
-## 🛠️ Development
+## 🚀 Quick Start
 
 ### Local Development
-1. Clone the repository
-2. Navigate to the `website` directory
-3. Serve the files using any HTTP server:
 
-```bash
-# Using Python
-python -m http.server 8000
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/codefreezeai/swift-multi-line-diff.git
+   cd swift-multi-line-diff/website
+   ```
 
-# Using Node.js
-npx serve .
+2. **Start a local server**:
+   ```bash
+   # Using Python 3
+   python -m http.server 8000
+   
+   # Using Python 2
+   python -m SimpleHTTPServer 8000
+   
+   # Using Node.js
+   npx http-server
+   
+   # Using PHP
+   php -S localhost:8000
+   ```
 
-# Using PHP
-php -S localhost:8000
-```
-
-4. Open http://localhost:8000 in your browser
+3. **Open in browser**:
+   ```
+   http://localhost:8000
+   ```
 
 ### Dependencies
-The website uses CDN-hosted libraries:
-- **Chart.js**: Performance charts
+
+The website uses CDN dependencies for optimal performance:
+
+- **Chart.js**: Performance visualization
 - **Prism.js**: Syntax highlighting
 - **Google Fonts**: Inter and JetBrains Mono fonts
 
-### Browser Support
-- Chrome 90+
-- Firefox 88+
-- Safari 14+
-- Edge 90+
+## 📖 Documentation Sections
 
-## 📱 Responsive Breakpoints
+The website includes comprehensive documentation covering:
 
-- **Desktop**: 1200px+
-- **Tablet**: 768px - 1199px
-- **Mobile**: 320px - 767px
+### 🚀 Quick Start Guide
+- Installation instructions
+- Basic usage examples
+- AI-friendly ASCII format
+- Round-trip workflow
+
+### 🤖 ASCII Diff Format
+- Symbol rules and meanings
+- Visual representation guide
+- Real-world examples
+- AI integration benefits
+
+### ⚡ Flash & Optimus Algorithms
+- Performance comparison tables
+- Algorithm selection guide
+- Usage examples
+- Technical details
+
+### 🔧 Enhanced Parser
+- New features overview
+- Source start line tracking
+- Metadata structure
+- Practical benefits
+
+### 🌟 Revolutionary Features
+- Unique innovations
+- Superiority comparisons
+- Security features
+- Complete feature list
+
+### 📖 API Reference
+- Core methods documentation
+- Algorithm enums
+- Display formats
+- Usage examples
 
 ## 🎨 Design System
 
-### Colors
-- **Primary**: #6366f1 (Indigo)
-- **Secondary**: #10b981 (Emerald)
-- **Accent**: #f59e0b (Amber)
-- **Background**: #0f0f23 (Dark Blue)
-- **Text**: #f8fafc (Slate)
+### Color Palette
+- **Primary**: `#6366f1` (Indigo)
+- **Secondary**: `#10b981` (Emerald)
+- **Accent**: `#f59e0b` (Amber)
+- **Background**: `#0f0f23` (Dark Navy)
+- **Text**: `#f8fafc` (Light Gray)
 
 ### Typography
-- **Sans Serif**: Inter (Google Fonts)
-- **Monospace**: JetBrains Mono (Google Fonts)
+- **Headings**: Inter (Google Fonts)
+- **Body**: Inter (Google Fonts)
+- **Code**: JetBrains Mono (Google Fonts)
 
-### Spacing
-- **Base Unit**: 1rem (16px)
-- **Scale**: 0.25, 0.5, 1, 1.5, 2, 3, 4rem
+### Components
+- **Cards**: Rounded corners, subtle shadows
+- **Buttons**: Gradient backgrounds, hover effects
+- **Code Blocks**: Dark theme, syntax highlighting
+- **Tables**: Responsive, alternating rows
 
 ## 🚀 Deployment
 
-### Static Hosting
-The website is a static site and can be deployed to:
-- **Netlify**: Drag and drop deployment
-- **Vercel**: Git-based deployment
-- **GitHub Pages**: Direct from repository
-- **AWS S3**: Static website hosting
-- **Cloudflare Pages**: Fast global deployment
+### Automated Deployment
 
-### Recommended Deployment (Netlify)
-1. Create account at netlify.com
-2. Drag the `website` folder to Netlify dashboard
-3. Configure custom domain: diff.xcf.ai
-4. Enable HTTPS and CDN
+Use the included deployment script:
 
-### Build Optimization
-For production deployment:
-1. Minify CSS and JavaScript files
-2. Optimize images (WebP format)
-3. Enable gzip compression
-4. Set up proper caching headers
+```bash
+# Make executable
+chmod +x deploy.sh
+
+# Deploy to development
+./deploy.sh dev
+
+# Deploy to staging
+./deploy.sh staging
+
+# Deploy to production
+./deploy.sh production
+```
+
+### Manual Deployment
+
+#### Netlify
+1. Connect your GitHub repository
+2. Set build command: `# No build needed`
+3. Set publish directory: `website`
+4. Deploy
+
+#### Vercel
+1. Import project from GitHub
+2. Set framework preset: `Other`
+3. Set root directory: `website`
+4. Deploy
+
+#### GitHub Pages
+1. Go to repository Settings
+2. Enable GitHub Pages
+3. Set source to `main` branch, `website` folder
+4. Access at `https://username.github.io/repository-name`
+
+#### Traditional Hosting
+1. Upload `website` folder contents to web root
+2. Ensure server supports HTML5 history API
+3. Configure HTTPS (recommended)
+
+## 🔧 Customization
+
+### Updating Content
+
+1. **Hero Section**: Edit `index.html` lines 60-120
+2. **Features**: Modify feature cards in `index.html`
+3. **Documentation**: Update expandable sections
+4. **Performance Data**: Modify `js/performance.js`
+
+### Styling Changes
+
+1. **Colors**: Update CSS variables in `css/styles.css`
+2. **Fonts**: Change Google Fonts imports in `index.html`
+3. **Layout**: Modify grid systems in `css/components.css`
+4. **Animations**: Adjust timing in `css/animations.css`
+
+### Adding New Sections
+
+1. Add HTML structure to `index.html`
+2. Create corresponding styles in `css/components.css`
+3. Add JavaScript functionality in `js/main.js`
+4. Update navigation links
 
 ## 📊 Performance
 
-### Lighthouse Scores (Target)
+### Optimization Features
+- **Lazy Loading**: Images and non-critical resources
+- **CDN Dependencies**: Fast loading from global CDNs
+- **Minification**: CSS and JS optimization for production
+- **Caching**: Proper cache headers for static assets
+- **Responsive Images**: Optimized for different screen sizes
+
+### Lighthouse Scores
 - **Performance**: 95+
 - **Accessibility**: 100
 - **Best Practices**: 100
 - **SEO**: 100
 
-### Optimization Features
-- **Lazy Loading**: Images load as needed
-- **Code Splitting**: JavaScript modules
-- **CSS Optimization**: Minimal unused styles
-- **Font Loading**: Optimized web fonts
+## 🤝 Contributing
 
-## 🔧 Customization
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Commit changes: `git commit -m 'Add amazing feature'`
+4. Push to branch: `git push origin feature/amazing-feature`
+5. Open a Pull Request
 
-### Adding New Sections
-1. Add HTML structure to `index.html`
-2. Add styles to appropriate CSS file
-3. Add JavaScript functionality if needed
-4. Update navigation links
+## 📝 License
 
-### Modifying Colors
-Update CSS custom properties in `styles.css`:
-```css
-:root {
-  --primary: #your-color;
-  --secondary: #your-color;
-  /* etc. */
-}
-```
+This project is part of the MultiLineDiff library created by Todd Bruss © xcf.ai.
 
-### Adding Animations
-Add new keyframes to `animations.css` and apply classes to elements.
+## 🔗 Links
 
-## 📈 Analytics
-
-### Recommended Analytics
-- **Google Analytics 4**: User behavior tracking
-- **Hotjar**: User session recordings
-- **PageSpeed Insights**: Performance monitoring
-
-### Event Tracking
-The site includes event tracking for:
-- Button clicks
-- Section scrolling
-- Demo interactions
-- Algorithm selections
-
-## 🔒 Security
-
-### Content Security Policy
-Recommended CSP headers:
-```
-Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src fonts.gstatic.com; img-src 'self' data:;
-```
-
-### HTTPS
-Always serve over HTTPS in production.
-
-## 📞 Support
-
-For website issues or suggestions:
-- **Repository**: https://github.com/codefreezeai/swift-multi-line-diff
-- **Email**: support@xcf.ai
-- **Website**: https://xcf.ai
-
-## 📄 License
-
-This website is part of the MultiLineDiff project.
-© 2025 Todd Bruss, XCF.ai. All rights reserved.
+- **Library Repository**: [swift-multi-line-diff](https://github.com/codefreezeai/swift-multi-line-diff)
+- **Documentation**: [ASCII Diff Guide](https://github.com/codefreezeai/swift-multi-line-diff/blob/main/NEW_ASCII_DIFF.md)
+- **XCF.ai**: [https://xcf.ai](https://xcf.ai)
 
 ---
 
-**Built with ❤️ for the MultiLineDiff community** 
+**MultiLineDiff: The World's Most Advanced Diffing System** 🚀 

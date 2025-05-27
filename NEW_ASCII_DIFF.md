@@ -4,7 +4,7 @@
 
 ### Symbol Rules
 
-**IMPORTANT:** All diff symbols are EXACTLY two characters:
+**IMPORTANT:** ASCII diff symbols are actually two characters:
 - `📎 ` (Paperclip + space): Retained/unchanged lines
 - `❌ ` (Red X + space): Lines to be removed
 - `✅ ` (Green checkmark + space): Lines to be added

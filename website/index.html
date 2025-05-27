@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MultiLineDiff - The World's Most Advanced Diffing System</title>
+    <title>MultiLineDiff - The World’s Most Advanced Diffing System</title>
     <meta name="description" content="Revolutionary Swift diffing library with AI integration, ASCII diffs, and lightning-fast performance. Created by Todd Bruss © xcf.ai">
     <meta name="keywords" content="diff, swift, AI, ASCII, code, algorithm, performance, xcf.ai, todd bruss">
     <meta name="author" content="Todd Bruss, xcf.ai">
@@ -12,14 +12,14 @@
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://diff.xcf.ai/">
     <meta property="og:title" content="MultiLineDiff - Revolutionary Diffing System">
-    <meta property="og:description" content="The world's most advanced diffing system with AI integration and lightning-fast performance">
+    <meta property="og:description" content="The world’s most advanced diffing system with AI integration and lightning-fast performance">
     <meta property="og:image" content="https://diff.xcf.ai/images/og-image.png">
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="https://diff.xcf.ai/">
     <meta property="twitter:title" content="MultiLineDiff - Revolutionary Diffing System">
-    <meta property="twitter:description" content="The world's most advanced diffing system with AI integration and lightning-fast performance">
+    <meta property="twitter:description" content="The world’s most advanced diffing system with AI integration and lightning-fast performance">
     <meta property="twitter:image" content="https://diff.xcf.ai/images/twitter-image.png">
 
     <!-- Favicon -->
@@ -44,11 +44,13 @@
     <nav class="navbar">
         <div class="nav-container">
             <div class="nav-brand">
-                <svg class="logo-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M8 12L20 24L32 12" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M8 28L20 16L32 28" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                <span class="logo-text">MultiLineDiff</span>
+                <a href="https://diff.xcf.ai" class="nav-brand-link">
+                    <svg class="logo-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M8 12L20 24L32 12" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M8 28L20 16L32 28" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span class="logo-text">MultiLineDiff</span>
+                </a>
             </div>
             <div class="nav-menu" id="nav-menu">
                 <a href="#showcase" class="nav-link">Showcase</a>
@@ -85,19 +87,19 @@
                     <span>Revolutionary Breakthrough</span>
                 </div>
                 <h1 class="hero-title">
-                    The World's Most
+                    The World’s Most
                     <span class="gradient-text">Advanced Diffing System</span>
                 </h1>
                 <p class="hero-subtitle">
                     MultiLineDiff makes Git diff, Myers algorithm, and traditional tools obsolete. 
-                    Experience <strong>10x faster performance</strong>, <strong>AI integration</strong>, 
+                    Experience <strong>500x faster performance</strong>, <strong>AI integration</strong>, 
                     and <strong>character-perfect accuracy</strong> with the most flexible diffing system on Earth.
                 </p>
                 <div class="hero-stats">
-                                            <div class="stat">
-                            <div class="stat-number">10x</div>
-                            <div class="stat-label">Faster</div>
-                        </div>
+                    <div class="stat">
+                        <div class="stat-number">500x</div>
+                        <div class="stat-label">Faster</div>
+                    </div>
                     <div class="stat">
                         <div class="stat-number">5</div>
                         <div class="stat-label">Algorithms</div>
@@ -164,7 +166,7 @@
                             <span class="stat-label">Round-trip Accuracy</span>
                         </div>
                         <div class="stat-item">
-                            <span class="stat-number">10x</span>
+                            <span class="stat-number">500x</span>
                             <span class="stat-label">Faster than Git</span>
                         </div>
                         <div class="stat-item">
@@ -181,7 +183,7 @@
                                 <span></span>
                                 <span></span>
                             </div>
-                            <span class="code-title">DIFF</span>
+                            <span class="code-title">SWIFT MULTI LINE DIFF</span>
                             <div class="code-actions">
                                 <button class="code-action-btn" title="Copy to clipboard">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -222,7 +224,7 @@
                             <div class="diff-stats">
                                 <span class="diff-stat">🤖 Optimus Algorithm</span>
                                 <span class="diff-stat">📊 15 operations</span>
-                                <span class="diff-stat">🕐 1.0ms</span>
+                                <span class="diff-stat">🕐 ~10ms</span>
                             </div>
                         </div>
                     </div>
@@ -242,7 +244,7 @@
                 <div class="feature-card">
                     <div class="feature-icon">⚡</div>
                     <h3>Lightning Fast Performance</h3>
-                    <p>Flash algorithm delivers 10x faster performance than traditional methods with O(n) complexity and minimal memory usage.</p>
+                    <p>Flash algorithm delivers 500x faster performance than traditional methods with O(n) complexity and minimal memory usage.</p>
                     <div class="feature-stats">
                         <span class="stat-badge">14.5ms create</span>
                         <span class="stat-badge">6.6ms apply</span>
@@ -582,7 +584,13 @@ let diff = MultiLineDiff.createDiff(
         <div class="container">
             <div class="section-header">
                 <h2 class="section-title">Performance Benchmarks</h2>
-                <p class="section-subtitle">Real-world performance data from 1000+ test runs</p>
+                <p class="section-subtitle">Real-world performance data from comprehensive testing</p>
+                <div class="benchmark-details">
+                    <p><strong>Test Environment:</strong> 2024 16TB RAM 2TB SSD Mac Mini M4 via Xcode Test Suite</p>
+                    <p><strong>Methodology:</strong> Tests averaged over 1000 runs for each algorithm on 5000-line files</p>
+                    <p><strong>Range:</strong> Max 1256 operations (Optimus) • Min 3 operations (Flash)</p>
+                    <p><strong>Created by:</strong> Todd Bruss, <a href="https://xcf.ai" target="_blank">XCF.ai</a> - Swift Multi Line Diff inventor</p>
+                </div>
             </div>
             <div class="performance-content">
                 <div class="performance-chart">
@@ -661,42 +669,553 @@ let diff = MultiLineDiff.createDiff(
                 <h2 class="section-title">Documentation</h2>
                 <p class="section-subtitle">Comprehensive guides and API reference</p>
             </div>
+            
+            <!-- Keep the beloved 6 cards! -->
             <div class="docs-grid">
-                <div class="doc-card">
+                <div class="doc-card" data-doc="quick-start">
                     <div class="doc-icon">🚀</div>
                     <h3>Quick Start</h3>
                     <p>Get up and running with MultiLineDiff in minutes. Installation, basic usage, and first examples.</p>
-                    <a href="https://github.com/codefreezeai/swift-multi-line-diff#quick-start" target="_blank" class="doc-link">Read Guide →</a>
+                    <button class="doc-link doc-toggle">Read Guide →</button>
                 </div>
-                <div class="doc-card">
+                <div class="doc-card" data-doc="ascii-diff">
+                    <div class="doc-icon">🤖</div>
+                    <h3>ASCII Diff Format</h3>
+                    <p>Learn the revolutionary ASCII diff format with 📎❌✅ symbols for AI integration and human readability.</p>
+                    <button class="doc-link doc-toggle">Learn Format →</button>
+                </div>
+                <div class="doc-card" data-doc="algorithms">
+                    <div class="doc-icon">⚡</div>
+                    <h3>Flash & Optimus</h3>
+                    <p>Deep dive into the fastest algorithms: Flash (14.5ms) and Optimus (line-aware) with Swift native methods.</p>
+                    <button class="doc-link doc-toggle">Explore Algorithms →</button>
+                </div>
+                <div class="doc-card" data-doc="parser-update">
+                    <div class="doc-icon">🔧</div>
+                    <h3>Enhanced Parser</h3>
+                    <p>Advanced ASCII parser with metadata capture, source reconstruction, and location tracking.</p>
+                    <button class="doc-link doc-toggle">View Updates →</button>
+                </div>
+                <div class="doc-card" data-doc="revolutionary-features">
+                    <div class="doc-icon">🌟</div>
+                    <h3>Revolutionary Features</h3>
+                    <p>Complete feature overview: cryptographic security, undo generation, and superiority over Git diff.</p>
+                    <button class="doc-link doc-toggle">See Features →</button>
+                </div>
+                <div class="doc-card" data-doc="api-reference">
                     <div class="doc-icon">📖</div>
                     <h3>API Reference</h3>
-                    <p>Complete API documentation with all methods, parameters, and return types for the Swift library.</p>
-                    <a href="https://github.com/codefreezeai/swift-multi-line-diff#api-reference" target="_blank" class="doc-link">View API →</a>
+                    <p>Complete Swift API documentation with all methods, parameters, and return types.</p>
+                    <button class="doc-link doc-toggle">View API →</button>
                 </div>
-                <div class="doc-card">
-                    <div class="doc-icon">🤖</div>
-                    <h3>AI Integration</h3>
-                    <p>Learn how to integrate MultiLineDiff with AI systems using ASCII diffs and round-trip workflows.</p>
-                    <a href="#showcase" class="doc-link">Learn More →</a>
+            </div>
+
+            <!-- Expandable Documentation Content -->
+            <div class="docs-content">
+                <!-- Quick Start Documentation -->
+                <div class="doc-content" id="quick-start-content">
+                    <div class="doc-header">
+                        <h3>🚀 Quick Start Guide</h3>
+                        <button class="doc-close">×</button>
+                    </div>
+                    <div class="doc-body">
+                        <h4>Installation</h4>
+                        <pre><code class="language-swift">// Add to Package.swift
+dependencies: [
+    .package(url: "https://github.com/codefreezeai/swift-multi-line-diff", from: "1.0.0")
+]</code></pre>
+
+                        <h4>Basic Usage</h4>
+                        <pre><code class="language-swift">import MultiLineDiff
+
+// Create a diff between two strings
+let source = "Hello, world!"
+let destination = "Hello, Swift!"
+
+let diff = MultiLineDiff.createDiff(
+    source: source,
+    destination: destination,
+    algorithm: .flash  // Fastest algorithm
+)
+
+// Apply the diff
+let result = try MultiLineDiff.applyDiff(to: source, diff: diff)
+print(result) // "Hello, Swift!"</code></pre>
+
+                        <h4>AI-Friendly ASCII Format</h4>
+                        <pre><code class="language-swift">// Generate ASCII diff for AI
+let asciiDiff = MultiLineDiff.createAndDisplayDiff(
+    source: source,
+    destination: destination,
+    format: .ai
+)
+
+print(asciiDiff)
+// Output:
+// 📎 Hello, 
+// ❌ world
+// ✅ Swift
+// 📎 !</code></pre>
+
+                        <h4>Round-Trip Workflow</h4>
+                        <pre><code class="language-swift">// Parse ASCII diff back to operations
+let parsedDiff = try MultiLineDiff.parseDiffFromASCII(asciiDiff)
+
+// Apply parsed diff
+let finalResult = try MultiLineDiff.applyDiff(to: source, diff: parsedDiff)
+// Result: 100% accuracy guaranteed!</code></pre>
+                    </div>
                 </div>
-                <div class="doc-card">
-                    <div class="doc-icon">⚡</div>
-                    <h3>Performance Guide</h3>
-                    <p>Optimize performance with algorithm selection, memory management, and best practices.</p>
-                    <a href="#performance" class="doc-link">Optimize →</a>
+
+                <!-- ASCII Diff Documentation -->
+                <div class="doc-content" id="ascii-diff-content">
+                    <div class="doc-header">
+                        <h3>🤖 ASCII Diff Format</h3>
+                        <button class="doc-close">×</button>
+                    </div>
+                    <div class="doc-body">
+                        <h4>Symbol Rules</h4>
+                        <p><strong>IMPORTANT:</strong> All diff symbols are EXACTLY two characters:</p>
+                        <ul>
+                            <li><code>📎 </code> (Paperclip + space): Retained/unchanged lines</li>
+                            <li><code>❌ </code> (Red X + space): Lines to be removed</li>
+                            <li><code>✅ </code> (Green checkmark + space): Lines to be added</li>
+                        </ul>
+
+                        <h4>Visual Meaning</h4>
+                        <table class="docs-table">
+                            <thead>
+                                <tr>
+                                    <th>Symbol</th>
+                                    <th>Operation</th>
+                                    <th>Visual Meaning</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>📎 </code></td>
+                                    <td>Retain</td>
+                                    <td>📎 Paperclip</td>
+                                    <td>Unchanged lines - "keeps code together"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>❌ </code></td>
+                                    <td>Delete</td>
+                                    <td>❌ Red X</td>
+                                    <td>Lines to be removed - "delete this"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>✅ </code></td>
+                                    <td>Insert</td>
+                                    <td>✅ Green checkmark</td>
+                                    <td>New lines to be added - "add this"</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h4>Real-World Example</h4>
+                        <pre><code class="language-swift">📎 class UserManager {
+📎     private var users: [String: User] = [:]
+✅     private var userCount: Int = 0
+📎     
+❌     func addUser(name: String, email: String) -> Bool {
+✅     func addUser(name: String, email: String, age: Int = 0) -> Result<User, UserError> {
+📎         guard !name.isEmpty && !email.isEmpty else {
+❌             return false
+✅             return .failure(.invalidInput)
+📎         }
+📎         
+❌         let user = User(name: name, email: email)
+✅         let user = User(id: UUID(), name: name, email: email, age: age)
+📎         users[email] = user
+❌         return true
+✅         userCount += 1
+✅         return .success(user)
+📎     }
+📎 }</code></pre>
+
+                        <h4>AI Integration Benefits</h4>
+                        <ul>
+                            <li><strong>Human Readable:</strong> Instantly understand changes</li>
+                            <li><strong>AI Parseable:</strong> Perfect for LLM integration</li>
+                            <li><strong>Version Control:</strong> Git-friendly format</li>
+                            <li><strong>Documentation:</strong> Self-documenting patches</li>
+                            <li><strong>Debugging:</strong> Visual diff inspection</li>
+                        </ul>
+
+                        <p><a href="https://github.com/codefreezeai/swift-multi-line-diff/blob/main/NEW_ASCII_DIFF.md" target="_blank" class="external-link">📖 View Complete ASCII Diff Documentation →</a></p>
+                    </div>
                 </div>
-                <div class="doc-card">
-                    <div class="doc-icon">🔧</div>
-                    <h3>Advanced Features</h3>
-                    <p>Truncated diffs, metadata, verification, undo operations, and enterprise features.</p>
-                    <a href="https://github.com/codefreezeai/swift-multi-line-diff#advanced-features" target="_blank" class="doc-link">Explore →</a>
+
+                <!-- Algorithms Documentation -->
+                <div class="doc-content" id="algorithms-content">
+                    <div class="doc-header">
+                        <h3>⚡ Flash & Optimus Algorithms</h3>
+                        <button class="doc-close">×</button>
+                    </div>
+                    <div class="doc-body">
+                        <h4>Performance Comparison</h4>
+                        <table class="docs-table">
+                            <thead>
+                                <tr>
+                                    <th>Algorithm</th>
+                                    <th>Create (ms)</th>
+                                    <th>Apply (ms)</th>
+                                    <th>Total (ms)</th>
+                                    <th>Operations</th>
+                                    <th>Type</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="winner">
+                                    <td><strong>⚡ Flash</strong></td>
+                                    <td><strong>14.5</strong></td>
+                                    <td><strong>6.6</strong></td>
+                                    <td><strong>21.0</strong></td>
+                                    <td>3</td>
+                                    <td>Swift Native</td>
+                                </tr>
+                                <tr>
+                                    <td>🤖 Optimus</td>
+                                    <td>43.7</td>
+                                    <td>6.6</td>
+                                    <td>50.3</td>
+                                    <td>1256</td>
+                                    <td>CollectionDiff</td>
+                                </tr>
+                                <tr>
+                                    <td>🔍 Zoom</td>
+                                    <td>23.9</td>
+                                    <td>9.1</td>
+                                    <td>33.0</td>
+                                    <td>3</td>
+                                    <td>Character-based</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h4>⚡ Flash Algorithm</h4>
+                        <p>The <strong>fastest</strong> diff algorithm using Swift's native string manipulation methods (<code>commonPrefix</code>, <code>commonSuffix</code>).</p>
+                        
+                        <pre><code class="language-swift">// Flash Algorithm Usage
+let diff = MultiLineDiff.createDiff(
+    source: "Hello, world!",
+    destination: "Hello, Swift!",
+    algorithm: .flash
+)
+
+// Flash identifies:
+// Prefix: "Hello, " (7 chars) → RETAIN
+// Middle: "world" → DELETE, "Swift" → INSERT  
+// Suffix: "!" (1 char) → RETAIN</code></pre>
+
+                        <h4>🤖 Optimus Algorithm</h4>
+                        <p>Combines the <strong>power of CollectionDifference</strong> with <strong>line-aware processing</strong>.</p>
+
+                        <pre><code class="language-swift">// Optimus Algorithm Usage
+let diff = MultiLineDiff.createDiff(
+    source: sourceCode,
+    destination: modifiedCode,
+    algorithm: .optimus
+)
+
+// Optimus Process:
+// 1. Split text into lines preserving line endings
+// 2. Use CollectionDifference to find line changes
+// 3. Convert to character-based operations
+// 4. Consolidate consecutive operations</code></pre>
+
+                        <h4>Algorithm Selection Guide</h4>
+                        <div class="algorithm-guide">
+                            <div class="guide-section">
+                                <h5>🚀 Choose Flash When:</h5>
+                                <ul>
+                                    <li>Speed is critical</li>
+                                    <li>Simple character-level changes</li>
+                                    <li>Memory constrained environments</li>
+                                    <li>Want minimal operations</li>
+                                </ul>
+                            </div>
+                            <div class="guide-section">
+                                <h5>🤖 Choose Optimus When:</h5>
+                                <ul>
+                                    <li>Working with code/structured text</li>
+                                    <li>Need detailed operation tracking</li>
+                                    <li>Want semantic understanding</li>
+                                    <li>Require line-aware processing</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <p><a href="https://github.com/codefreezeai/swift-multi-line-diff/blob/main/NEW_OPTIMUS_FLASH.md" target="_blank" class="external-link">📖 View Complete Algorithm Documentation →</a></p>
+                    </div>
                 </div>
-                <div class="doc-card">
-                    <div class="doc-icon">📊</div>
-                    <h3>Examples</h3>
-                    <p>Real-world examples, code samples, and use cases for different scenarios and applications.</p>
-                    <a href="#demo" class="doc-link">See Examples →</a>
+
+                <!-- Parser Update Documentation -->
+                <div class="doc-content" id="parser-update-content">
+                    <div class="doc-header">
+                        <h3>🔧 Enhanced ASCII Parser</h3>
+                        <button class="doc-close">×</button>
+                    </div>
+                    <div class="doc-body">
+                        <h4>New Features Added</h4>
+                        <ul>
+                            <li><strong>📝 Source Content Capture:</strong> Reconstructs complete source text</li>
+                            <li><strong>📝 Destination Content Capture:</strong> Reconstructs complete destination text</li>
+                            <li><strong>📍 Preceding Context:</strong> Captures the first line of the source</li>
+                            <li><strong>📍 Following Context:</strong> Captures the last line of the source</li>
+                            <li><strong>🎯 Source Start Line:</strong> Identifies exactly where modifications begin</li>
+                            <li><strong>📊 Source Total Lines:</strong> Total number of lines in the source</li>
+                        </ul>
+
+                        <h4>Source Start Line Explanation</h4>
+                        <p>The <code>sourceStartLine</code> pinpoints exactly where modifications begin:</p>
+
+                        <pre><code class="language-swift">Line 1: 📎 class Calculator {        (retain)
+Line 2: 📎     private var result... (retain)
+Line 3: ❌     func add(_ value...   (delete) ← MODIFICATIONS START HERE
+Line 4: ❌         result += value   (delete)
+Line 5: ❌     }                     (delete)
+       ✅     func add(_ value...   (insert)
+       ✅         result += value   (insert)
+       ✅         return result     (insert)
+       ✅     }                     (insert)
+
+// Result: sourceStartLine = 2 (0-indexed, displayed as Line 3)</code></pre>
+
+                        <h4>Enhanced Metadata Structure</h4>
+                        <pre><code class="language-swift">DiffMetadata(
+    sourceStartLine: 2,                    // NEW: Where modifications begin
+    sourceTotalLines: 9,                   // Total source lines
+    precedingContext: "class Calculator {", // First line of source
+    followingContext: "}",                 // Last line of source
+    sourceContent: "class Calculator {\n...", // Complete source
+    destinationContent: "class Calculator {\n...", // Complete destination
+    algorithmUsed: .megatron,
+    applicationType: .requiresFullSource
+)</code></pre>
+
+                        <h4>Practical Benefits</h4>
+                        <div class="benefits-grid">
+                            <div class="benefit-item">
+                                <h5>🤖 AI Integration</h5>
+                                <p>Full source/destination content for validation and context information for intelligent patch application.</p>
+                            </div>
+                            <div class="benefit-item">
+                                <h5>📍 Location Tracking</h5>
+                                <p>Precise positioning for patch application with context helps locate diffs in large files.</p>
+                            </div>
+                            <div class="benefit-item">
+                                <h5>✅ Verification</h5>
+                                <p>Complete source/destination reconstruction with checksum validation support.</p>
+                            </div>
+                            <div class="benefit-item">
+                                <h5>↩️ Undo Operations</h5>
+                                <p>Create reverse diffs with stored content and full context preservation for rollback scenarios.</p>
+                            </div>
+                        </div>
+
+                        <p><a href="https://github.com/codefreezeai/swift-multi-line-diff/blob/main/NEW_ASCIIPARSER_UPDATE.md" target="_blank" class="external-link">📖 View Complete Parser Documentation →</a></p>
+                    </div>
+                </div>
+
+                <!-- Revolutionary Features Documentation -->
+                <div class="doc-content" id="revolutionary-features-content">
+                    <div class="doc-header">
+                        <h3>🌟 Revolutionary Features</h3>
+                        <button class="doc-close">×</button>
+                    </div>
+                    <div class="doc-body">
+                        <h4>🚀 Revolutionary Breakthrough</h4>
+                        <p>MultiLineDiff isn't just another diff tool—it's a <strong>complete paradigm shift</strong> that makes Git diff, Myers algorithm, copy-paste, line-number edits, and search-replace look like stone-age tools.</p>
+
+                        <h4>🔮 Unique Innovations Not Found Anywhere Else</h4>
+                        
+                        <div class="innovation-item">
+                            <h5>🔮 Intelligent Algorithm Convergence</h5>
+                            <p><strong>WORLD FIRST:</strong> Two completely different algorithms (Flash & Optimus) produce <strong>identical character counts and results</strong> while using entirely different approaches.</p>
+                            <pre><code class="language-swift">// Flash: 3 operations, 14.5ms
+// Optimus: 1256 operations, 43.7ms  
+// IDENTICAL RESULTS: 100% character-perfect match</code></pre>
+                        </div>
+
+                        <div class="innovation-item">
+                            <h5>🧠 Automatic Source Type Detection</h5>
+                            <p><strong>WORLD FIRST:</strong> Automatically detects whether you're applying a diff to full source document, truncated section, or partial content. <strong>No manual parameters needed.</strong></p>
+                        </div>
+
+                        <div class="innovation-item">
+                            <h5>🔐 Built-in SHA256 Integrity Verification</h5>
+                            <p><strong>SECURITY BREAKTHROUGH:</strong> Every diff includes cryptographic verification with SHA256 hash, automatic integrity checking, tamper detection, and round-trip verification.</p>
+                        </div>
+
+                        <div class="innovation-item">
+                            <h5>↩️ Automatic Undo Generation</h5>
+                            <p><strong>WORLD FIRST:</strong> Automatic reverse diff creation for instant rollback capability with zero configuration.</p>
+                            <pre><code class="language-swift">let undoDiff = MultiLineDiff.createUndoDiff(from: originalDiff)
+// Instant rollback capability with zero configuration</code></pre>
+                        </div>
+
+                        <h4>🏆 Superiority Over Existing Solutions</h4>
+                        
+                        <table class="comparison-table">
+                            <thead>
+                                <tr>
+                                    <th>Feature</th>
+                                    <th>Git Diff</th>
+                                    <th>MultiLineDiff</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Accuracy</strong></td>
+                                    <td>Line-based approximation</td>
+                                    <td>Character-perfect precision</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Context</strong></td>
+                                    <td>Static line numbers</td>
+                                    <td>Dynamic context matching</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Verification</strong></td>
+                                    <td>None</td>
+                                    <td>SHA256 + checksum</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Undo</strong></td>
+                                    <td>Manual reverse patches</td>
+                                    <td>Automatic undo generation</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>AI Integration</strong></td>
+                                    <td>None</td>
+                                    <td>Native ASCII diff parsing</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h4>🎯 The Bottom Line</h4>
+                        <p>MultiLineDiff isn't just better than Git diff, Myers algorithm, copy-paste, line edits, or search-replace—<strong>it makes them obsolete</strong>.</p>
+
+                        <p>This is the <strong>first and only</strong> diffing system that:</p>
+                        <ul class="checkmark-list">
+                            <li>✅ <strong>Preserves every character perfectly</strong></li>
+                            <li>✅ <strong>Handles truncated patches intelligently</strong></li>
+                            <li>✅ <strong>Provides cryptographic verification</strong></li>
+                            <li>✅ <strong>Generates automatic undo operations</strong></li>
+                            <li>✅ <strong>Works seamlessly with AI systems</strong></li>
+                            <li>✅ <strong>Offers multiple algorithms for any need</strong></li>
+                            <li>✅ <strong>Supports all I/O formats</strong></li>
+                            <li>✅ <strong>Maintains complete metadata</strong></li>
+                        </ul>
+
+                        <p><a href="https://github.com/codefreezeai/swift-multi-line-diff/blob/main/NEW_SUMMARY_2025.md" target="_blank" class="external-link">📖 View Complete Features Documentation →</a></p>
+                    </div>
+                </div>
+
+                <!-- API Reference Documentation -->
+                <div class="doc-content" id="api-reference-content">
+                    <div class="doc-header">
+                        <h3>📖 API Reference</h3>
+                        <button class="doc-close">×</button>
+                    </div>
+                    <div class="doc-body">
+                        <h4>Core Methods</h4>
+                        
+                        <div class="api-method">
+                            <h5>createDiff</h5>
+                            <pre><code class="language-swift">public static func createDiff(
+    source: String,
+    destination: String,
+    algorithm: DiffAlgorithm = .megatron,
+    includeMetadata: Bool = true,
+    sourceStartLine: Int? = nil,
+    destStartLine: Int? = nil
+) -> DiffResult</code></pre>
+                            <p>Creates a diff between two strings using advanced diffing algorithms.</p>
+                        </div>
+
+                        <div class="api-method">
+                            <h5>applyDiff</h5>
+                            <pre><code class="language-swift">public static func applyDiff(
+    to source: String,
+    diff: DiffResult
+) throws -> String</code></pre>
+                            <p>Applies a diff to a source string with automatic truncated source detection.</p>
+                        </div>
+
+                        <div class="api-method">
+                            <h5>createAndDisplayDiff</h5>
+                            <pre><code class="language-swift">public static func createAndDisplayDiff(
+    source: String,
+    destination: String,
+    format: DiffDisplayFormat,
+    algorithm: DiffAlgorithm = .megatron
+) -> String</code></pre>
+                            <p>Creates and displays a diff in one convenient call.</p>
+                        </div>
+
+                        <div class="api-method">
+                            <h5>parseDiffFromASCII</h5>
+                            <pre><code class="language-swift">public static func parseDiffFromASCII(_ asciiDiff: String) throws -> DiffResult</code></pre>
+                            <p>Parses ASCII diff text back into a DiffResult for AI integration.</p>
+                        </div>
+
+                        <h4>Algorithms</h4>
+                        <pre><code class="language-swift">public enum DiffAlgorithm {
+    case flash      // ⚡ Fastest (14.5ms)
+    case optimus    // 🤖 Line-aware CollectionDiff
+    case megatron   // 🧠 Semantic analysis (default)
+    case starscream // 🌟 Swift native line processing
+    case zoom       // 🔍 Simple character-based
+}</code></pre>
+
+                        <h4>Display Formats</h4>
+                        <pre><code class="language-swift">public enum DiffDisplayFormat {
+    case terminal   // Colored terminal output with ANSI codes
+    case ai         // Plain ASCII output for AI models
+}</code></pre>
+
+                        <h4>Encoding Formats</h4>
+                        <pre><code class="language-swift">public enum DiffEncoding {
+    case base64     // Base64 encoded string
+    case jsonString // JSON string representation
+    case jsonData   // JSON data object
+}</code></pre>
+
+                        <h4>Example Usage</h4>
+                        <pre><code class="language-swift">import MultiLineDiff
+
+// Basic diff creation
+let diff = MultiLineDiff.createDiff(
+    source: "Hello, world!",
+    destination: "Hello, Swift!",
+    algorithm: .flash
+)
+
+// Apply diff
+let result = try MultiLineDiff.applyDiff(to: source, diff: diff)
+
+// ASCII format for AI
+let asciiDiff = MultiLineDiff.createAndDisplayDiff(
+    source: source,
+    destination: destination,
+    format: .ai
+)
+
+// Parse ASCII diff
+let parsedDiff = try MultiLineDiff.parseDiffFromASCII(asciiDiff)
+
+// Base64 encoding
+let base64Diff = try MultiLineDiff.createBase64Diff(
+    source: source,
+    destination: destination
+)</code></pre>
+
+                        <p><a href="https://github.com/codefreezeai/swift-multi-line-diff/blob/main/Sources/MultiLineDiff/MultiLineDiff.swift" target="_blank" class="external-link">📖 View Complete Source Code →</a></p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -707,14 +1226,14 @@ let diff = MultiLineDiff.createDiff(
         <div class="container">
             <div class="footer-content">
                 <div class="footer-brand">
-                    <div class="footer-logo">
+                    <a href="https://diff.xcf.ai" class="footer-logo">
                         <svg class="logo-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M8 12L20 24L32 12" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
                             <path d="M8 28L20 16L32 28" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                         <span>MultiLineDiff</span>
-                    </div>
-                    <p>The world's most advanced diffing system</p>
+                    </a>
+                    <p>The world’s most advanced diffing system</p>
                 </div>
                 <div class="footer-links">
                     <div class="footer-section">
@@ -743,7 +1262,7 @@ let diff = MultiLineDiff.createDiff(
             </div>
             <div class="footer-bottom">
                 <div class="footer-copyright">
-                    <p>&copy; 2025 Todd Bruss, XCF.ai. All rights reserved.</p>
+                    <p>&copy; 2025 Todd Bruss, <a href="https://xcf.ai" target="_blank">XCF.ai</a>. All rights reserved.</p>
                 </div>
                 <div class="footer-social">
                     <a href="https://github.com/codefreezeai/swift-multi-line-diff" target="_blank" class="social-link">
