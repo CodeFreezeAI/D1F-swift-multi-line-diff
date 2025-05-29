@@ -9,7 +9,7 @@
 
 # Swift D1F MultiLineDiff Package Usage Guide
 
-## 🌐 Interactive Demo
+## ✅ Interactive Demo
 
 **🚀 Try the Live Demo**: [d1f.ai](https://d1f.ai)
 
