@@ -1,15 +1,15 @@
-# MultiLineDiff
+# D1F MultiLineDiff
 
 [![Swift 6.1](https://img.shields.io/badge/Swift-6.1-orange.svg)](https://swift.org)
-[![Website](https://img.shields.io/badge/website-d1f.pages.dev-blue.svg)](https://d1f.pages.dev)
+[![Website](https://img.shields.io/badge/website-d1f.ai-blue.svg)](https://d1f.ai)
 [![Live Demo](https://img.shields.io/badge/demo-interactive-green.svg)](https://d1f.ai#demo)
-[![Version](https://img.shields.io/badge/version-2.0.1-green.svg)](https://github.com/codefreezeai/swift-multi-line-diff)
+[![Version](https://img.shields.io/badge/version-2.0.2-green.svg)](https://github.com/codefreezeai/swift-multi-line-diff)
 [![GitHub stars](https://img.shields.io/github/stars/codefreezeai/swift-multi-line-diff.svg?style=social)](https://github.com/codefreezeai/swift-multi-line-diff/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/codefreezeai/swift-multi-line-diff.svg?style=social)](https://github.com/codefreezeai/swift-multi-line-diff/network)
 
-# Swift MultiLineDiff Package Usage Guide
+# Swift D1F MultiLineDiff Package Usage Guide
 
-## 🌐 Interactive Demo
+## ✅ Interactive Demo
 
 **🚀 Try the Live Demo**: [d1f.ai](https://d1f.ai)
 
@@ -29,7 +29,7 @@ Experience the power of MultiLineDiff algorithms in real-time with our interacti
 **Website**: [d1f.ai](https://d1f.ai) - Interactive Demo & Documentation  
 **License**: MIT  
 **Language**: Swift 100%  
-**Latest Release**: v2.0.1 (May 26, 2025)  
+**Latest Release**: v2.0.2 (May 27, 2025)  
 **Creator**: Todd Bruss © xcf.ai
 
 ---
@@ -2989,3 +2989,5 @@ This is the **first and only** diffing system that:
 
 created by Todd (Optimus Flash) Bruss (c) 2025 XCF.ai
 
+website https://d1f.ai 
+mirror  https://diff.xcf.ai
